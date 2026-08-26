@@ -595,5 +595,6 @@
   }
 
   bind();
+  ensureMap();
   autoConnect();
 })();
