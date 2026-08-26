@@ -366,6 +366,11 @@
       pendingLatLng = { lat: c.lat, lng: c.lng };
       moveTempMarker(pendingLatLng);
     }
+    var statusBanner = '';
+    if (c) {
+      if (c.status === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音/小红书/B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
+      else if (c.status === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:8px 14px;border-radius:10px;margin-bottom:10px;">🏠 这只猫已被领养，开启新生活啦～</div>';
+    }
     var banner = $('cat-status-banner');
     if (banner) { banner.innerHTML = statusBanner; banner.style.display = statusBanner ? '' : 'none'; }
     openModal('cat-modal');
@@ -632,6 +637,11 @@
   // ---------- GitHub 拉取 ----------
   async function pullFromGitHub() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+    // 拉取前检查：本地有未保存的修改时先警告
+    if (!confirm('⚠️ 拉取操作会用 GitHub 上的数据覆盖本地文件（cats.json/relations.json/图片）。\n\n如果本地有未推送的修改，请先点「推送到 GitHub」，否则这些修改会丢失！\n\n确定要继续吗？')) {
+      log('ℹ️ 已取消拉取', 'info');
+      return;
+    }
     var repo = $('cfg-repo').value.trim();
     var branch = $('cfg-branch').value.trim() || 'main';
     var token = $('cfg-token').value.trim();
