@@ -4,7 +4,7 @@ import { showToast } from './ui.js';
 
 let currentProviderIdx = 0;
 let tileErrors = 0;
-const TILE_ERROR_LIMIT = 12; // 连续失败阈值，达到后自动切换瓦片源
+const TILE_ERROR_LIMIT = 6; // 连续失败阈值，达到后自动切换瓦片源
 
 /** 添加瓦片层（带失败自动回退到下一个瓦片源） */
 function addTileLayer(map) {
