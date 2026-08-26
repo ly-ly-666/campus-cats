@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数据管理 · 校园猫咪地图</title>
+
+  <!-- Leaflet CSS（多 CDN 回退） -->
+  <link rel="stylesheet" id="leaflet-css" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <script>
+    (function () {
+      var i = 0, urls = [
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
+      ];
+      var el = document.getElementById('leaflet-css');
+      if (el) el.onerror = function () { i++; if (i < urls.length) el.href = urls[i]; };
+    })();
+  </script>
+
   <link rel="stylesheet" href="./style.css">
   <style>
     .admin-main { max-width: 1080px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
@@ -19,6 +34,31 @@
     .admin-actions .primary:hover { background: var(--primary-dark); }
     .admin-check { display: flex; align-items: center; gap: 6px; font-size: 13px; }
     .admin-tip { margin-top: 10px; font-size: 12px; color: #b45309; background: #fef3c7; border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
+    .admin-hint { font-size: 12px; color: var(--muted); margin: 6px 0; line-height: 1.6; }
+
+    .map-wrap { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    #admin-map { height: 420px; width: 100%; background: #e5e0d8; }
+    .cat-form {
+      position: absolute; top: 12px; left: 12px; width: 300px; max-height: calc(100% - 24px); overflow-y: auto;
+      background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.25); padding: 14px; z-index: 900;
+    }
+    .cat-form h3 { font-size: 14px; margin-bottom: 10px; color: var(--primary-dark); }
+    .cat-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .cat-form input, .cat-form select, .cat-form textarea { padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: inherit; }
+    .cat-form .form-row { display: flex; gap: 8px; }
+    .cat-form .form-row label { flex: 1; }
+    .cat-form .form-actions { display: flex; gap: 8px; margin-top: 6px; }
+    .cat-form .form-actions button { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; }
+    .cat-form .save-btn { background: var(--primary); color: #fff; font-weight: 600; }
+    .cat-form .del-btn { background: #fee2e2; color: #dc2626; }
+
+    .mini-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .mini-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: #fdfbf7; }
+    .mini-item .nm { font-weight: 600; }
+    .mini-item .ar { color: var(--muted); font-size: 12px; flex: 1; }
+    .mini-item button { border: none; background: #eef6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .mini-item .del { background: #fee2e2; color: #dc2626; }
+
     .cat-row, .rel-row { display: grid; gap: 8px 10px; border: 1px dashed var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fdfbf7; }
     .cat-row { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
     .cat-row .wide, .rel-row .wide { grid-column: 1 / -1; }
@@ -58,22 +98,64 @@
       </div>
       <div class="admin-actions">
         <button id="btn-test">测试连接</button>
-        <button id="btn-load">② 从 GitHub 拉取数据</button>
+        <button id="btn-load">从 GitHub 拉取数据</button>
         <button id="btn-save-config">保存设置</button>
       </div>
-      <p class="admin-tip">⚠️ Token 仅保存在<b>本浏览器 localStorage</b>，只用于调用 api.github.com。请创建<b>仅限本仓库</b>的 Fine-grained Token（Contents 读写），不要在公共电脑使用；泄露后可在 GitHub 一键撤销。数据一旦保存会自动触发部署。</p>
+      <p class="admin-tip">⚠️ Token 只保存在<b>本浏览器 localStorage</b>，只用于调用 api.github.com。建议使用<b>仅限本仓库</b>的 Fine-grained Token（Contents 读写）。保存后会自动触发部署。</p>
     </section>
 
     <section class="admin-card">
-      <h2>③ 编辑猫咪</h2>
-      <div id="cats-editor" class="cats-editor"><p class="admin-tip">请先完成 ①② 并点击「从 GitHub 拉取数据」。</p></div>
-      <button id="btn-add-cat" class="add-btn">+ 新增猫咪</button>
+      <h2>② 地图编辑猫咪（推荐）</h2>
+      <p class="admin-hint">🖱️ 在地图上<b>点一个位置</b> → 填猫咪名字等 → 保存，猫咪就出现在那个位置；<b>点击已有猫咪标记</b>可编辑或拖到新位置。<br>（需先在上面①连接并"从 GitHub 拉取数据"）</p>
+      <div class="map-wrap">
+        <div id="admin-map"></div>
+        <div id="cat-form" class="cat-form hidden">
+          <h3 id="form-title">📍 添加猫咪</h3>
+          <label>名字（必填）<input id="f-name" placeholder="如：橘座"></label>
+          <div class="form-row">
+            <label>性别
+              <select id="f-gender"><option value="male">公</option><option value="female">母</option></select>
+            </label>
+            <label>绝育状态
+              <select id="f-status"><option>已绝育</option><option>未绝育</option></select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>毛色<input id="f-color" placeholder="如：橘白"></label>
+            <label>区域<input id="f-area" placeholder="如：图书馆后花园"></label>
+          </div>
+          <label>简介<textarea id="f-desc" rows="2" placeholder="性格/特征（可选）"></textarea></label>
+          <label>照片路径<input id="f-photo" placeholder="images/placeholder.svg 或 images/cat001.jpg"></label>
+          <div class="form-row">
+            <label>纬度<input id="f-lat" type="number" step="0.0001"></label>
+            <label>经度<input id="f-lng" type="number" step="0.0001"></label>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="f-save" class="save-btn">保存</button>
+            <button type="button" id="f-cancel">取消</button>
+            <button type="button" id="f-del" class="del-btn hidden">删除</button>
+          </div>
+        </div>
+      </div>
+      <div id="mini-list" class="mini-list"></div>
     </section>
 
     <section class="admin-card">
-      <h2>④ 编辑关系</h2>
-      <div id="rels-editor"><p class="admin-tip">请先完成 ①② 并点击「从 GitHub 拉取数据」。</p></div>
+      <h2>③ 关系编辑</h2>
+      <p class="admin-hint">猫咪之间的亲戚/社交关系：从 → 到 → 关系类型 → 备注。</p>
+      <div id="rels-editor"><p class="admin-tip">请先连接 GitHub 并拉取数据。</p></div>
       <button id="btn-add-rel" class="add-btn">+ 新增关系</button>
+    </section>
+
+    <section class="admin-card">
+      <h2>④ 高级：表格 / 原始 JSON</h2>
+      <label class="admin-check"><input type="checkbox" id="advanced-toggle"> 显示高级表格编辑（不熟悉可不用，地图编辑更直观）</label>
+      <div id="advanced-box" class="hidden">
+        <h3 style="margin-top:12px;">猫咪表格（高级）</h3>
+        <div id="cats-editor"><p class="admin-tip">请先拉取数据。</p></div>
+        <button id="btn-add-cat" class="add-btn">+ 新增猫咪</button>
+      </div>
+      <pre id="raw-pre" class="raw-json hidden"></pre>
     </section>
 
     <section class="admin-card">
@@ -82,12 +164,14 @@
         <button id="btn-validate">校验数据</button>
         <button id="btn-save" class="primary">💾 保存到 GitHub（提交并自动部署）</button>
         <button id="btn-download">下载 JSON 备份</button>
-        <label class="admin-check"><input type="checkbox" id="advanced-toggle"> 显示原始 JSON</label>
       </div>
-      <pre id="raw-pre" class="raw-json hidden"></pre>
       <div id="log" class="admin-log"></div>
     </section>
   </main>
+
+  <!-- Leaflet JS（多 CDN 回退） -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+          onerror="window.__leafletIdx=(window.__leafletIdx||0)+1;if(window.__leafletIdx===1){document.write('<script src=\'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\'><\/script>')}else if(window.__leafletIdx===2){document.write('<script src=\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\'><\/script>')}"></script>
 
   <script src="./js/admin.js"></script>
 </body>
