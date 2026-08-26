@@ -14,3 +14,6 @@ Thumbs.db
 # 环境自带目录（不应入库）
 Python/
 .agent-teams/
+
+# 本地项目记忆库（不上传）
+.project-memory/
