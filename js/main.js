@@ -14,7 +14,7 @@ function setLoading(text) {
 
 function showError(message) {
   if (loadingEl) {
-    loadingEl.innerHTML = `<span class="loading-error">⚠️ ${message}</span>`;
+    loadingEl.innerHTML = '<span class="loading-error">⚠️ ' + message + '</span>';
     loadingEl.style.display = 'flex';
   }
 }
@@ -44,6 +44,10 @@ async function boot() {
     map = initMap('map', cats, (cat) => showModal(cat, cats, relations));
   } catch (e) {
     console.error('地图初始化失败', e);
+    if (typeof L === 'undefined') {
+      showError('Leaflet 地图库加载失败（网络无法访问 jsdelivr/unpkg/cdnjs）。请检查网络后刷新；大陆网络可参考 README「国内访问」章节。');
+      return;
+    }
   }
 
   // 关系图
@@ -52,6 +56,10 @@ async function boot() {
     graph = initGraph('graph', cats, relations);
   } catch (e) {
     console.error('关系图初始化失败', e);
+    if (typeof echarts === 'undefined') {
+      showError('ECharts 关系图库加载失败（网络无法访问 CDN）。请检查网络后刷新，或参考 README「国内访问」章节。');
+      return;
+    }
   }
 
   // 列表

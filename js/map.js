@@ -1,5 +1,35 @@
 // map.js — 地图模块（Leaflet 初始化与圆形猫咪标记）
-import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO } from './config.js';
+import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS } from './config.js';
+import { showToast } from './ui.js';
+
+let currentProviderIdx = 0;
+let tileErrors = 0;
+const TILE_ERROR_LIMIT = 12; // 连续失败阈值，达到后自动切换瓦片源
+
+/** 添加瓦片层（带失败自动回退到下一个瓦片源） */
+function addTileLayer(map) {
+  const p = TILE_PROVIDERS[currentProviderIdx];
+  const opts = {
+    maxZoom: p.maxZoom || MAX_ZOOM,
+    attribution: p.attribution,
+  };
+  if (p.subdomains) opts.subdomains = p.subdomains;
+
+  const layer = L.tileLayer(p.url, opts);
+
+  layer.on('tileerror', () => {
+    tileErrors++;
+    if (tileErrors >= TILE_ERROR_LIMIT && currentProviderIdx < TILE_PROVIDERS.length - 1) {
+      tileErrors = 0;
+      currentProviderIdx++;
+      map.removeLayer(layer);
+      addTileLayer(map);
+      showToast('网络原因，地图瓦片源已自动切换为「' + TILE_PROVIDERS[currentProviderIdx].name + '」');
+    }
+  });
+
+  layer.addTo(map);
+}
 
 /**
  * 创建单个猫咪的圆形 divIcon 标记。
@@ -31,14 +61,12 @@ function createCatIcon(cat) {
  */
 export function initMap(containerId, cats, onCatClick) {
   const container = document.getElementById(containerId);
-  if (!container) throw new Error(`找不到地图容器 #${containerId}`);
+  if (!container) throw new Error('找不到地图容器 #' + containerId);
+  if (typeof L === 'undefined') throw new Error('Leaflet 地图库未加载（CDN 访问失败）');
 
   const map = L.map(containerId, { zoomControl: true }).setView(CAMPUS_CENTER, DEFAULT_ZOOM);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: MAX_ZOOM,
-    attribution: '© OpenStreetMap contributors',
-  }).addTo(map);
+  addTileLayer(map);
 
   const catById = new Map(cats.map((c) => [c.id, c]));
 
@@ -48,9 +76,9 @@ export function initMap(containerId, cats, onCatClick) {
       .addTo(map);
 
     const popupLines = [
-      `<strong>${cat.name}</strong>`,
-      cat.area ? `📍 ${cat.area}` : null,
-      cat.description ? `💬 ${cat.description}` : null,
+      '<strong>' + cat.name + '</strong>',
+      cat.area ? '📍 ' + cat.area : null,
+      cat.description ? '💬 ' + cat.description : null,
     ].filter(Boolean);
 
     marker.bindPopup(popupLines.join('<br>'), { closeButton: true });

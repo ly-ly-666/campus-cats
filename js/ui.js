@@ -183,3 +183,16 @@ export function bindTabs(views, opts = {}) {
     });
   });
 }
+
+/**
+ * 在页面右下角显示一条短暂的 toast 提示。
+ * @param {string} message 提示内容
+ */
+export function showToast(message) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => el.classList.remove('show'), 4200);
+}

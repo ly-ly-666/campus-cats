@@ -281,6 +281,27 @@ body { display: flex; flex-direction: column; }
 }
 .loading-error { color: #dc2626; }
 
+/* ---------- 右下角 toast 提示 ---------- */
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  max-width: 320px;
+  background: rgba(40, 40, 40, .92);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+  z-index: 3000;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
 /* ---------- 响应式：<768px 纵向布局 ---------- */
 @media (max-width: 768px) {
   .app-header { flex-direction: column; align-items: stretch; text-align: center; }

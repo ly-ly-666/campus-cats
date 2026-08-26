@@ -205,6 +205,8 @@ export const RELATION_STYLE = {
 4. **数据校验脚本**：`scripts/validate.mjs` 在提交/部署前校验 cats.json 与 relations.json 的数据合法性（id 唯一、字段取值、关系引用存在等），从源头保证数据质量。
 5. **数据与逻辑分离**：数据存于 `data/`，展示逻辑存于 `js/`，改数据不需改代码，改代码不需动数据。
 6. **GitHub Actions 自动部署**：push 到主分支后自动执行校验、构建并发布到 GitHub Pages，实现 CI/CD。
+7. **CDN 多源回退**：Leaflet / ECharts 由 jsdelivr → unpkg → cdnjs 三级回退加载，提升国内访问稳定性。
+8. **地图瓦片源自动回退**：默认 OSM 瓦片加载失败时自动切换 CARTO / 高德（见 `js/config.js` 的 `TILE_PROVIDERS`），并给出右下角 toast 提示。
 
 ## 7. 后期扩展点
 

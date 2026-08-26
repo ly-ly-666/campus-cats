@@ -166,7 +166,11 @@ npm run validate
 确保 JSON 格式正确（无多余逗号、引号闭合），并运行 `npm run validate`。浏览器可能需要强制刷新（Ctrl/Cmd+Shift+R）清除缓存。
 
 **Q：地图不显示？**
-地图瓦片来自 OpenStreetMap，需要联网；校园坐标以广东石油化工学院官渡校区为中心，如要换校区请修改 `js/config.js` 的 `CAMPUS_CENTER` 与 `DEFAULT_ZOOM`。
+按以下顺序排查：
+1. **必须用本地服务器预览**：直接双击 `index.html`（file:// 协议）时浏览器会拦截数据请求，地图无法初始化。请改用 `npm start` 或 `python -m http.server 4173`。
+2. **检查网络/CDN**：Leaflet 与 ECharts 自 jsdelivr / unpkg / cdnjs 三级回退加载（页面已内置）。若三个 CDN 都不可达（部分校园网/大陆网络环境），页面会给出明确的中文错误提示。必要时可将 `leaflet.css`、`leaflet.js`、`echarts.min.js` 下载到 `vendor/` 目录并改为本地引用。
+3. **瓦片源自动回退**：默认 OSM 瓦片加载失败时，地图会自动切换到 CARTO / 高德瓦片（右下角有提示）。也可在 `js/config.js` 的 `TILE_PROVIDERS` 调整首选源或顺序。
+4. 校园坐标以广东石油化工学院官渡校区为中心，换校区请改 `js/config.js` 的 `CAMPUS_CENTER` 与 `DEFAULT_ZOOM`。
 
 **Q：GitHub Pages 和 Cloudflare Pages 能同时用吗？**
 可以。两者各自独立部署，互不影响，任选其一即可满足托管需求；也可一个作为主站、一个作为备份。
