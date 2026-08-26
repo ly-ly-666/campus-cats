@@ -199,30 +199,78 @@
     openModal('cat-modal');
   }
 
-  // 照片文件选择 → 预览 + 暂存
+  // 照片文件选择 → 打开裁剪弹窗
   function onFileChange() {
     var f = $('f-file').files && $('f-file').files[0];
     if (!f) return;
-    pendingImageName = f.name;
+    startCrop(f);
+  }
+  function onCameraChange() {
+    var f = $('f-camera').files && $('f-camera').files[0];
+    if (!f) return;
+    startCrop(f);
+  }
+  function startCrop(file) {
+    pendingImageName = file.name;
     var reader = new FileReader();
-    reader.onload = function (ev) {
-      pendingImage = ev.target.result; // dataURL
+    reader.onload = function (ev) { openCropModal(ev.target.result); };
+    reader.readAsDataURL(file);
+  }
+  function openCropModal(dataUrl) {
+    var box = $('crop-box');
+    box.innerHTML = '';
+    var img = document.createElement('img');
+    img.id = 'crop-img';
+    img.style.width = '100%';
+    img.style.display = 'block';
+    img.src = dataUrl;
+    box.appendChild(img);
+    openModal('crop-modal');
+    setTimeout(function () {
+      if (typeof Cropper === 'undefined') { log('❌ 裁剪组件加载失败（网络原因），请刷新重试', 'err'); return; }
+      if (cropInstance) cropInstance.destroy();
+      cropInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.9 });
+    }, 80);
+  }
+  function confirmCrop() {
+    if (cropInstance) {
+      var canvas = cropInstance.getCroppedCanvas({ width: 480, height: 480 });
+      pendingImage = canvas.toDataURL('image/jpeg', 0.85);
       $('f-preview').src = pendingImage; $('f-preview').classList.add('show');
-      log('📷 已选择照片：' + f.name + '（保存时会自动上传到 images/）', 'info');
-    };
-    reader.readAsDataURL(f);
+      log('✂️ 已裁剪照片，点「保存」时自动上传到 images/ 并显示', 'ok');
+      cropInstance.destroy(); cropInstance = null;
+    } else {
+      pendingImage = null;
+      log('⚠️ 裁剪未完成，请重试', 'err');
+    }
+    closeModal('crop-modal');
+  }
+  function cancelCrop() {
+    if (cropInstance) { cropInstance.destroy(); cropInstance = null; }
+    closeModal('crop-modal');
+    pendingImage = null;
   }
 
-  function saveCat() {
+  async function saveCat() {
     var name = $('f-name').value.trim();
     if (!name) { log('❌ 请填猫咪名字', 'err'); return; }
     var isAdd = editIndex < 0;
     var id = isAdd ? nextId() : state.cats[editIndex].id;
     var lat = pendingLatLng ? pendingLatLng.lat : 21.6795;
     var lng = pendingLatLng ? pendingLatLng.lng : 110.9226;
-
-    // 若选了新照片：优先上传到 GitHub images/，否则用 dataURL 兜底
     var photo = $('f-photo').value.trim() || 'images/placeholder.svg';
+
+    // 先上传裁剪好的照片（有则），拿到最终路径，保证保存后立即可见
+    if (pendingImage) {
+      if (state.token) {
+        var uploaded = await uploadPhoto(id, pendingImage, pendingImageName);
+        if (uploaded) photo = uploaded;
+      } else {
+        log('⚠️ 未配置 Token：照片未上传。先保存猫咪，配好 Token 后再编辑补传', 'err');
+      }
+    }
+    pendingImage = null;
+
     var cat = {
       id: id, name: name,
       nickname: $('f-nickname').value.trim() || '',
@@ -241,27 +289,17 @@
 
     closeModal('cat-modal');
     renderAll();
-    log('✅ 已保存猫咪「' + name + '」到本地（别忘了点 ⑤ 保存到 GitHub）', 'ok');
-
-    // 上传照片
-    if (pendingImage) {
-      uploadPhoto(id, cat, pendingImage, pendingImageName);
-    }
+    log('✅ 已保存猫咪「' + name + '」' + (photo.indexOf('images/') === 0 ? '（照片：' + photo + '）' : '') + '，别忘了点 ⑤ 保存到 GitHub', 'ok');
   }
 
-  function uploadPhoto(id, cat, dataUrl, fileName) {
-    if (!state.token) { log('⚠️ 未设置 Token，照片将以内嵌方式保存（仍能显示，但建议设置 Token 后重新上传）', 'err'); return; }
-    var ext = (fileName.split('.').pop() || 'jpg').toLowerCase();
+  function uploadPhoto(id, dataUrl, fileName) {
+    var ext = (fileName.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
     var path = 'images/' + id + '.' + ext;
     var base64 = dataUrl.split(',')[1];
-    log('⏳ 正在上传照片 ' + fileName + ' → ' + path + ' …', 'info');
-    apiPut('/repos/' + state.repo + '/contents/' + path, { message: 'data: 上传照片 ' + fileName, content: base64, branch: state.branch })
-      .then(function () {
-        cat.photo = path;
-        renderAll();
-        log('✅ 照片已上传：' + path + '（记得点 ⑤ 保存到 GitHub 更新数据）', 'ok');
-      })
-      .catch(function (e) { log('❌ 照片上传失败：' + e.message + '（可能是 Token 无 Contents 写权限）', 'err'); });
+    log('⏳ 正在上传照片 → ' + path + ' …', 'info');
+    return apiPut('/repos/' + state.repo + '/contents/' + path, { message: 'data: 上传照片 ' + fileName, content: base64, branch: state.branch })
+      .then(function () { log('✅ 照片已上传：' + path, 'ok'); return path; })
+      .catch(function (e) { log('❌ 照片上传失败：' + e.message + '（检查 Token 是否有 Contents 写权限）', 'err'); return null; });
   }
 
   function deleteCat() {
@@ -434,6 +472,12 @@
     $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); });
     $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
     $('f-file').addEventListener('change', onFileChange);
+    $('f-camera').addEventListener('change', onCameraChange);
+    $('btn-pick-photo').addEventListener('click', function () { $('f-file').click(); });
+    $('btn-camera').addEventListener('click', function () { $('f-camera').click(); });
+    $('crop-ok').addEventListener('click', confirmCrop);
+    $('crop-cancel').addEventListener('click', cancelCrop);
+    $('crop-close').addEventListener('click', cancelCrop);
     $('r-save').addEventListener('click', saveRel);
     $('r-cancel').addEventListener('click', function () { closeModal('rel-modal'); });
     $('rel-close').addEventListener('click', function () { closeModal('rel-modal'); });

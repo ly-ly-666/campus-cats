@@ -78,6 +78,8 @@
     details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
     details.help ol { font-size: 12px; color: var(--muted); line-height: 1.9; padding-left: 18px; }
   </style>
+  <!-- Cropper.js（照片裁剪） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 </head>
 <body>
   <header class="app-header">
@@ -150,16 +152,34 @@
     </section>
   </main>
 
+  <!-- 照片裁剪弹窗 -->
+  <div class="modal-bg" id="crop-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="crop-close">×</button>
+      <h3>✂️ 裁剪照片（方形头像）</h3>
+      <div style="width:100%;height:300px;background:#f0ebe2;" id="crop-box"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="crop-ok">确认裁剪</button>
+        <button class="btn" id="crop-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 猫咪弹窗 -->
   <div class="modal-bg" id="cat-modal">
     <div class="modal-panel">
       <button class="modal-close" id="cat-close">×</button>
       <h3 id="cat-modal-title">📝 添加猫咪</h3>
       <div class="loc-line" id="loc-line">📍 位置：点地图空白处选择</div>
-      <div class="field" style="margin-bottom:10px;"><label>📷 照片（可上传，也可填图片地址）</label>
-        <input type="file" id="f-file" accept="image/*" style="font-size:12px;">
+      <div class="field" style="margin-bottom:10px;"><label>📷 照片（相册/拍照，自动裁剪成方头像）</label>
+        <div class="row" style="margin-top:0;">
+          <button type="button" class="btn btn-sm" id="btn-pick-photo">🖼️ 从相册选择</button>
+          <button type="button" class="btn btn-sm" id="btn-camera">📸 拍照（手机）</button>
+        </div>
+        <input type="file" id="f-file" accept="image/*" style="display:none;">
+        <input type="file" id="f-camera" accept="image/*" capture="environment" style="display:none;">
         <img id="f-preview" class="photo-preview" alt="预览">
-        <input id="f-photo" placeholder="images/xxx.jpg 或留空自动占位">
+        <input id="f-photo" placeholder="images/xxx.jpg 或粘贴图片网址">
       </div>
       <div class="grid3">
         <div class="field"><label>名字（必填）</label><input id="f-name" placeholder="如：橘座"></div>
@@ -205,6 +225,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
           onerror="window.__li=(window.__li||0)+1;if(window.__li===1){document.write('<script src=\'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\'><\/script>')}else if(window.__li===2){document.write('<script src=\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\'><\/script>')}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"
+          onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js';document.head.appendChild(s)})()"></script>
+
   <script src="./js/admin.js"></script>
 </body>
 </html>
