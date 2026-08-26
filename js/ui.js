@@ -166,7 +166,7 @@ export function showModal(cat, cats, relations) {
       ${statusBanner}
       ${cat.description ? `<p class="modal-desc">${escapeHtml(cat.description)}</p>` : ''}
       <div class="modal-info">${infoHtml}</div>
-      <div style="margin:8px 0;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a></div>
+      <div style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a><button class="btn btn-sm" id="corr-from-modal" data-cat-id="${cat.id}">🐾 信息有误？更正</button></div>
       <h3 class="modal-section-title">关系</h3>
       <div class="modal-relations">${relationHtml}</div>
       <h3 class="modal-section-title">相册</h3>
@@ -224,4 +224,84 @@ export function showToast(message) {
   el.classList.add('show');
   clearTimeout(showToast._timer);
   showToast._timer = setTimeout(() => el.classList.remove('show'), 4200);
+}
+
+/**
+ * 更正猫咪信息：给访客一个提交更正内容的渠道，
+ * 整理成文字后复制/发邮件给站长（纯静态站无法直接推送到后端）。
+ */
+let _corrCats = [];
+export function openCorrection(cats, catId) {
+  _corrCats = Array.isArray(cats) ? cats : [];
+  const modal = document.getElementById('correction-modal');
+  if (!modal) return;
+  const sel = document.getElementById('corr-cat');
+  if (sel) {
+    sel.innerHTML = _corrCats
+      .filter((c) => c && c.id)
+      .map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}${c.nickname ? '（' + escapeHtml(c.nickname) + '）' : ''}</option>`)
+      .join('');
+    if (catId && sel.querySelector(`option[value="${catId}"]`)) sel.value = catId;
+  }
+  const txt = document.getElementById('corr-text');
+  if (txt) txt.value = '';
+  modal.classList.add('open');
+  modal.style.display = 'flex';
+}
+function closeCorrection() {
+  const modal = document.getElementById('correction-modal');
+  if (modal) { modal.classList.remove('open'); modal.style.display = 'none'; }
+}
+function buildCorrectionText() {
+  const sel = document.getElementById('corr-cat');
+  const txt = document.getElementById('corr-text');
+  const catName = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
+  const body = (txt && txt.value || '').trim();
+  return '【猫咪信息更正】\n🐱 猫咪：' + catName + '\n✍️ 更正内容：' + (body || '（未填写）') + '\n\n—— 来自校园猫咪地图访客';
+}
+function copyCorrection() {
+  const text = buildCorrectionText();
+  function done() {
+    showToast('✅ 已复制！粘贴到微信发给站长即可');
+    closeCorrection();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => { legacyCopy(text); done(); });
+  } else { legacyCopy(text); done(); }
+}
+function legacyCopy(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  } catch (e) {}
+}
+function mailCorrection() {
+  const text = buildCorrectionText();
+  const subject = encodeURIComponent('猫咪信息更正：' + (document.getElementById('corr-cat') && document.getElementById('corr-cat').selectedOptions[0] ? document.getElementById('corr-cat').selectedOptions[0].text : ''));
+  const body = encodeURIComponent(text);
+  window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+}
+/**
+ * 初始化更正信息入口：绑定浮动按钮 + 弹窗内按钮。
+ * @param {Array} cats 猫咪数组（用于下拉选择）
+ */
+export function initCorrection(cats) {
+  _corrCats = Array.isArray(cats) ? cats : [];
+  const fab = document.getElementById('corr-fab');
+  if (fab) fab.addEventListener('click', () => openCorrection(_corrCats));
+  const modal = document.getElementById('correction-modal');
+  if (modal) {
+    modal.querySelectorAll('[data-cclose]').forEach((el) => el.addEventListener('click', closeCorrection));
+    const copy = document.getElementById('corr-copy');
+    if (copy) copy.addEventListener('click', copyCorrection);
+    const mail = document.getElementById('corr-mail');
+    if (mail) mail.addEventListener('click', mailCorrection);
+  }
+  // 详情弹窗里的「更正」按钮（每次 showModal 重新挂载，用事件委托）
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#corr-from-modal');
+    if (btn) openCorrection(_corrCats, btn.dataset.catId);
+  });
 }

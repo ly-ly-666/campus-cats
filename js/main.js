@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap } from './map.js';
 import { initGraph, resizeGraph } from './graph.js';
-import { renderCatList, showModal, bindTabs } from './ui.js';
+import { renderCatList, showModal, bindTabs, initCorrection } from './ui.js';
 import { loadData } from './data.js';
 
 const loadingEl = document.getElementById('loading');
@@ -73,6 +73,9 @@ async function boot() {
 
   // 窗口尺寸变化时调整关系图
   window.addEventListener('resize', () => resizeGraph());
+
+  // 更正信息入口
+  initCorrection(cats);
 
   // 键盘关闭弹窗（Esc）
   window.addEventListener('keydown', (e) => {

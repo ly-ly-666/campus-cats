@@ -416,3 +416,18 @@ body { display: flex; flex-direction: column; }
   border-bottom: 1px solid #fed7aa; line-height: 1.6;
 }
 @keyframes cat-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.7); } 50% { box-shadow: 0 0 0 14px rgba(220,38,38,0); } }
+/* ---------- 更正猫咪信息 ---------- */
+.corr-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 9999;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  color: #fff; font-size: 24px; border: none; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(249,115,22,.5);
+  display: flex; align-items: center; justify-content: center;
+}
+.corr-fab:hover { transform: scale(1.08); }
+.corr-actions { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
+.corr-actions .btn { flex: 1; min-width: 130px; }
+.corr-select { width: 100%; padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; }
+#corr-text { width: 100%; padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
+.corr-note { font-size: 12px; color: #6b7280; margin: 6px 0 0; }

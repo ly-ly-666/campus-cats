@@ -73,6 +73,36 @@
   <!-- 详情弹窗 -->
   <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true"></div>
 
+  <!-- 更正猫咪信息弹窗 -->
+  <div id="correction-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop" data-cclose="1"></div>
+    <div class="modal-panel">
+      <button class="modal-close" data-cclose="1" aria-label="关闭">×</button>
+      <div class="modal-header">
+        <div class="modal-title-block">
+          <h2 class="modal-name">🐾 信息有误？帮我更正</h2>
+        </div>
+      </div>
+      <p class="modal-desc" style="margin-top:6px;">你发现的猫猫信息问题会整理成文字，复制后发给站长（微信 / 邮件均可），站长核对后会尽快更新。</p>
+      <div class="field" style="margin:12px 0 8px;">
+        <label>🐱 涉及猫咪</label>
+        <select id="corr-cat" class="corr-select"></select>
+      </div>
+      <div class="field" style="margin:8px 0;">
+        <label>✍️ 哪里不对 / 实际看到的情况</label>
+        <textarea id="corr-text" rows="4" placeholder="例如：小白已经搬到实验楼附近了 / 花花的毛色写错了 / 失踪状态其实还在图书馆…"></textarea>
+      </div>
+      <div class="corr-actions">
+        <button class="btn btn-green" id="corr-copy">📋 复制内容发站长</button>
+        <button class="btn" id="corr-mail">✉️ 用邮件发送</button>
+      </div>
+      <p class="corr-note">复制后粘贴到微信发给站长即可。邮件地址在站长设置里配置。</p>
+    </div>
+  </div>
+
+  <!-- 更正信息浮动按钮 -->
+  <button id="corr-fab" class="corr-fab" title="更正猫咪信息">🐾</button>
+
   <!-- 加载提示 -->
   <div id="loading" class="loading">正在加载猫咪数据…</div>
 
