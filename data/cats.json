@@ -9,7 +9,9 @@
     "lat": 21.678524,
     "lng": 110.922105,
     "photo": "images/cat001.jpg",
-    "album": [],
+    "album": [
+      "images/cat001_album_1787764928408_0.jpg"
+    ],
     "description": "",
     "story": "",
     "tags": [],
