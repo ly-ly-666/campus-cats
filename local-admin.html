@@ -67,6 +67,10 @@
     .album-item { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #f0ebe2; border: 1px solid var(--border); position: relative; }
     .album-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .album-item .del { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; margin-top: 4px; }
+    .tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; background: #fff7ed; color: #d97706; border: 1px solid #fde6c4; border-radius: 999px; font-size: 12px; }
+    .tag-chip button { width: 18px; height: 18px; border: none; background: transparent; color: #d97706; font-size: 14px; line-height: 1; cursor: pointer; padding: 0; }
+    .tag-chip button:hover { color: #dc2626; }
     .hidden { display: none !important; }
     details.help { margin-top: 8px; }
     details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
@@ -160,7 +164,7 @@
       <div class="grid3" style="margin-top:10px;">
         <div class="field"><label>纬度 *</label><input id="f-lat" type="number" step="any" placeholder="21.6785"></div>
         <div class="field"><label>经度 *</label><input id="f-lng" type="number" step="any" placeholder="110.9221"></div>
-        <div class="field"><label>首次出现</label><input id="f-firstSeen" placeholder="2026-08"></div>
+        <div class="field"><label>出现时间（选填）</label><div class="row" style="margin-top:0;gap:4px;"><input id="f-firstY" type="number" min="1990" max="2100" placeholder="年" style="width:60px;"><span style="align-self:center;">-</span><input id="f-firstM" type="number" min="1" max="12" placeholder="月" style="width:50px;"><span style="align-self:center;">-</span><input id="f-firstD" type="number" min="1" max="31" placeholder="日" style="width:50px;"></div></div>
       </div>
       <div class="grid3" style="margin-top:10px;">
         <div class="field"><label>离开时间</label><input id="f-leftAt" placeholder="过往才填"></div>
@@ -168,7 +172,7 @@
       </div>
       <div class="field" style="margin-top:10px;"><label>简介</label><textarea id="f-desc" rows="2" placeholder="性格/特征"></textarea></div>
       <div class="field" style="margin-top:10px;"><label>档案故事</label><textarea id="f-story" rows="4" placeholder="这只猫的故事、来历、性格细节"></textarea></div>
-      <div class="field" style="margin-top:10px;"><label>档案标签（用逗号分隔）</label><input id="f-tags" placeholder="活泼,亲人,话痨"></div>
+      <div class="field" style="margin-top:10px;"><label>档案标签（选填，回车添加）</label><div id="f-tags-chips" class="tag-chips"></div><input id="f-tags-input" placeholder="输入标签后回车，如：活泼"></div>
       <div class="modal-actions">
         <button class="btn btn-primary" id="f-save">保存</button>
         <button class="btn btn-danger" id="f-del">删除</button>

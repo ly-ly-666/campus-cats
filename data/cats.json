@@ -17,5 +17,24 @@
     "firstSeen": "2026-08",
     "leftAt": "",
     "caretaker": ""
+  },
+  {
+    "id": "cat002",
+    "name": "花花",
+    "nickname": "花奶",
+    "gender": "female",
+    "color": "三花",
+    "area": "花坛",
+    "lat": 21.679051,
+    "lng": 110.921918,
+    "photo": "images/cat002.png",
+    "album": [],
+    "description": "乖顺",
+    "story": "",
+    "tags": [],
+    "status": "已绝育",
+    "firstSeen": "2026-08",
+    "leftAt": "",
+    "caretaker": ""
   }
 ]

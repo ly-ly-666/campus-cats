@@ -313,12 +313,16 @@
     $('f-status').value = c ? (c.status || '未绝育') : '未绝育';
     $('f-lat').value = c ? c.lat : '';
     $('f-lng').value = c ? c.lng : '';
-    $('f-firstSeen').value = c ? (c.firstSeen || '') : '';
+    var fs = c ? (c.firstSeen || '') : '';
+    var m = fs.match(/^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/);
+    $('f-firstY').value = m ? m[1] : '';
+    $('f-firstM').value = m && m[2] ? String(parseInt(m[2])) : '';
+    $('f-firstD').value = m && m[3] ? String(parseInt(m[3])) : '';
     $('f-leftAt').value = c ? (c.leftAt || '') : '';
     $('f-caretaker').value = c ? (c.caretaker || '') : '';
     $('f-desc').value = c ? (c.description || '') : '';
     $('f-story').value = c ? (c.story || '') : '';
-    $('f-tags').value = c ? ((c.tags || []).join(', ')) : '';
+    renderTagChips(c ? (c.tags || []) : []);
     if (c && c.photo) { $('f-preview').src = c.photo; $('f-preview').classList.add('show'); }
     else { $('f-preview').src = ''; $('f-preview').classList.remove('show'); }
     pendingAvatar = null; pendingAvatarName = '';
@@ -456,9 +460,9 @@
       album: isAdd ? [] : (cats[editIdx].album || []),
       description: $('f-desc').value.trim(),
       story: $('f-story').value.trim(),
-      tags: $('f-tags').value.split(/[,，]/).map(function (s) { return s.trim(); }).filter(function (s) { return s; }),
+      tags: getCurrentTags(),
       status: $('f-status').value,
-      firstSeen: $('f-firstSeen').value.trim() || currentMonth(),
+      firstSeen: buildDate($('f-firstY').value, $('f-firstM').value, $('f-firstD').value),
       leftAt: $('f-leftAt').value.trim(),
       caretaker: $('f-caretaker').value.trim()
     };
@@ -478,6 +482,65 @@
   function currentMonth() {
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  // ---------- 档案标签 chips ----------
+  var _currentTags = [];
+  function renderTagChips(tags) {
+    _currentTags = (tags || []).slice();
+    var box = $('f-tags-chips');
+    box.innerHTML = _currentTags.map(function (t, i) {
+      return '<span class="tag-chip">' + esc(t) + '<button type="button" data-i="' + i + '" aria-label="删除">×</button></span>';
+    }).join('');
+    box.querySelectorAll('button[data-i]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        _currentTags.splice(Number(b.dataset.i), 1);
+        renderTagChips(_currentTags);
+      });
+    });
+  }
+  function addTag(text) {
+    text = String(text || '').trim();
+    if (!text) return;
+    if (_currentTags.indexOf(text) >= 0) return;
+    _currentTags.push(text);
+    renderTagChips(_currentTags);
+  }
+  function getCurrentTags() {
+    var input = $('f-tags-input');
+    if (input && input.value.trim()) addTag(input.value);
+    if (input) input.value = '';
+    return _currentTags.slice();
+  }
+  function initTagInput() {
+    var input = $('f-tags-input');
+    if (!input) return;
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addTag(input.value);
+        input.value = '';
+      } else if (e.key === 'Backspace' && !input.value && _currentTags.length) {
+        _currentTags.pop();
+        renderTagChips(_currentTags);
+      }
+    });
+    input.addEventListener('blur', function () {
+      if (input.value.trim()) { addTag(input.value); input.value = ''; }
+    });
+  }
+  function buildDate(y, m, d) {
+    y = String(y || '').trim();
+    m = String(m || '').trim();
+    d = String(d || '').trim();
+    if (!y) return '';
+    if (!/^\d{4}$/.test(y)) return '';
+    if (!m) return y;
+    if (!/^\d{1,2}$/.test(m) || +m < 1 || +m > 12) return y;
+    m = String(+m).padStart(2, '0');
+    if (!d) return y + '-' + m;
+    if (!/^\d{1,2}$/.test(d) || +d < 1 || +d > 31) return y + '-' + m;
+    d = String(+d).padStart(2, '0');
+    return y + '-' + m + '-' + d;
   }
 
   // ---------- GitHub 推送 ----------
@@ -568,6 +631,7 @@
 
   // ---------- 事件绑定 ----------
   function bind() {
+    initTagInput();
     $('btn-pick').addEventListener('click', pickFolder);
     $('btn-save-all').addEventListener('click', saveAll);
     $('btn-push').addEventListener('click', pushToGitHub);
