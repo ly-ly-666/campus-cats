@@ -158,7 +158,7 @@
     if (map.getZoom() < 16) map.setView([latlng.lat, latlng.lng], 16);
   }
   function renderMarkers() {
-    if (!markerLayer) return;
+    if (!map || !markerLayer) return;
     markerLayer.clearLayers();
     cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
@@ -570,7 +570,9 @@
     var repo = $('cfg-repo').value.trim();
     var branch = $('cfg-branch').value.trim() || 'main';
     var token = $('cfg-token').value.trim();
-    if (!repo) { log('❌ 请填写仓库名', 'err'); return; }
+    // 如果输入框是空的，尝试从 localStorage 读
+    if (!repo) { try { var c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); if (c.repo) { $('cfg-repo').value = c.repo; repo = c.repo; } if (c.token) { $('cfg-token').value = c.token; token = c.token; } if (c.branch) { $('cfg-branch').value = c.branch; branch = c.branch; } } catch (e) {} }
+    if (!repo) { log('❌ 请先填写仓库名（如 ly-ly-666/campus-cats）', 'err'); return; }
     log('⏳ 正在从 GitHub 拉取最新数据…', 'info');
     try {
       var headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
@@ -599,8 +601,7 @@
       cats = remoteCats;
       try { relations = JSON.parse(await readTextFile(RELS_PATH)); } catch (e) { relations = []; }
       renderCats();
-      ensureMap();
-      renderMarkers();
+      if (typeof L !== 'undefined') { ensureMap(); renderMarkers(); }
       log('✅ 已从 GitHub 拉取最新数据并写入本地文件（' + cats.length + ' 只猫）', 'ok');
     } catch (e) {
       log('❌ 拉取失败：' + e.message, 'err');
@@ -648,7 +649,9 @@
     var repo = $('cfg-repo').value.trim();
     var branch = $('cfg-branch').value.trim() || 'main';
     var token = $('cfg-token').value.trim();
-    if (!repo || !token) { log('❌ 请填写仓库名和 Token', 'err'); return; }
+    if (!repo) { try { var c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); if (c.repo) { $('cfg-repo').value = c.repo; repo = c.repo; } if (c.token) { $('cfg-token').value = c.token; token = c.token; } if (c.branch) { $('cfg-branch').value = c.branch; branch = c.branch; } } catch (e) {} }
+    if (!repo) { log('❌ 请先填写仓库名（如 ly-ly-666/campus-cats）', 'err'); return; }
+    if (!token) { log('❌ 请填写 Token', 'err'); return; }
 
     log('⏳ 开始推送到 GitHub…', 'info');
     try {
