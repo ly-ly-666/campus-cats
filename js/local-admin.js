@@ -725,7 +725,9 @@
   }
 
   function dataUrlToBase64(dataUrl) {
-    return dataUrl.split(',')[1];
+    // GitHub API 的 content 字段要求是「二进制」的 base64 编码
+    var raw = atob(dataUrl.split(',')[1]);
+    return btoa(raw);
   }
 
   // ---------- 事件绑定 ----------

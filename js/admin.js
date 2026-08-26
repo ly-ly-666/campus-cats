@@ -339,7 +339,10 @@
   function uploadPhoto(id, dataUrl, fileName) {
     var ext = (fileName.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
     var path = 'images/' + id + '.' + ext;
-    var base64 = dataUrl.split(',')[1];
+    // dataURL 已经是 base64，但 GitHub API 的 content 字段要求是「二进制」的 base64 编码
+    // 所以先 atob 解码成二进制字符串，再 btoa 重新编码
+    var raw = atob(dataUrl.split(',')[1]);
+    var base64 = btoa(raw);
     log('⏳ 正在上传照片 → ' + path + ' …', 'info');
     return doUpload(path, base64, fileName)
       .catch(function (e) {
