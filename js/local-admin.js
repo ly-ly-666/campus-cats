@@ -543,6 +543,84 @@
     return y + '-' + m + '-' + d;
   }
 
+  // ---------- GitHub 拉取 ----------
+  async function pullFromGitHub() {
+    if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+    var repo = $('cfg-repo').value.trim();
+    var branch = $('cfg-branch').value.trim() || 'main';
+    var token = $('cfg-token').value.trim();
+    if (!repo) { log('❌ 请填写仓库名', 'err'); return; }
+    log('⏳ 正在从 GitHub 拉取最新数据…', 'info');
+    try {
+      var headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      var q = '?ref=' + encodeURIComponent(branch);
+
+      // 拉取 cats.json
+      var r1 = await fetch('https://api.github.com/repos/' + repo + '/contents/' + CATS_PATH + q, { headers: headers });
+      if (!r1.ok) throw new Error('拉取 cats.json 失败: HTTP ' + r1.status);
+      var j1 = await r1.json();
+      var catsText = decodeBase64Utf8(j1.content || '');
+      await writeTextFile(CATS_PATH, catsText);
+      // 同步图片
+      var remoteCats = JSON.parse(catsText);
+      await syncImages(remoteCats, repo, branch, headers);
+
+      // 拉取 relations.json
+      var r2 = await fetch('https://api.github.com/repos/' + repo + '/contents/' + RELS_PATH + q, { headers: headers });
+      if (r2.ok) {
+        var j2 = await r2.json();
+        await writeTextFile(RELS_PATH, decodeBase64Utf8(j2.content || ''));
+      } else {
+        await writeTextFile(RELS_PATH, '[]\n');
+      }
+
+      cats = remoteCats;
+      try { relations = JSON.parse(await readTextFile(RELS_PATH)); } catch (e) { relations = []; }
+      renderCats();
+      ensureMap();
+      renderMarkers();
+      log('✅ 已从 GitHub 拉取最新数据并写入本地文件（' + cats.length + ' 只猫）', 'ok');
+    } catch (e) {
+      log('❌ 拉取失败：' + e.message, 'err');
+    }
+  }
+  function decodeBase64Utf8(b64) {
+    var bin = atob(b64.replace(/\n/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+  async function syncImages(remoteCats, repo, branch, headers) {
+    var q = '?ref=' + encodeURIComponent(branch);
+    var paths = [];
+    remoteCats.forEach(function (c) {
+      [c.photo].concat(c.album || []).forEach(function (p) {
+        if (p && p.indexOf('placeholder') < 0 && p.indexOf('http') !== 0) paths.push(p);
+      });
+    });
+    for (var i = 0; i < paths.length; i++) {
+      var p = paths[i];
+      if (await fileExists(p)) continue;
+      try {
+        var r = await fetch('https://api.github.com/repos/' + repo + '/contents/' + p + q, { headers: headers });
+        if (!r.ok) continue;
+        var j = await r.json();
+        var bin = atob((j.content || '').replace(/\n/g, ''));
+        var bytes = new Uint8Array(bin.length);
+        for (var k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+        var parts = p.split('/');
+        var name = parts.pop();
+        var d = await getDir(parts);
+        var fh = await d.getFileHandle(name, { create: true });
+        var w = await fh.createWritable();
+        await w.write(bytes);
+        await w.close();
+        log('📥 已下载图片：' + p, 'info');
+      } catch (e) { /* 忽略单张图片失败 */ }
+    }
+  }
+
   // ---------- GitHub 推送 ----------
   async function pushToGitHub() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
@@ -634,6 +712,7 @@
     initTagInput();
     $('btn-pick').addEventListener('click', pickFolder);
     $('btn-save-all').addEventListener('click', saveAll);
+    $('btn-pull').addEventListener('click', pullFromGitHub);
     $('btn-push').addEventListener('click', pushToGitHub);
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
     $('f-save').addEventListener('click', saveCat);
