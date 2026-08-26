@@ -163,11 +163,16 @@
     cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
       var color = c.leftAt ? '#9ca3af' : (c.gender === 'male' ? '#3b82f6' : '#ec4899');
-      var m = L.circleMarker([c.lat, c.lng], { radius: 12, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(markerLayer);
+      var icon = L.divIcon({
+        className: '',
+        html: '<div style="width:24px;height:24px;border-radius:50%;background:' + color + ';border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+      var m = L.marker([c.lat, c.lng], { icon: icon, draggable: true }).addTo(markerLayer);
       m.options.catIndex = i;
       m.bindTooltip(c.name + (c.leftAt ? '（过往）' : ''), { direction: 'top' });
       m.on('click', function () { openCatModal(i); });
-      m.dragging.enable();
       m.on('dragend', function () {
         var idx = m.options.catIndex; var ll = m.getLatLng();
         cats[idx].lat = +ll.lat.toFixed(6); cats[idx].lng = +ll.lng.toFixed(6);
