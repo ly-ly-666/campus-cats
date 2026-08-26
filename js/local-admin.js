@@ -163,9 +163,11 @@
     cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
       var isMissing = c.life === '失踪';
+      var isMissingOld = c.life === '失踪已久';
       var isAdopted = c.life === '已领养';
-      var color = c.leftAt ? '#9ca3af' : (isMissing ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : '#ec4899')));
-      var size = isMissing ? 32 : 24;
+      var isMissingAny = isMissing || isMissingOld;
+      var color = c.leftAt ? '#9ca3af' : (isMissingAny ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : '#ec4899')));
+      var size = isMissing ? 32 : (isMissingOld ? 28 : 24);
       var pulse = isMissing ? 'animation:cat-missing-pulse 1.5s infinite;' : '';
       var icon = L.divIcon({
         className: '',
@@ -310,6 +312,7 @@
       var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
     function statusBadge(c) {
       if (c.life === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
+      if (c.life === '失踪已久') return ' <span style="background:#9f1239;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪已久</span>';
       if (c.life === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
       return '';
     }
@@ -379,6 +382,7 @@
     var statusBanner = '';
     if (c) {
       if (c.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音/小红书/B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
+      else if (c.life === '失踪已久') statusBanner = '<div style="background:#9f1239;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫已失踪很久了。若你还见过它，请给猫协留言（抖音/小红书/B 站「这里油只喵」），任何线索都很宝贵。</div>';
       else if (c.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:8px 14px;border-radius:10px;margin-bottom:10px;">🏠 这只猫已被领养，开启新生活啦～</div>';
     }
     var banner = $('cat-status-banner');
