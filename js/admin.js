@@ -1,4 +1,4 @@
-// admin.js — 网页端数据管理后台（地图可视化编辑 + GitHub API 保存部署）
+// admin.js — 卡片式数据管理后台（地图添加、照片上传、关系编辑、GitHub 保存部署）
 (function () {
   'use strict';
 
@@ -15,7 +15,10 @@
 
   var state = { repo: '', branch: 'main', token: '', cats: [], relations: [], catsSha: null, relsSha: null };
   var map = null, markerLayer = null, tempMarker = null, tileIdx = 0, tileErrors = 0;
-  var editIndex = -1; // -1 = 添加模式
+  var editIndex = -1;          // 当前编辑的猫咪索引；-1 = 添加
+  var pendingLatLng = null;    // 添加/编辑时选中的地图位置
+  var pendingImage = null;     // 待上传的照片 dataURL
+  var pendingImageName = '';   // 待上传照片文件名
 
   function $(id) { return document.getElementById(id); }
 
@@ -26,8 +29,7 @@
   }
 
   function log(msg, kind) {
-    var box = $('log');
-    if (!box) return;
+    var box = $('log'); if (!box) return;
     var div = document.createElement('div');
     div.className = kind || 'info';
     div.textContent = msg;
@@ -40,18 +42,21 @@
     state.branch = $('cfg-branch').value.trim() || 'main';
     state.token = $('cfg-token').value.trim();
   }
-  function fillConfig() {
-    $('cfg-repo').value = state.repo; $('cfg-branch').value = state.branch; $('cfg-token').value = state.token;
-  }
+  function fillConfig() { $('cfg-repo').value = state.repo; $('cfg-branch').value = state.branch; $('cfg-token').value = state.token; }
   function loadConfig() {
-    try { var c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); if (c.repo) state.repo = c.repo; if (c.branch) state.branch = c.branch; if (c.token) state.token = c.token; } catch (e) {}
+    try {
+      var c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+      if (c.repo) state.repo = c.repo; if (c.branch) state.branch = c.branch; if (c.token) state.token = c.token;
+    } catch (e) {}
     fillConfig();
   }
   function saveConfig() {
     readConfig();
-    try { localStorage.setItem(CFG_KEY, JSON.stringify({ repo: state.repo, branch: state.branch, token: state.token })); log('✅ 设置已保存到本浏览器', 'ok'); }
+    try { localStorage.setItem(CFG_KEY, JSON.stringify({ repo: state.repo, branch: state.branch, token: state.token })); log('✅ 设置已保存到本浏览器（Token 只存本地）', 'ok'); }
     catch (e) { log('⚠️ 保存设置失败：' + e.message, 'err'); }
+    refreshSaveHint();
   }
+  function hasConfig() { return !!(state.repo && state.token); }
 
   // ---------- GitHub API ----------
   function headers() {
@@ -76,14 +81,15 @@
 
   function testConn() {
     readConfig();
-    if (!state.repo) { log('❌ 请先填写仓库名（用户名/仓库名）', 'err'); return; }
-    apiGet('/repos/' + state.repo).then(function (r) { log('✅ 连接成功：' + (r.full_name || state.repo) + ' @ ' + state.branch, 'ok'); })
-      .catch(function (e) { log('❌ 连接失败：' + e.message, 'err'); });
+    if (!state.repo) { log('❌ 请先填仓库名', 'err'); return; }
+    apiGet('/repos/' + state.repo).then(function (r) { log('✅ 连接成功：' + (r.full_name || state.repo) + ' @ ' + state.branch, 'ok'); refreshSaveHint(); })
+      .catch(function (e) { log('❌ 连接失败：' + e.message + '（若为 404 请检查仓库名 / Token 权限）', 'err'); });
   }
 
   function loadData() {
     readConfig();
-    if (!state.repo) { log('❌ 请先填写仓库名', 'err'); return; }
+    if (!state.repo) { log('❌ 请先填仓库名（如 ly-ly-666/campus-cats）', 'err'); return; }
+    if (!state.token) { log('❌ 请先填 Token（见 ① 的 3 步教程）', 'err'); return; }
     var q = '?ref=' + encodeURIComponent(state.branch);
     log('⏳ 正在从 GitHub 拉取数据…', 'info');
     Promise.all([
@@ -92,8 +98,9 @@
     ]).then(function (res) {
       state.cats = JSON.parse(b64ToUtf8(res[0].content)); state.catsSha = res[0].sha || null;
       state.relations = JSON.parse(b64ToUtf8(res[1].content)); state.relsSha = res[1].sha || null;
-      renderAll();
-      log('✅ 已拉取：' + state.cats.length + ' 只猫、' + state.relations.length + ' 条关系。现在可以在地图上点位置添加猫咪了！', 'ok');
+      ensureMap(); renderAll();
+      log('✅ 已拉取：' + state.cats.length + ' 只猫、' + state.relations.length + ' 条关系。现在可以点地图或添加猫咪了！', 'ok');
+      refreshSaveHint();
     }).catch(function (e) { log('❌ 拉取失败：' + e.message, 'err'); });
   }
 
@@ -104,7 +111,16 @@
     map = L.map('admin-map', { zoomControl: true }).setView(CAMPUS_CENTER, 16);
     addTileLayer();
     markerLayer = L.layerGroup().addTo(map);
-    map.on('click', function (e) { openForm(-1, e.latlng); });
+    map.on('click', function (e) {
+      pendingLatLng = { lat: +e.latlng.lat.toFixed(6), lng: +e.latlng.lng.toFixed(6) };
+      moveTempMarker(pendingLatLng);
+      // 若正在编辑/添加猫咪，则更新弹窗位置
+      if (!$('cat-modal').classList.contains('open')) {
+        openCatModal(-1);
+      } else {
+        $('loc-line').textContent = '📍 位置已选：' + pendingLatLng.lat + ', ' + pendingLatLng.lng + '（可再点别处调整）';
+      }
+    });
   }
 
   function addTileLayer() {
@@ -115,11 +131,7 @@
     var layer = L.tileLayer(t.url, opts);
     layer.on('tileerror', function () {
       tileErrors++;
-      if (tileErrors >= 6 && tileIdx < TILES.length - 1) {
-        tileErrors = 0; tileIdx++;
-        map.removeLayer(layer); addTileLayer();
-        log('网络原因，地图瓦片已切换为「' + TILES[tileIdx].name + '」', 'info');
-      }
+      if (tileErrors >= 6 && tileIdx < TILES.length - 1) { tileErrors = 0; tileIdx++; map.removeLayer(layer); addTileLayer(); log('网络原因，地图已切换为「' + TILES[tileIdx].name + '」', 'info'); }
     });
     layer.addTo(map);
   }
@@ -129,241 +141,226 @@
     markerLayer.clearLayers();
     state.cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
-      var color = c.gender === 'male' ? '#3b82f6' : '#ec4899';
-      var m = L.circleMarker([c.lat, c.lng], { radius: 12, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 })
-        .addTo(markerLayer);
+      var color = c.leftAt ? '#9ca3af' : (c.gender === 'male' ? '#3b82f6' : '#ec4899');
+      var m = L.circleMarker([c.lat, c.lng], { radius: 12, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(markerLayer);
       m.options.catIndex = i;
-      m.bindTooltip(c.name, { permanent: false, direction: 'top' });
-      m.on('click', function () { openForm(i, m.getLatLng()); });
+      m.bindTooltip(c.name + (c.leftAt ? '（过往）' : ''), { direction: 'top' });
+      m.on('click', function () { openCatModal(i); });
       m.dragging.enable();
       m.on('dragend', function () {
-        var idx = m.options.catIndex;
-        var ll = m.getLatLng();
-        state.cats[idx].lat = +ll.lat.toFixed(6);
-        state.cats[idx].lng = +ll.lng.toFixed(6);
-        updateRaw(); renderMiniList();
-        if (editIndex === idx && !$('cat-form').classList.contains('hidden')) {
-          $('f-lat').value = state.cats[idx].lat; $('f-lng').value = state.cats[idx].lng;
-        }
+        var idx = m.options.catIndex; var ll = m.getLatLng();
+        state.cats[idx].lat = +ll.lat.toFixed(6); state.cats[idx].lng = +ll.lng.toFixed(6);
+        updateRaw(); renderCats();
       });
     });
   }
 
-  // ---------- 猫咪表单 ----------
-  function openForm(index, latlng) {
-    if (!map) { log('❌ 地图未就绪，请刷新后重试', 'err'); return; }
+  function moveTempMarker(latlng) {
+    if (!markerLayer || !map) return;
+    if (tempMarker) markerLayer.removeLayer(tempMarker);
+    tempMarker = L.marker([latlng.lat, latlng.lng], { draggable: true }).addTo(markerLayer);
+    tempMarker.on('dragend', function () { var ll = tempMarker.getLatLng(); pendingLatLng = { lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6) }; updateLocLine(); });
+    if (map.getZoom() < 16) map.setView([latlng.lat, latlng.lng], 16);
+  }
+  function updateLocLine() {
+    if (pendingLatLng) $('loc-line').textContent = '📍 位置：' + pendingLatLng.lat + ', ' + pendingLatLng.lng + '（可点地图或拖动圆点调整）';
+  }
+
+  // ---------- 猫咪弹窗 ----------
+  function openCatModal(index) {
     editIndex = index;
     var isAdd = index < 0;
-    var c = isAdd
-      ? { id: nextId(), name: '', gender: 'male', color: '', area: '', lat: latlng ? +latlng.lat.toFixed(6) : 21.6795, lng: latlng ? +latlng.lng.toFixed(6) : 110.9226, photo: 'images/placeholder.svg', description: '', status: '已绝育', firstSeen: '' }
-      : state.cats[index];
-
-    $('form-title').textContent = isAdd ? '📍 添加猫咪' : '✏️ 编辑猫咪';
-    $('f-name').value = c.name || '';
-    $('f-gender').value = c.gender || 'male';
-    $('f-status').value = c.status || '未绝育';
-    $('f-color').value = c.color || '';
-    $('f-area').value = c.area || '';
-    $('f-desc').value = c.description || '';
-    $('f-photo').value = c.photo || 'images/placeholder.svg';
-    $('f-lat').value = c.lat; $('f-lng').value = c.lng;
-    $('f-del').classList.toggle('hidden', isAdd);
-    $('cat-form').classList.remove('hidden');
-
-    if (tempMarker) markerLayer.removeLayer(tempMarker);
-    tempMarker = L.marker([c.lat, c.lng], { draggable: true }).addTo(markerLayer);
-    tempMarker.on('dragend', function () {
-      var ll = tempMarker.getLatLng();
-      $('f-lat').value = +ll.lat.toFixed(6); $('f-lng').value = +ll.lng.toFixed(6);
-    });
-    map.setView([c.lat, c.lng], Math.max(map.getZoom(), 16));
-  }
-
-  function closeForm() {
-    $('cat-form').classList.add('hidden');
-    if (tempMarker) { markerLayer.removeLayer(tempMarker); tempMarker = null; }
-    editIndex = -1;
-  }
-
-  function saveForm() {
-    var name = $('f-name').value.trim();
-    if (!name) { log('❌ 请填写猫咪名字', 'err'); return; }
-    var lat = parseFloat($('f-lat').value), lng = parseFloat($('f-lng').value);
-    if (isNaN(lat) || lat < -90 || lat > 90 || isNaN(lng) || lng < -180 || lng > 180) {
-      log('❌ 经纬度无效', 'err'); return;
+    var c = isAdd ? null : state.cats[index];
+    // 选择位置：编辑用猫的位置，添加用 pendingLatLng（或默认校园中心）
+    var ll = c ? { lat: c.lat, lng: c.lng } : (pendingLatLng || { lat: CAMPUS_CENTER[0], lng: CAMPUS_CENTER[1] });
+    pendingLatLng = ll;
+    pendingImage = null; pendingImageName = '';
+    $('cat-modal-title').textContent = isAdd ? '📝 添加猫咪' : '✏️ 编辑猫咪';
+    $('f-name').value = c ? (c.name || '') : '';
+    $('f-nickname').value = c ? (c.nickname || '') : '';
+    $('f-gender').value = c ? (c.gender || 'male') : 'male';
+    $('f-color').value = c ? (c.color || '') : '';
+    $('f-area').value = c ? (c.area || '') : '';
+    $('f-status').value = c ? (c.status || '未绝育') : '未绝育';
+    $('f-firstSeen').value = c ? (c.firstSeen || '') : '';
+    $('f-leftAt').value = c ? (c.leftAt || '') : '';
+    $('f-caretaker').value = c ? (c.caretaker || '') : '';
+    $('f-desc').value = c ? (c.description || '') : '';
+    $('f-photo').value = c ? (c.photo || '') : '';
+    // 预览当前照片
+    if (c && c.photo) {
+      $('f-preview').src = c.photo; $('f-preview').classList.add('show');
+    } else {
+      $('f-preview').classList.remove('show');
     }
+    $('f-del').style.display = isAdd ? 'none' : '';
+    updateLocLine();
+    moveTempMarker(ll);
+    openModal('cat-modal');
+  }
+
+  // 照片文件选择 → 预览 + 暂存
+  function onFileChange() {
+    var f = $('f-file').files && $('f-file').files[0];
+    if (!f) return;
+    pendingImageName = f.name;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      pendingImage = ev.target.result; // dataURL
+      $('f-preview').src = pendingImage; $('f-preview').classList.add('show');
+      log('📷 已选择照片：' + f.name + '（保存时会自动上传到 images/）', 'info');
+    };
+    reader.readAsDataURL(f);
+  }
+
+  function saveCat() {
+    var name = $('f-name').value.trim();
+    if (!name) { log('❌ 请填猫咪名字', 'err'); return; }
     var isAdd = editIndex < 0;
+    var id = isAdd ? nextId() : state.cats[editIndex].id;
+    var lat = pendingLatLng ? pendingLatLng.lat : 21.6795;
+    var lng = pendingLatLng ? pendingLatLng.lng : 110.9226;
+
+    // 若选了新照片：优先上传到 GitHub images/，否则用 dataURL 兜底
+    var photo = $('f-photo').value.trim() || 'images/placeholder.svg';
     var cat = {
-      id: isAdd ? nextId() : state.cats[editIndex].id,
-      name: name,
+      id: id, name: name,
+      nickname: $('f-nickname').value.trim() || '',
       gender: $('f-gender').value,
       color: $('f-color').value.trim(),
       area: $('f-area').value.trim(),
-      lat: +lat.toFixed(6),
-      lng: +lng.toFixed(6),
-      photo: $('f-photo').value.trim() || 'images/placeholder.svg',
+      lat: +lat.toFixed(6), lng: +lng.toFixed(6),
+      photo: photo,
       description: $('f-desc').value.trim(),
       status: $('f-status').value,
-      firstSeen: isAdd ? currentMonth() : (state.cats[editIndex].firstSeen || currentMonth()),
-      caretaker: isAdd ? '' : (state.cats[editIndex].caretaker || '')
+      firstSeen: $('f-firstSeen').value.trim(),
+      leftAt: $('f-leftAt').value.trim() || '',
+      caretaker: $('f-caretaker').value.trim()
     };
-    if (isAdd) { state.cats.push(cat); } else { state.cats[editIndex] = cat; }
-    closeForm(); renderAll();
-    log('✅ 已保存猫咪「' + name + '」到本地（记得点下方 ⑤ 保存到 GitHub 部署）', 'ok');
+    if (isAdd) state.cats.push(cat); else state.cats[editIndex] = cat;
+
+    closeModal('cat-modal');
+    renderAll();
+    log('✅ 已保存猫咪「' + name + '」到本地（别忘了点 ⑤ 保存到 GitHub）', 'ok');
+
+    // 上传照片
+    if (pendingImage) {
+      uploadPhoto(id, cat, pendingImage, pendingImageName);
+    }
   }
 
-  function deleteFormCat() {
+  function uploadPhoto(id, cat, dataUrl, fileName) {
+    if (!state.token) { log('⚠️ 未设置 Token，照片将以内嵌方式保存（仍能显示，但建议设置 Token 后重新上传）', 'err'); return; }
+    var ext = (fileName.split('.').pop() || 'jpg').toLowerCase();
+    var path = 'images/' + id + '.' + ext;
+    var base64 = dataUrl.split(',')[1];
+    log('⏳ 正在上传照片 ' + fileName + ' → ' + path + ' …', 'info');
+    apiPut('/repos/' + state.repo + '/contents/' + path, { message: 'data: 上传照片 ' + fileName, content: base64, branch: state.branch })
+      .then(function () {
+        cat.photo = path;
+        renderAll();
+        log('✅ 照片已上传：' + path + '（记得点 ⑤ 保存到 GitHub 更新数据）', 'ok');
+      })
+      .catch(function (e) { log('❌ 照片上传失败：' + e.message + '（可能是 Token 无 Contents 写权限）', 'err'); });
+  }
+
+  function deleteCat() {
     if (editIndex < 0) return;
-    var name = state.cats[editIndex].name;
     var removedId = state.cats[editIndex].id;
+    var name = state.cats[editIndex].name;
     state.cats.splice(editIndex, 1);
     state.relations = state.relations.filter(function (r) { return r.from !== removedId && r.to !== removedId; });
-    closeForm(); renderAll();
+    closeModal('cat-modal'); renderAll();
     log('🗑️ 已删除猫咪「' + name + '」及其关联关系', 'info');
   }
 
-  function nextId() {
-    var n = state.cats.length + 1, id = 'cat' + pad(n, 3);
-    while (state.cats.some(function (c) { return c.id === id; })) { n++; id = 'cat' + pad(n, 3); }
-    return id;
-  }
+  function nextId() { var n = state.cats.length + 1, id = 'cat' + pad(n, 3); while (state.cats.some(function (c) { return c.id === id; })) { n++; id = 'cat' + pad(n, 3); } return id; }
   function pad(n, w) { n = String(n); while (n.length < w) n = '0' + n; return n; }
-  function currentMonth() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1, 2); }
 
-  // ---------- 渲染汇总 ----------
-  function renderAll() {
-    renderCats(); renderRelations(); renderMiniList(); renderMarkers(); updateRaw();
-  }
+  // ---------- 渲染 ----------
+  function renderAll() { renderCats(); renderRels(); renderMarkers(); updateRaw(); refreshSaveHint(); }
 
   function renderCats() {
-    var box = $('cats-editor'); if (!box) return;
+    var box = $('cats-list'); if (!box) return;
     var html = '';
     state.cats.forEach(function (c, i) {
-      html += '<div class="cat-row" data-i="' + i + '">' +
-        '<label>ID<input data-f="id" value="' + esc(c.id) + '"></label>' +
-        '<label>名字<input data-f="name" value="' + esc(c.name) + '"></label>' +
-        '<label>性别<select data-f="gender">' + opt(GENDERS, c.gender, { male: '公', female: '母' }) + '</select></label>' +
-        '<label>毛色<input data-f="color" value="' + esc(c.color) + '"></label>' +
-        '<label>区域<input data-f="area" value="' + esc(c.area) + '"></label>' +
-        '<label>纬度<input data-f="lat" type="number" step="0.0001" value="' + esc(c.lat) + '"></label>' +
-        '<label>经度<input data-f="lng" type="number" step="0.0001" value="' + esc(c.lng) + '"></label>' +
-        '<label>照片<input data-f="photo" value="' + esc(c.photo || 'images/placeholder.svg') + '"></label>' +
-        '<label>状态<select data-f="status">' + opt(STATUSES, c.status) + '</select></label>' +
-        '<label>首次发现<input data-f="firstSeen" value="' + esc(c.firstSeen || '') + '"></label>' +
-        '<label>照料人<input data-f="caretaker" value="' + esc(c.caretaker || '') + '"></label>' +
-        '<label class="wide">描述<textarea data-f="description" rows="2">' + esc(c.description || '') + '</textarea></label>' +
-        '<button type="button" class="row-del" data-del="' + i + '">删除</button></div>';
+      var photo = c.photo || 'images/placeholder.svg';
+      var past = c.leftAt ? '<span class="tag tag-past">过往</span>' : '';
+      html += '<div class="catcard">' +
+        '<div class="th"><img src="' + esc(photo) + '" alt="" onerror="this.style.display=\'none\'"><span style="font-size:40px;">🐱</span></div>' +
+        '<div class="bd">' +
+        '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + '</div>' +
+        '<div class="meta">' + past + ' ' + (c.gender === 'male' ? '公' : '母') + ' · ' + esc(c.status || '') + '</div>' +
+        '<div class="meta">📍 ' + esc(c.area || '') + (c.firstSeen ? ' · 出现于 ' + esc(c.firstSeen) : '') + (c.leftAt ? ' · 离开 ' + esc(c.leftAt) : '') + '</div>' +
+        '<div class="ops">' +
+        '<button class="btn btn-sm" data-edit="' + i + '">编辑</button>' +
+        '<button class="btn btn-sm btn-danger" data-del="' + i + '">删除</button>' +
+        '</div></div></div>';
     });
-    box.innerHTML = html || '<p class="admin-tip">暂无猫咪。</p>';
-    box.querySelectorAll('[data-del]').forEach(function (b) {
-      b.addEventListener('click', function () { state.cats.splice(Number(b.dataset.del), 1); renderAll(); });
-    });
+    box.innerHTML = html || '<p class="hint">还没有猫咪，点地图或「＋ 添加猫咪」。</p>';
+    box.querySelectorAll('[data-edit]').forEach(function (b) { b.addEventListener('click', function () { ensureMap(); openCatModal(Number(b.dataset.edit)); }); });
+    box.querySelectorAll('[data-del]').forEach(function (b) { b.addEventListener('click', function () { state.cats.splice(Number(b.dataset.del), 1); renderAll(); }); });
   }
 
-  function opt(values, sel, labels) {
-    var s = '';
-    values.forEach(function (v) { s += '<option value="' + esc(v) + '"' + (String(v) === String(sel) ? ' selected' : '') + '>' + esc(labels ? (labels[v] || v) : v) + '</option>'; });
-    return s;
-  }
-
-  function renderRelations() {
-    var box = $('rels-editor'); if (!box) return;
-    var idOpts = ''; state.cats.forEach(function (c) { idOpts += '<option value="' + esc(c.id) + '">' + esc(c.id) + ' ' + esc(c.name) + '</option>'; });
-    var relOpts = ''; REL_TYPES.forEach(function (rt) { relOpts += '<option value="' + esc(rt) + '">' + esc(rt) + '</option>'; });
+  function renderRels() {
+    var box = $('rels-list'); if (!box) return;
+    var byId = {}; state.cats.forEach(function (c) { byId[c.id] = c; });
     var html = '';
     state.relations.forEach(function (r, i) {
-      html += '<div class="rel-row" data-i="' + i + '">' +
-        '<label>从<select data-f="from">' + markSel(idOpts, r.from) + '</select></label>' +
-        '<label>到<select data-f="to">' + markSel(idOpts, r.to) + '</select></label>' +
-        '<label>关系<select data-f="relation">' + markSel(relOpts, r.relation) + '</select></label>' +
-        '<label class="wide">备注<input data-f="note" value="' + esc(r.note || '') + '"></label>' +
-        '<button type="button" class="row-del" data-del="' + i + '">删除</button></div>';
+      var a = byId[r.from] ? byId[r.from].name : r.from;
+      var b = byId[r.to] ? byId[r.to].name : r.to;
+      html += '<div class="relcard"><span>' + esc(a) + '</span><span class="t">『' + esc(r.relation) + '』</span><span>' + esc(b) + '</span>' +
+        (r.note ? '<span class="note">（' + esc(r.note) + '）</span>' : '<span class="note"></span>') +
+        '<button class="btn btn-sm btn-danger" data-del="' + i + '">删除</button></div>';
     });
-    box.innerHTML = html || '<p class="admin-tip">暂无关系。</p>';
-    box.querySelectorAll('[data-del]').forEach(function (b) {
-      b.addEventListener('click', function () { state.relations.splice(Number(b.dataset.del), 1); renderAll(); });
-    });
+    box.innerHTML = html || '<p class="hint">还没有关系。不是每只猫都有亲戚，需要时点「＋ 添加关系」。</p>';
+    box.querySelectorAll('[data-del]').forEach(function (b) { b.addEventListener('click', function () { state.relations.splice(Number(b.dataset.del), 1); renderAll(); }); });
   }
 
-  function markSel(options, val) {
-    if (val == null || val === '') return options;
-    return options.replace('value="' + esc(val) + '"', 'value="' + esc(val) + '" selected');
+  // ---------- 关系弹窗 ----------
+  function openRelModal() {
+    if (!state.cats.length) { log('❌ 请先添加猫咪，再添加关系', 'err'); return; }
+    var opts = '';
+    state.cats.forEach(function (c) { opts += '<option value="' + esc(c.id) + '">' + esc(c.name) + (c.nickname ? '（' + esc(c.nickname) + '）' : '') + '</option>'; });
+    $('r-from').innerHTML = opts;
+    $('r-to').innerHTML = opts;
+    if (state.cats.length > 1) $('r-to').value = state.cats[1].id;
+    $('r-note').value = '';
+    openModal('rel-modal');
+  }
+  function saveRel() {
+    var from = $('r-from').value, to = $('r-to').value, type = $('r-type').value, note = $('r-note').value.trim();
+    if (from === to) { log('❌ 两只猫不能相同', 'err'); return; }
+    state.relations.push({ from: from, to: to, relation: type, note: note });
+    closeModal('rel-modal'); renderAll();
+    log('✅ 已添加关系（记得点 ⑤ 保存到 GitHub）', 'ok');
   }
 
-  function addRelation() {
-    state.relations.push({ from: state.cats[0] ? state.cats[0].id : '', to: state.cats[1] ? state.cats[1].id : (state.cats[0] ? state.cats[0].id : ''), relation: '朋友', note: '' });
-    renderAll();
-  }
-  function addCat() {
-    state.cats.push({ id: nextId(), name: '新猫咪', gender: 'male', color: '', area: '', lat: 21.6795, lng: 110.9226, photo: 'images/placeholder.svg', description: '', status: '未绝育', firstSeen: currentMonth(), caretaker: '' });
-    renderAll();
-  }
+  // ---------- 弹窗通用 ----------
+  function openModal(id) { $(id).classList.add('open'); }
+  function closeModal(id) { $(id).classList.remove('open'); }
 
-  function renderMiniList() {
-    var box = $('mini-list'); if (!box) return;
-    var html = '';
-    state.cats.forEach(function (c, i) {
-      html += '<div class="mini-item"><span class="nm">' + esc(c.name) + '</span><span class="ar">📍 ' + esc(c.area || '') + ' · ' + (c.gender === 'male' ? '公' : '母') + ' · ' + esc(c.status || '') + '</span>' +
-        '<button data-edit="' + i + '">编辑</button><button class="del" data-del="' + i + '">删除</button></div>';
-    });
-    box.innerHTML = html || '<p class="admin-tip">暂无猫咪。</p>';
-    box.querySelectorAll('[data-edit]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var i = Number(b.dataset.edit);
-        ensureMap(); openForm(i, { lat: state.cats[i].lat, lng: state.cats[i].lng });
-      });
-    });
-    box.querySelectorAll('[data-del]').forEach(function (b) {
-      b.addEventListener('click', function () { state.cats.splice(Number(b.dataset.del), 1); renderAll(); });
-    });
-  }
-
-  function updateRaw() { var pre = $('raw-pre'); if (pre) pre.textContent = JSON.stringify({ cats: state.cats, relations: state.relations }, null, 2); }
-
-  function syncFromEditors() {
-    var box = $('cats-editor'); if (!box) return;
-    var rows = box.querySelectorAll('.cat-row');
-    if (rows.length) {
-      var arr = Array.prototype.map.call(rows, function (row) {
-        var c = {}; row.querySelectorAll('[data-f]').forEach(function (el) { c[el.dataset.f] = el.value.trim(); });
-        c.lat = parseFloat(c.lat); c.lng = parseFloat(c.lng);
-        if (!c.photo) c.photo = 'images/placeholder.svg';
-        return c;
-      });
-      state.cats = arr;
-    } else {
-      // 表格为空但有数据，保留 state
-    }
-    var rbox = $('rels-editor'); if (!rbox) return;
-    var rrows = rbox.querySelectorAll('.rel-row');
-    if (rrows.length) {
-      var arr2 = Array.prototype.map.call(rrows, function (row) {
-        var r = {}; row.querySelectorAll('[data-f]').forEach(function (el) { r[el.dataset.f] = el.value.trim(); });
-        return r;
-      });
-      state.relations = arr2;
-    }
-  }
-
+  // ---------- 校验 / 保存 ----------
   function validateData(cats, relations) {
     var errors = [];
-    if (!Array.isArray(cats) || !cats.length) errors.push('cats 不能为空');
+    if (!Array.isArray(cats) || !cats.length) errors.push('cats 不能为空（先添加至少一只猫）');
     var ids = {};
     cats.forEach(function (c, i) {
       var p = 'cats[' + i + '] ';
-      ['id', 'name', 'gender', 'color', 'area', 'lat', 'lng', 'description', 'status', 'firstSeen'].forEach(function (f) {
-        if (c[f] === undefined || c[f] === null || c[f] === '') errors.push(p + '缺少必填字段：' + f);
+      ['id', 'name', 'gender', 'color', 'area', 'lat', 'lng', 'description', 'status'].forEach(function (f) {
+        if (c[f] === undefined || c[f] === null || c[f] === '') errors.push(p + '缺必填：' + f);
       });
       if (c.id) { if (ids[c.id]) errors.push(p + 'id 重复：' + c.id); ids[c.id] = true; }
       if (GENDERS.indexOf(c.gender) < 0) errors.push(p + 'gender 无效');
       if (STATUSES.indexOf(c.status) < 0) errors.push(p + 'status 无效');
       if (isNaN(c.lat) || c.lat < -90 || c.lat > 90) errors.push(p + '纬度无效');
       if (isNaN(c.lng) || c.lng < -180 || c.lng > 180) errors.push(p + '经度无效');
-      if (c.firstSeen && !/^\d{4}-\d{2}$/.test(c.firstSeen)) errors.push(p + 'firstSeen 格式应为 YYYY-MM');
+      if (c.firstSeen && !/^\d{4}-\d{2}$/.test(c.firstSeen)) errors.push(p + 'firstSeen 应为 YYYY-MM');
+      if (c.leftAt && !/^\d{4}-\d{2}$/.test(c.leftAt)) errors.push(p + 'leftAt 应为 YYYY-MM');
     });
     (relations || []).forEach(function (r, i) {
       var p = 'relations[' + i + '] ';
-      ['from', 'to', 'relation'].forEach(function (f) { if (!r[f]) errors.push(p + '缺少必填字段：' + f); });
+      ['from', 'to', 'relation'].forEach(function (f) { if (!r[f]) errors.push(p + '缺必填：' + f); });
       if (r.from && !ids[r.from]) errors.push(p + 'from 引用不存在：' + r.from);
       if (r.to && !ids[r.to]) errors.push(p + 'to 引用不存在：' + r.to);
       if (r.from && r.from === r.to) errors.push(p + 'from=to 相同');
@@ -372,8 +369,14 @@
     return { ok: !errors.length, errors: errors };
   }
 
+  function refreshSaveHint() {
+    var el = $('save-warn'); if (!el) return;
+    if (!state.repo || !state.token) { el.textContent = '⚠️ 还没设置 Token 或仓库：请先完成 ①（填仓库/分支/Token → 保存设置 → 拉取数据）。'; el.style.display = ''; }
+    else if (!state.cats.length) { el.textContent = 'ℹ️ 已连接但还没数据：点 ① 的「拉取数据」，或直接在地图上添加猫咪。'; el.style.display = ''; }
+    else { el.style.display = 'none'; }
+  }
+
   function doValidate() {
-    syncFromEditors(); renderAll();
     var v = validateData(state.cats, state.relations);
     if (v.ok) log('✅ 校验通过：' + state.cats.length + ' 只猫、' + state.relations.length + ' 条关系', 'ok');
     else v.errors.forEach(function (e) { log('❌ ' + e, 'err'); });
@@ -382,10 +385,10 @@
   function prettyJSON(a) { return JSON.stringify(a, null, 2) + '\n'; }
 
   function saveToGitHub() {
-    syncFromEditors(); renderAll();
     var v = validateData(state.cats, state.relations);
     if (!v.ok) { v.errors.forEach(function (e) { log('❌ ' + e, 'err'); }); log('⚠️ 校验未通过，已阻止保存', 'err'); return; }
-    if (!state.token) { log('❌ 请先填写 Token', 'err'); return; }
+    if (!state.repo) { log('❌ 请先填仓库名', 'err'); return; }
+    if (!state.token) { log('❌ 请先填 Token（见 ① 的 3 步教程）', 'err'); return; }
     var m = 'data: 通过网页后台更新猫咪数据';
     log('⏳ 正在提交到 GitHub…', 'info');
     apiPut('/repos/' + state.repo + '/contents/data/cats.json', { message: m, content: utf8ToB64(prettyJSON(state.cats)), sha: state.catsSha || undefined, branch: state.branch })
@@ -402,7 +405,6 @@
   }
 
   function downloadBackup() {
-    syncFromEditors(); renderAll();
     var files = [{ name: 'cats.json', data: prettyJSON(state.cats) }, { name: 'relations.json', data: prettyJSON(state.relations) }];
     files.forEach(function (f) {
       var blob = new Blob([f.data], { type: 'application/json' });
@@ -411,28 +413,37 @@
     });
     log('📦 已生成 JSON 备份下载', 'ok');
   }
+  function toggleRaw() {
+    var pre = $('raw-pre'); pre.textContent = JSON.stringify({ cats: state.cats, relations: state.relations }, null, 2);
+    pre.classList.toggle('hidden');
+  }
 
   // ---------- 事件 ----------
   function bind() {
     $('btn-save-config').addEventListener('click', saveConfig);
     $('btn-test').addEventListener('click', testConn);
     $('btn-load').addEventListener('click', function () { ensureMap(); loadData(); });
-    $('btn-add-cat').addEventListener('click', addCat);
-    $('btn-add-rel').addEventListener('click', addRelation);
+    $('btn-add-cat').addEventListener('click', function () { ensureMap(); openCatModal(-1); });
+    $('btn-add-rel').addEventListener('click', openRelModal);
     $('btn-validate').addEventListener('click', doValidate);
     $('btn-save').addEventListener('click', saveToGitHub);
     $('btn-download').addEventListener('click', downloadBackup);
-    $('f-save').addEventListener('click', saveForm);
-    $('f-cancel').addEventListener('click', closeForm);
-    $('f-del').addEventListener('click', deleteFormCat);
-    $('advanced-toggle').addEventListener('change', function () {
-      $('advanced-box').classList.toggle('hidden', !this.checked);
-      $('raw-pre').classList.toggle('hidden', !this.checked);
-      if (this.checked) updateRaw();
-    });
+    $('btn-raw').addEventListener('click', toggleRaw);
+    $('f-save').addEventListener('click', saveCat);
+    $('f-del').addEventListener('click', deleteCat);
+    $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); });
+    $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
+    $('f-file').addEventListener('change', onFileChange);
+    $('r-save').addEventListener('click', saveRel);
+    $('r-cancel').addEventListener('click', function () { closeModal('rel-modal'); });
+    $('rel-close').addEventListener('click', function () { closeModal('rel-modal'); });
+    // 点遮罩关闭
+    $('cat-modal').addEventListener('click', function (e) { if (e.target === $('cat-modal')) closeModal('cat-modal'); });
+    $('rel-modal').addEventListener('click', function (e) { if (e.target === $('rel-modal')) closeModal('rel-modal'); });
   }
 
   loadConfig();
   bind();
-  log('👋 欢迎：填好仓库与 Token → 从 GitHub 拉取数据 → 在地图上点位置添加猫咪 → 保存到 GitHub 自动部署', 'info');
+  refreshSaveHint();
+  log('👋 使用步骤：① 填仓库/Token并拉取数据 → ② 点地图加猫咪 → ③ 编辑信息/上传照片 → ④ 加关系 → ⑤ 保存到 GitHub 自动部署', 'info');
 })();

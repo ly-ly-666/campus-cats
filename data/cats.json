@@ -2,6 +2,7 @@
   {
     "id": "cat001",
     "name": "橘座",
+    "nickname": "橘座大爷",
     "gender": "male",
     "color": "橘白",
     "area": "图书馆后花园",
@@ -44,7 +45,9 @@
   {
     "id": "cat004",
     "name": "白眉",
+    "nickname": "白眉大侠",
     "gender": "male",
+    "leftAt": "2024-12",
     "color": "白身黄耳",
     "area": "第一教学楼前",
     "lat": 21.679,
@@ -86,6 +89,7 @@
   {
     "id": "cat007",
     "name": "阿黄",
+    "nickname": "小黄",
     "gender": "female",
     "color": "黄白",
     "area": "校门口花坛",

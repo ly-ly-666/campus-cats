@@ -41,6 +41,8 @@ export function renderCatList(cats, onSelect) {
         <div class="cat-item-info">
           <div class="cat-item-name">
             ${escapeHtml(cat.name)}
+            ${cat.nickname && !cat.nickname.startsWith('img-') ? '<span class="cat-item-nick">（' + escapeHtml(cat.nickname) + '）</span>' : ''}
+            ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : 'female'}">${GENDER_LABEL[cat.gender] || cat.gender}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
           </div>
@@ -81,10 +83,12 @@ export function showModal(cat, cats, relations) {
   const photo = cat.photo || DEFAULT_PHOTO;
   const infoRows = [
     ['性别', GENDER_LABEL[cat.gender] || cat.gender],
+    ['外号', cat.nickname],
     ['毛色', cat.color],
     ['区域', cat.area],
     ['状态', cat.status],
     ['首次发现', cat.firstSeen],
+    ['离开时间', cat.leftAt],
     ['照料人', cat.caretaker],
   ];
 
@@ -133,6 +137,7 @@ export function showModal(cat, cats, relations) {
         <div class="modal-title-block">
           <h2 class="modal-name">${escapeHtml(cat.name)}</h2>
           <div class="modal-tags">
+            ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : 'female'}">${GENDER_LABEL[cat.gender] || cat.gender}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
           </div>

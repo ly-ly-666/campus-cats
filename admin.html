@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数据管理 · 校园猫咪地图</title>
 
-  <!-- Leaflet CSS（多 CDN 回退） -->
   <link rel="stylesheet" id="leaflet-css" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <script>
     (function () {
@@ -21,158 +20,191 @@
 
   <link rel="stylesheet" href="./style.css">
   <style>
-    .admin-main { max-width: 1080px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-    .admin-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
-    .admin-card h2 { font-size: 15px; margin-bottom: 10px; color: var(--primary-dark); }
-    .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-    .admin-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-    .admin-grid input, .admin-grid select { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
-    .admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
-    .admin-actions button, .admin-actions .link-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
-    .admin-actions button:hover { background: #fff7ed; }
-    .admin-actions .primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
-    .admin-actions .primary:hover { background: var(--primary-dark); }
-    .admin-check { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-    .admin-tip { margin-top: 10px; font-size: 12px; color: #b45309; background: #fef3c7; border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
-    .admin-hint { font-size: 12px; color: var(--muted); margin: 6px 0; line-height: 1.6; }
+    body { background: #faf7f2; }
+    .admin-main { max-width: 980px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .card h2 { font-size: 15px; margin-bottom: 6px; color: var(--primary-dark); }
+    .hint { font-size: 12px; color: var(--muted); margin: 4px 0 10px; line-height: 1.7; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+    .field input, .field select, .field textarea { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
+    .btn:hover { background: #fff7ed; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-green { background: #059669; border-color: #059669; color: #fff; font-weight: 600; }
+    .btn-green:hover { background: #047857; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .warn { font-size: 12px; color: #b45309; background: #fef3c7; border-radius: 8px; padding: 8px 10px; line-height: 1.7; }
+    .logbox { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; max-height: 220px; overflow: auto; }
+    .logbox .ok { color: #059669; } .logbox .err { color: #dc2626; } .logbox .info { color: var(--muted); }
 
     .map-wrap { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-    #admin-map { height: 420px; width: 100%; background: #e5e0d8; }
-    .cat-form {
-      position: absolute; top: 12px; left: 12px; width: 300px; max-height: calc(100% - 24px); overflow-y: auto;
-      background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.25); padding: 14px; z-index: 900;
-    }
-    .cat-form h3 { font-size: 14px; margin-bottom: 10px; color: var(--primary-dark); }
-    .cat-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-    .cat-form input, .cat-form select, .cat-form textarea { padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: inherit; }
-    .cat-form .form-row { display: flex; gap: 8px; }
-    .cat-form .form-row label { flex: 1; }
-    .cat-form .form-actions { display: flex; gap: 8px; margin-top: 6px; }
-    .cat-form .form-actions button { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; }
-    .cat-form .save-btn { background: var(--primary); color: #fff; font-weight: 600; }
-    .cat-form .del-btn { background: #fee2e2; color: #dc2626; }
+    #admin-map { height: 400px; width: 100%; background: #e5e0d8; }
 
-    .mini-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-    .mini-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: #fdfbf7; }
-    .mini-item .nm { font-weight: 600; }
-    .mini-item .ar { color: var(--muted); font-size: 12px; flex: 1; }
-    .mini-item button { border: none; background: #eef6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-    .mini-item .del { background: #fee2e2; color: #dc2626; }
+    /* 卡片列表 */
+    .catcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 8px; }
+    .catcard { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    .catcard .th { height: 120px; background: #f0ebe2; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .catcard .th img { width: 100%; height: 100%; object-fit: cover; }
+    .catcard .bd { padding: 10px; }
+    .catcard .nm { font-weight: 700; font-size: 14px; }
+    .catcard .nick { color: var(--muted); font-size: 12px; margin-left: 4px; }
+    .catcard .meta { font-size: 12px; color: var(--muted); margin: 4px 0; }
+    .catcard .ops { display: flex; gap: 6px; }
 
-    .cat-row, .rel-row { display: grid; gap: 8px 10px; border: 1px dashed var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fdfbf7; }
-    .cat-row { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-    .cat-row .wide, .rel-row .wide { grid-column: 1 / -1; }
-    .cat-row label, .rel-row label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
-    .cat-row input, .cat-row select, .cat-row textarea, .rel-row input, .rel-row select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: inherit; }
-    .row-del { justify-self: end; align-self: end; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
-    .add-btn { background: #eef6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
-    .raw-json { background: #1f2937; color: #d1fae5; padding: 12px; border-radius: 8px; font-size: 12px; max-height: 300px; overflow: auto; margin-top: 10px; white-space: pre-wrap; }
-    .admin-log { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
-    .admin-log .ok { color: #059669; }
-    .admin-log .err { color: #dc2626; }
-    .admin-log .info { color: var(--muted); }
-    .hidden { display: none; }
+    /* 关系卡片 */
+    .relcards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .relcard { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; background: #fdfbf7; font-size: 13px; flex-wrap: wrap; }
+    .relcard .note { color: var(--muted); font-size: 12px; flex: 1; }
+    .relcard .t { color: var(--primary-dark); font-weight: 600; }
+
+    /* 弹窗 */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-bg.open { display: flex; }
+    .modal-panel { background: #fff; border-radius: 14px; width: 100%; max-width: 460px; max-height: 90vh; overflow: auto; padding: 20px; position: relative; }
+    .modal-panel h3 { font-size: 16px; margin-bottom: 14px; color: var(--primary-dark); }
+    .modal-close { position: absolute; top: 10px; right: 14px; border: none; background: none; font-size: 22px; cursor: pointer; color: var(--muted); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .modal-actions .btn { flex: 1; }
+    .photo-preview { width: 100%; height: 150px; border-radius: 10px; object-fit: cover; background: #f0ebe2; margin: 8px 0; display: none; }
+    .photo-preview.show { display: block; }
+    .loc-line { font-size: 12px; color: #2563eb; background: #eef6ff; border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; }
+    .hidden { display: none !important; }
+    details.help { margin-top: 8px; }
+    details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
+    details.help ol { font-size: 12px; color: var(--muted); line-height: 1.9; padding-left: 18px; }
   </style>
 </head>
 <body>
   <header class="app-header">
     <h1 class="app-title">🐱 数据管理后台</h1>
-    <nav class="tab-bar">
-      <a class="tab-btn" href="./index.html">← 返回地图</a>
-    </nav>
+    <nav class="tab-bar"><a class="tab-btn" href="./index.html">← 返回地图</a></nav>
   </header>
 
   <main class="admin-main">
-    <section class="admin-card">
-      <h2>① GitHub 连接设置</h2>
-      <div class="admin-grid">
-        <label>仓库（用户名/仓库名）
-          <input id="cfg-repo" placeholder="yourname/campus-cats">
-        </label>
-        <label>分支
-          <input id="cfg-branch" value="main">
-        </label>
-        <label>Token（仅需该仓库 Contents 读写权限）
-          <input id="cfg-token" type="password" placeholder="github_pat_xxx 或 ghp_xxx">
-        </label>
+    <!-- ① 连接 -->
+    <section class="card">
+      <h2>① 连接 GitHub（第一次要做，之后会自动记住）</h2>
+      <div class="grid3">
+        <div class="field"><label>仓库</label><input id="cfg-repo" placeholder="ly-ly-666/campus-cats"></div>
+        <div class="field"><label>分支</label><input id="cfg-branch" value="main"></div>
+        <div class="field"><label>Token（密钥）</label><input id="cfg-token" type="password" placeholder="github_pat_ 开头"></div>
       </div>
-      <div class="admin-actions">
-        <button id="btn-test">测试连接</button>
-        <button id="btn-load">从 GitHub 拉取数据</button>
-        <button id="btn-save-config">保存设置</button>
+      <div class="row">
+        <button class="btn" id="btn-test">测试连接</button>
+        <button class="btn btn-primary" id="btn-load">① 拉取数据（开始编辑）</button>
+        <button class="btn" id="btn-save-config">保存设置</button>
       </div>
-      <p class="admin-tip">⚠️ Token 只保存在<b>本浏览器 localStorage</b>，只用于调用 api.github.com。建议使用<b>仅限本仓库</b>的 Fine-grained Token（Contents 读写）。保存后会自动触发部署。</p>
+      <details class="help">
+        <summary>🔑 不知道 Token 怎么弄？点这里看 3 步教程（只需做一次）</summary>
+        <ol>
+          <li>打开 <b>github.com/settings/tokens/new?type=beta</b>（GitHub 登录后）</li>
+          <li>名字随便填（如 campus-cats），在 <b>Repository access</b> 选 <b>Only select repositories</b>，勾选 <b>campus-cats</b>；在 <b>Permissions</b> 里把 <b>Contents</b> 设为 <b>Read and write</b></li>
+          <li>点最下方 <b>Generate token</b>，把生成的 <b>github_pat_…</b> 复制粘贴到上面的 Token 框，点「保存设置」。Token 只存本浏览器，不会泄露。</li>
+        </ol>
+      </details>
     </section>
 
-    <section class="admin-card">
-      <h2>② 地图编辑猫咪（推荐）</h2>
-      <p class="admin-hint">🖱️ 在地图上<b>点一个位置</b> → 填猫咪名字等 → 保存，猫咪就出现在那个位置；<b>点击已有猫咪标记</b>可编辑或拖到新位置。<br>（需先在上面①连接并"从 GitHub 拉取数据"）</p>
-      <div class="map-wrap">
-        <div id="admin-map"></div>
-        <div id="cat-form" class="cat-form hidden">
-          <h3 id="form-title">📍 添加猫咪</h3>
-          <label>名字（必填）<input id="f-name" placeholder="如：橘座"></label>
-          <div class="form-row">
-            <label>性别
-              <select id="f-gender"><option value="male">公</option><option value="female">母</option></select>
-            </label>
-            <label>绝育状态
-              <select id="f-status"><option>已绝育</option><option>未绝育</option></select>
-            </label>
-          </div>
-          <div class="form-row">
-            <label>毛色<input id="f-color" placeholder="如：橘白"></label>
-            <label>区域<input id="f-area" placeholder="如：图书馆后花园"></label>
-          </div>
-          <label>简介<textarea id="f-desc" rows="2" placeholder="性格/特征（可选）"></textarea></label>
-          <label>照片路径<input id="f-photo" placeholder="images/placeholder.svg 或 images/cat001.jpg"></label>
-          <div class="form-row">
-            <label>纬度<input id="f-lat" type="number" step="0.0001"></label>
-            <label>经度<input id="f-lng" type="number" step="0.0001"></label>
-          </div>
-          <div class="form-actions">
-            <button type="button" id="f-save" class="save-btn">保存</button>
-            <button type="button" id="f-cancel">取消</button>
-            <button type="button" id="f-del" class="del-btn hidden">删除</button>
-          </div>
-        </div>
+    <!-- ② 地图添加 -->
+    <section class="card">
+      <h2>② 在地图上添加 / 修改猫咪位置</h2>
+      <p class="hint">点击「从 GitHub 拉取数据」后，在这里<b>点地图空白处</b> = 在那个位置添加猫咪；<b>拖动已有圆点</b> = 调整位置。点下方卡片上的「编辑」可改信息。</p>
+      <div class="map-wrap"><div id="admin-map"></div></div>
+    </section>
+
+    <!-- ③ 猫咪卡片 -->
+    <section class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2>③ 猫咪列表（点「＋ 添加猫咪」或直接点地图）</h2>
+        <button class="btn btn-primary" id="btn-add-cat">＋ 添加猫咪</button>
       </div>
-      <div id="mini-list" class="mini-list"></div>
+      <div id="cats-list" class="catcards"><p class="hint">请先拉取数据。</p></div>
     </section>
 
-    <section class="admin-card">
-      <h2>③ 关系编辑</h2>
-      <p class="admin-hint">猫咪之间的亲戚/社交关系：从 → 到 → 关系类型 → 备注。</p>
-      <div id="rels-editor"><p class="admin-tip">请先连接 GitHub 并拉取数据。</p></div>
-      <button id="btn-add-rel" class="add-btn">+ 新增关系</button>
+    <!-- ④ 关系 -->
+    <section class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2>④ 关系（亲戚 / 朋友，可留空）</h2>
+        <button class="btn btn-primary" id="btn-add-rel">＋ 添加关系</button>
+      </div>
+      <p class="hint">不是所有猫都有亲戚，按需添加：选「猫A」→ 关系 → 「猫B」→ 备注。</p>
+      <div id="rels-list" class="relcards"><p class="hint">请先拉取数据。</p></div>
     </section>
 
-    <section class="admin-card">
-      <h2>④ 高级：表格 / 原始 JSON</h2>
-      <label class="admin-check"><input type="checkbox" id="advanced-toggle"> 显示高级表格编辑（不熟悉可不用，地图编辑更直观）</label>
-      <div id="advanced-box" class="hidden">
-        <h3 style="margin-top:12px;">猫咪表格（高级）</h3>
-        <div id="cats-editor"><p class="admin-tip">请先拉取数据。</p></div>
-        <button id="btn-add-cat" class="add-btn">+ 新增猫咪</button>
+    <!-- ⑤ 保存 -->
+    <section class="card">
+      <h2>⑤ 保存到 GitHub（提交后两个网站自动更新）</h2>
+      <p class="warn" id="save-warn">⚠️ 还没设置 Token 或还没拉取数据：请先完成 ①（填仓库/分支/Token → 保存设置 → 拉取数据）。</p>
+      <div class="row">
+        <button class="btn" id="btn-validate">校验数据</button>
+        <button class="btn btn-green" id="btn-save">💾 保存到 GitHub</button>
+        <button class="btn" id="btn-download">下载 JSON 备份</button>
+        <button class="btn" id="btn-raw">查看原始 JSON</button>
       </div>
       <pre id="raw-pre" class="raw-json hidden"></pre>
-    </section>
-
-    <section class="admin-card">
-      <h2>⑤ 校验 & 提交部署</h2>
-      <div class="admin-actions">
-        <button id="btn-validate">校验数据</button>
-        <button id="btn-save" class="primary">💾 保存到 GitHub（提交并自动部署）</button>
-        <button id="btn-download">下载 JSON 备份</button>
-      </div>
-      <div id="log" class="admin-log"></div>
+      <div id="log" class="logbox"></div>
     </section>
   </main>
 
-  <!-- Leaflet JS（多 CDN 回退） -->
-  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
-          onerror="window.__leafletIdx=(window.__leafletIdx||0)+1;if(window.__leafletIdx===1){document.write('<script src=\'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\'><\/script>')}else if(window.__leafletIdx===2){document.write('<script src=\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\'><\/script>')}"></script>
+  <!-- 猫咪弹窗 -->
+  <div class="modal-bg" id="cat-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="cat-close">×</button>
+      <h3 id="cat-modal-title">📝 添加猫咪</h3>
+      <div class="loc-line" id="loc-line">📍 位置：点地图空白处选择</div>
+      <div class="field" style="margin-bottom:10px;"><label>📷 照片（可上传，也可填图片地址）</label>
+        <input type="file" id="f-file" accept="image/*" style="font-size:12px;">
+        <img id="f-preview" class="photo-preview" alt="预览">
+        <input id="f-photo" placeholder="images/xxx.jpg 或留空自动占位">
+      </div>
+      <div class="grid3">
+        <div class="field"><label>名字（必填）</label><input id="f-name" placeholder="如：橘座"></div>
+        <div class="field"><label>外号</label><input id="f-nickname" placeholder="如：橘座大爷"></div>
+        <div class="field"><label>性别</label><select id="f-gender"><option value="male">公</option><option value="female">母</option></select></div>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div class="field"><label>毛色</label><input id="f-color" placeholder="如：橘白"></div>
+        <div class="field"><label>区域</label><input id="f-area" placeholder="如：图书馆后花园"></div>
+        <div class="field"><label>绝育状态</label><select id="f-status"><option>已绝育</option><option>未绝育</option></select></div>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div class="field"><label>首次出现（年月）</label><input id="f-firstSeen" placeholder="如 2023-04"></div>
+        <div class="field"><label>离开时间（可选）</label><input id="f-leftAt" placeholder="留空=常驻；填如 2025-06=过往"></div>
+        <div class="field"><label>照料人</label><input id="f-caretaker" placeholder="选填"></div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>简介</label><textarea id="f-desc" rows="2" placeholder="性格/特征（选填）"></textarea></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="f-save">保存</button>
+        <button class="btn btn-danger" id="f-del">删除</button>
+        <button class="btn" id="f-cancel">取消</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- 关系弹窗 -->
+  <div class="modal-bg" id="rel-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="rel-close">×</button>
+      <h3>🪢 添加关系</h3>
+      <div class="grid3">
+        <div class="field"><label>猫 A</label><select id="r-from"></select></div>
+        <div class="field"><label>关系</label><select id="r-type"><option>配偶</option><option>父子</option><option>母子</option><option>兄弟姐妹</option><option>朋友</option></select></div>
+        <div class="field"><label>猫 B</label><select id="r-to"></select></div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>备注（选填）</label><input id="r-note" placeholder="如：同窝的 / 常在一起玩"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="r-save">保存关系</button>
+        <button class="btn" id="r-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+          onerror="window.__li=(window.__li||0)+1;if(window.__li===1){document.write('<script src=\'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\'><\/script>')}else if(window.__li===2){document.write('<script src=\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\'><\/script>')}"></script>
   <script src="./js/admin.js"></script>
 </body>
 </html>

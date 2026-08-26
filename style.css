@@ -266,6 +266,9 @@ body { display: flex; flex-direction: column; }
 .tag-female { background: var(--female); }
 .tag-neutered { background: var(--neutered); }
 .tag-unneutered { background: var(--unneutered); }
+.tag-past { background: #9ca3af; }
+.cat-item-nick { font-weight: 400; font-size: 12px; color: var(--muted); }
+.cat-marker-past { filter: grayscale(0.85) opacity(0.75); }
 
 /* ---------- 加载提示 ---------- */
 .loading {

@@ -38,8 +38,9 @@ function addTileLayer(map) {
  */
 function createCatIcon(cat) {
   const photo = cat.photo || DEFAULT_PHOTO;
+  const isPast = cat.leftAt ? true : false;
   const html = `
-    <div class="cat-marker" data-cat-id="${cat.id}">
+    <div class="cat-marker${isPast ? ' cat-marker-past' : ''}" data-cat-id="${cat.id}">
       <img src="${photo}" alt="" loading="lazy"
            onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">
       <span class="marker-fallback-icon">🐱</span>
@@ -77,8 +78,10 @@ export function initMap(containerId, cats, onCatClick) {
       .addTo(map);
 
     const popupLines = [
-      '<strong>' + cat.name + '</strong>',
+      '<strong>' + cat.name + '</strong>' + (cat.leftAt ? ' <span class="tag tag-past">过往</span>' : ''),
+      cat.nickname ? '🐾 外号：' + cat.nickname : null,
       cat.area ? '📍 ' + cat.area : null,
+      cat.leftAt ? '🚪 离开时间：' + cat.leftAt : null,
       cat.description ? '💬 ' + cat.description : null,
     ].filter(Boolean);
 

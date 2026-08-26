@@ -89,6 +89,16 @@ for (let i = 0; i < cats.length; i++) {
     error(idx + " firstSeen 格式无效 (应为 YYYY-MM): " + c.firstSeen);
   }
 
+  // nickname 可选字符串
+  if (c.nickname !== undefined && c.nickname !== null && typeof c.nickname !== "string") {
+    error(idx + " nickname 应为字符串: " + JSON.stringify(c.nickname));
+  }
+
+  // leftAt 可选（离开时间，YYYY-MM；填了即标记为“过往”猫咪）
+  if (c.leftAt && !/^\d{4}-\d{2}$/.test(c.leftAt)) {
+    error(idx + " leftAt 格式无效 (应为 YYYY-MM): " + c.leftAt);
+  }
+
   // photo 为相对路径字符串（可选字段）
   if (c.photo !== undefined && c.photo !== null && c.photo !== "" && typeof c.photo !== "string") {
     error(idx + " photo 应为字符串路径: " + JSON.stringify(c.photo));
