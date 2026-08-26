@@ -166,7 +166,7 @@
       var isMissingOld = c.life === '失踪已久';
       var isAdopted = c.life === '已领养';
       var isMissingAny = isMissing || isMissingOld;
-      var color = c.leftAt ? '#9ca3af' : (isMissingAny ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : '#ec4899')));
+      var color = c.leftAt ? '#9ca3af' : (isMissingAny ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : (c.gender === 'female' ? '#ec4899' : '#9ca3af'))));
       var size = isMissing ? 32 : (isMissingOld ? 28 : 24);
       var pulse = isMissing ? 'animation:cat-missing-pulse 1.5s infinite;' : '';
       var icon = L.divIcon({
@@ -320,7 +320,7 @@
         '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' + fallback + '</div>' +
         '<div class="bd">' +
         '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
-        '<div class="meta">' + (c.gender === 'male' ? '公' : '母') + ' · 绝育:' + esc(c.status || '未绝育') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
+        '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未绝育') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
         '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
         '<div class="ops"><button class="btn btn-sm" data-edit="' + i + '">编辑</button>' +
         '<button class="btn btn-sm btn-danger" data-del="' + i + '">删除</button></div>' +
@@ -354,7 +354,7 @@
     $('modal-title').textContent = c ? '编辑猫咪' : '添加猫咪';
     $('f-name').value = c ? (c.name || '') : '';
     $('f-nickname').value = c ? (c.nickname || '') : '';
-    $('f-gender').value = c ? (c.gender || 'male') : 'male';
+    $('f-gender').value = c ? (c.gender || '') : '';
     $('f-color').value = c ? (c.color || '') : '';
     $('f-area').value = c ? (c.area || '') : '';
     $('f-status').value = c ? (c.status || '未绝育') : '未绝育';

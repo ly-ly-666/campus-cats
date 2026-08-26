@@ -1,7 +1,7 @@
 // profile.js — 猫咪独立档案页
 import { DEFAULT_PHOTO } from './config.js';
 
-const GENDER_LABEL = { male: '公', female: '母' };
+const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
 const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered' };
 
 function escapeHtml(str) {
@@ -60,7 +60,7 @@ function render(cats, relations) {
     ${cat.nickname ? '<div class="profile-nick">外号：' + escapeHtml(cat.nickname) + '</div>' : ''}
     <div class="profile-tags">
       ${past}
-      <span class="tag tag-${cat.gender === 'male' ? 'male' : 'female'}">${GENDER_LABEL[cat.gender] || cat.gender}</span>
+      <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
       <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
       ${tags}
     </div>

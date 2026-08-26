@@ -23,7 +23,7 @@ export function escapeHtml(str) {
 }
 
 /** 性别 / 绝育状态中文标签 */
-const GENDER_LABEL = { male: '公', female: '母' };
+const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
 const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered' };
 
 /**
@@ -53,7 +53,7 @@ export function renderCatList(cats, onSelect) {
             ${escapeHtml(cat.name)}
             ${cat.nickname && !cat.nickname.startsWith('img-') ? '<span class="cat-item-nick">（' + escapeHtml(cat.nickname) + '）</span>' : ''}
             ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
-            <span class="tag tag-${cat.gender === 'male' ? 'male' : 'female'}">${GENDER_LABEL[cat.gender] || cat.gender}</span>
+            <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
             ${cat.life === '失踪' ? '<span class="tag" style="background:#dc2626;color:#fff;">⚠️ 失踪</span>' : ''}
             ${cat.life === '失踪已久' ? '<span class="tag" style="background:#9f1239;color:#fff;">⚠️ 失踪已久</span>' : ''}
@@ -101,7 +101,7 @@ export function showModal(cat, cats, relations) {
   else if (cat.life === '失踪已久') statusBanner = '<div style="background:#9f1239;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫已失踪很久了。若你还见过它，请给猫协留言（抖音 / 小红书 / B 站「这里油只喵」），任何线索都很宝贵。</div>';
   else if (cat.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:14px;">🏠 这只猫已被领养，开启新生活啦～</div>';
   const infoRows = [
-    ['性别', GENDER_LABEL[cat.gender] || cat.gender],
+    ['性别', GENDER_LABEL[cat.gender] || '未知'],
     ['年龄', cat.age],
     ['外号', cat.nickname],
     ['毛色', cat.color],
@@ -165,7 +165,7 @@ export function showModal(cat, cats, relations) {
           <h2 class="modal-name">${escapeHtml(cat.name)}</h2>
           <div class="modal-tags">
             ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
-            <span class="tag tag-${cat.gender === 'male' ? 'male' : 'female'}">${GENDER_LABEL[cat.gender] || cat.gender}</span>
+            <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
           </div>
         </div>
