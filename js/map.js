@@ -11,6 +11,7 @@ function addTileLayer(map) {
   const p = TILE_PROVIDERS[currentProviderIdx];
   const opts = {
     maxZoom: p.maxZoom || MAX_ZOOM,
+    maxNativeZoom: p.maxNativeZoom || 18, // 超过原始清晰度后自动放大（overzoom）
     attribution: p.attribution,
   };
   if (p.subdomains) opts.subdomains = p.subdomains;

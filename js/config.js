@@ -4,10 +4,10 @@
 export const CAMPUS_CENTER = [21.6795, 110.9226];
 
 // 地图初始缩放级别
-export const DEFAULT_ZOOM = 16;
+export const DEFAULT_ZOOM = 17;
 
 // 地图最大缩放级别
-export const MAX_ZOOM = 19;
+export const MAX_ZOOM = 20;
 
 // 照片缺失时的默认占位图路径（相对路径，兼容子路径部署）
 export const DEFAULT_PHOTO = 'images/placeholder.svg';
@@ -17,9 +17,9 @@ export const DEFAULT_PHOTO = 'images/placeholder.svg';
 //   OSM / CARTO：适合境外访问，国内网络常超时。
 // 如需接入天地图（官方免费，需申请 Key），可把 key 填入后取消下面注释并加入队列。
 export const TILE_PROVIDERS = [
-  { name: '高德', url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', attribution: '© 高德地图', maxZoom: 18, subdomains: ['1', '2', '3', '4'] },
-  { name: 'OpenStreetMap', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© OpenStreetMap contributors', maxZoom: 19 },
-  { name: 'CARTO', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attribution: '© OpenStreetMap © CARTO', maxZoom: 19 }
+  { name: '高德', url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', attribution: '© 高德地图', maxZoom: 20, maxNativeZoom: 18, subdomains: ['1', '2', '3', '4'] },
+  { name: 'OpenStreetMap', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '© OpenStreetMap contributors', maxZoom: 20, maxNativeZoom: 19 },
+  { name: 'CARTO', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attribution: '© OpenStreetMap © CARTO', maxZoom: 20, maxNativeZoom: 19 }
 ];
 
 // 示例：天地图（需在 https://console.tianditu.gov.cn 免费申请 Key）

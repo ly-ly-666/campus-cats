@@ -144,8 +144,8 @@
 | 导出 | 值 | 说明 |
 | --- | --- | --- |
 | `CAMPUS_CENTER` | `[21.6795, 110.9226]` | 校区中心坐标（广东石油化工学院官渡校区），Leaflet 使用 [lat, lng] 顺序 |
-| `DEFAULT_ZOOM` | `16` | 地图初始缩放级别 |
-| `MAX_ZOOM` | `19` | 地图最大缩放级别 |
+| `DEFAULT_ZOOM` | `17` | 地图初始缩放级别 |
+| `MAX_ZOOM` | `20` | 地图最大缩放级别（超出瓦片原始清晰度后自动放大） |
 | `DEFAULT_PHOTO` | `'images/placeholder.svg'` | 照片缺失时的默认占位图路径 |
 | `RELATION_STYLE` | 对象 | 各关系类型对应的边样式（颜色/线宽/线型），供 graph.js 使用 |
 
