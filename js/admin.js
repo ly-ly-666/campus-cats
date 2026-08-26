@@ -89,7 +89,6 @@
   function loadData() {
     readConfig();
     if (!state.repo) { log('❌ 请先填仓库名（如 ly-ly-666/campus-cats）', 'err'); return; }
-    if (!state.token) { log('❌ 请先填 Token（见 ① 的 3 步教程）', 'err'); return; }
     var q = '?ref=' + encodeURIComponent(state.branch);
     log('⏳ 正在从 GitHub 拉取数据…', 'info');
     Promise.all([
@@ -221,8 +220,12 @@
     box.innerHTML = '';
     var img = document.createElement('img');
     img.id = 'crop-img';
-    img.style.width = '100%';
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '280px';
+    img.style.width = 'auto';
+    img.style.height = 'auto';
     img.style.display = 'block';
+    img.style.margin = '0 auto';
     img.src = dataUrl;
     box.appendChild(img);
     openModal('crop-modal');
@@ -424,7 +427,7 @@
   function refreshSaveHint() {
     var el = $('save-warn'); if (!el) return;
     if (!state.repo || !state.token) { el.textContent = '⚠️ 还没设置 Token 或仓库：请先完成 ①（填仓库/分支/Token → 保存设置 → 拉取数据）。'; el.style.display = ''; }
-    else if (!state.cats.length) { el.textContent = 'ℹ️ 已连接但还没数据：点 ① 的「拉取数据」，或直接在地图上添加猫咪。'; el.style.display = ''; }
+    else if (!state.cats.length) { el.textContent = 'ℹ️ 还没数据：点 ① 的「拉取数据」（不需要 Token 也能拉），或直接在地图上添加猫咪。'; el.style.display = ''; }
     else { el.style.display = 'none'; }
   }
 
