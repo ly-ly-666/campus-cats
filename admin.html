@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据管理 · 校园猫咪地图</title>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .admin-main { max-width: 1080px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .admin-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .admin-card h2 { font-size: 15px; margin-bottom: 10px; color: var(--primary-dark); }
+    .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .admin-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+    .admin-grid input, .admin-grid select { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+    .admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .admin-actions button, .admin-actions .link-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
+    .admin-actions button:hover { background: #fff7ed; }
+    .admin-actions .primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+    .admin-actions .primary:hover { background: var(--primary-dark); }
+    .admin-check { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .admin-tip { margin-top: 10px; font-size: 12px; color: #b45309; background: #fef3c7; border-radius: 8px; padding: 8px 10px; line-height: 1.6; }
+    .cat-row, .rel-row { display: grid; gap: 8px 10px; border: 1px dashed var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fdfbf7; }
+    .cat-row { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .cat-row .wide, .rel-row .wide { grid-column: 1 / -1; }
+    .cat-row label, .rel-row label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
+    .cat-row input, .cat-row select, .cat-row textarea, .rel-row input, .rel-row select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: inherit; }
+    .row-del { justify-self: end; align-self: end; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+    .add-btn { background: #eef6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+    .raw-json { background: #1f2937; color: #d1fae5; padding: 12px; border-radius: 8px; font-size: 12px; max-height: 300px; overflow: auto; margin-top: 10px; white-space: pre-wrap; }
+    .admin-log { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+    .admin-log .ok { color: #059669; }
+    .admin-log .err { color: #dc2626; }
+    .admin-log .info { color: var(--muted); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">🐱 数据管理后台</h1>
+    <nav class="tab-bar">
+      <a class="tab-btn" href="./index.html">← 返回地图</a>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-card">
+      <h2>① GitHub 连接设置</h2>
+      <div class="admin-grid">
+        <label>仓库（用户名/仓库名）
+          <input id="cfg-repo" placeholder="yourname/campus-cats">
+        </label>
+        <label>分支
+          <input id="cfg-branch" value="main">
+        </label>
+        <label>Token（仅需该仓库 Contents 读写权限）
+          <input id="cfg-token" type="password" placeholder="github_pat_xxx 或 ghp_xxx">
+        </label>
+      </div>
+      <div class="admin-actions">
+        <button id="btn-test">测试连接</button>
+        <button id="btn-load">② 从 GitHub 拉取数据</button>
+        <button id="btn-save-config">保存设置</button>
+      </div>
+      <p class="admin-tip">⚠️ Token 仅保存在<b>本浏览器 localStorage</b>，只用于调用 api.github.com。请创建<b>仅限本仓库</b>的 Fine-grained Token（Contents 读写），不要在公共电脑使用；泄露后可在 GitHub 一键撤销。数据一旦保存会自动触发部署。</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>③ 编辑猫咪</h2>
+      <div id="cats-editor" class="cats-editor"><p class="admin-tip">请先完成 ①② 并点击「从 GitHub 拉取数据」。</p></div>
+      <button id="btn-add-cat" class="add-btn">+ 新增猫咪</button>
+    </section>
+
+    <section class="admin-card">
+      <h2>④ 编辑关系</h2>
+      <div id="rels-editor"><p class="admin-tip">请先完成 ①② 并点击「从 GitHub 拉取数据」。</p></div>
+      <button id="btn-add-rel" class="add-btn">+ 新增关系</button>
+    </section>
+
+    <section class="admin-card">
+      <h2>⑤ 校验 & 提交部署</h2>
+      <div class="admin-actions">
+        <button id="btn-validate">校验数据</button>
+        <button id="btn-save" class="primary">💾 保存到 GitHub（提交并自动部署）</button>
+        <button id="btn-download">下载 JSON 备份</button>
+        <label class="admin-check"><input type="checkbox" id="advanced-toggle"> 显示原始 JSON</label>
+      </div>
+      <pre id="raw-pre" class="raw-json hidden"></pre>
+      <div id="log" class="admin-log"></div>
+    </section>
+  </main>
+
+  <script src="./js/admin.js"></script>
+</body>
+</html>

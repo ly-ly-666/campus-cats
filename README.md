@@ -66,7 +66,20 @@ python -m http.server 4173
 # 浏览器访问 http://localhost:4173
 ```
 
-## ✏️ 如何编辑数据
+
+## ⚙️ 在线编辑数据（网页后台，改完自动部署）
+
+除了手改 JSON，本站内置一个「网页数据后台」（admin.html），你在浏览器里直接改猫咪/关系 → 点「保存到 GitHub」 → GitHub API 提交 → 现有 GitHub Actions / Cloudflare 自动重新部署，全程无需本地命令。
+
+1. **生成 Token** (https://github.com/settings/tokens?type=beta) → Fine-grained → 只选本仓库 campus-cats → 勾 Contents: Read and write → Generate → 复制 Token。
+2. 打开 `https://你的站点/admin.html`。
+3. 填「仓库（用户名/仓库名）」「分支（main）」「Token」 → 点 **测试连接** → 点 **从 GitHub 拉取数据**。
+4. 在表格里增删改猫咪与关系 → 点 **校验数据** → 无误后点 **保存到 GitHub**。
+5. 保存后 1~3 分钟站点自动更新（可点日志里的仓库 Commits 链接查看进度）。
+
+> ⚠️ Token 只保存在本浏览器 localStorage，仅用于调用 api.github.com；请使用仅限本仓库的 Token，勿在公共电脑使用，泄露后到 GitHub 一键撤销。
+
+## ✏️ 如何编辑数据（手动改 JSON）
 
 所有内容都来自两个 JSON 文件，无需改任何代码：
 

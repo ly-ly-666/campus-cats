@@ -36,9 +36,11 @@
 ```
 .
 ├── index.html                    # 站点入口页面
+├── admin.html                    # 网页数据管理后台（在线编辑+自动部署）
 ├── style.css                     # 全局样式
 ├── js/
 │   ├── config.js                 # 全局配置与常量（校区中心、缩放级别、关系样式等）
+│   ├── admin.js                  # 后台管理逻辑（GitHub API 读/写数据）
 │   ├── data.js                   # 数据加载模块（读取 cats.json / relations.json）
 │   ├── map.js                    # 地图模块（Leaflet 初始化与标记）
 │   ├── graph.js                  # 关系图模块（ECharts graph）
