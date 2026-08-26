@@ -71,6 +71,7 @@
     .tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; background: #fff7ed; color: #d97706; border: 1px solid #fde6c4; border-radius: 999px; font-size: 12px; }
     .tag-chip button { width: 18px; height: 18px; border: none; background: transparent; color: #d97706; font-size: 14px; line-height: 1; cursor: pointer; padding: 0; }
     .tag-chip button:hover { color: #dc2626; }
+    @keyframes cat-missing-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,.7); } 50% { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(220,38,38,0); } }
     .hidden { display: none !important; }
     details.help { margin-top: 8px; }
     details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
@@ -142,6 +143,7 @@
     <div class="modal-panel">
       <button class="modal-close" id="cat-close">×</button>
       <h3 id="modal-title">编辑猫咪</h3>
+      <div id="cat-status-banner"></div>
       <div class="field" style="margin-bottom:10px;">
         <label>📷 头像</label>
         <div class="row" style="margin-top:0;">
@@ -163,7 +165,7 @@
       <div class="grid3" style="margin-top:10px;">
         <div class="field"><label>毛色</label><input id="f-color" placeholder="白色混合橙色"></div>
         <div class="field"><label>区域</label><input id="f-area" placeholder="图书馆东门"></div>
-        <div class="field"><label>绝育状态</label><select id="f-status"><option>已绝育</option><option>未绝育</option></select></div>
+        <div class="field"><label>状态</label><select id="f-status"><option>已绝育</option><option>未绝育</option><option>已领养</option><option>失踪</option></select></div>
       </div>
       <div class="grid3" style="margin-top:10px;">
         <div class="field"><label>纬度 *</label><input id="f-lat" type="number" step="any" placeholder="21.6785"></div>

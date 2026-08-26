@@ -162,12 +162,16 @@
     markerLayer.clearLayers();
     cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
-      var color = c.leftAt ? '#9ca3af' : (c.gender === 'male' ? '#3b82f6' : '#ec4899');
+      var isMissing = c.status === '失踪';
+      var isAdopted = c.status === '已领养';
+      var color = c.leftAt ? '#9ca3af' : (isMissing ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : '#ec4899')));
+      var size = isMissing ? 32 : 24;
+      var pulse = isMissing ? 'animation:cat-missing-pulse 1.5s infinite;' : '';
       var icon = L.divIcon({
         className: '',
-        html: '<div style="width:24px;height:24px;border-radius:50%;background:' + color + ';border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);' + pulse + '"></div>',
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2]
       });
       var m = L.marker([c.lat, c.lng], { icon: icon, draggable: true }).addTo(markerLayer);
       m.options.catIndex = i;
@@ -295,10 +299,15 @@
       var photo = c.photo || 'images/placeholder.svg';
       var fallback = photo.indexOf('placeholder') >= 0 ? '' : '<span class="fallback">🐱</span>';
       var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
+    function statusBadge(s) {
+      if (s === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
+      if (s === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
+      return '';
+    }
       return '<div class="catcard">' +
         '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' + fallback + '</div>' +
         '<div class="bd">' +
-        '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + '</div>' +
+        '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c.status) + '</div>' +
         '<div class="meta">' + (c.gender === 'male' ? '公' : '母') + ' · ' + esc(c.status || '') + ' · 📍 ' + esc(c.area || '') + '</div>' +
         '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
         '<div class="ops"><button class="btn btn-sm" data-edit="' + i + '">编辑</button>' +
@@ -357,6 +366,8 @@
       pendingLatLng = { lat: c.lat, lng: c.lng };
       moveTempMarker(pendingLatLng);
     }
+    var banner = $('cat-status-banner');
+    if (banner) { banner.innerHTML = statusBanner; banner.style.display = statusBanner ? '' : 'none'; }
     openModal('cat-modal');
   }
 
