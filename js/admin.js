@@ -226,20 +226,38 @@
     img.style.height = 'auto';
     img.style.display = 'block';
     img.style.margin = '0 auto';
+    img.onload = function () {
+      openModal('crop-modal');
+      // 等 DOM 更新后初始化 Cropper
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          if (typeof Cropper !== 'undefined') {
+            if (cropInstance) cropInstance.destroy();
+            cropInstance = new Cropper(img, {
+              aspectRatio: 1,
+              viewMode: 1,
+              autoCropArea: 0.9,
+              dragMode: "move",
+              background: false,
+              responsive: true
+            });
+          } else {
+            var hint = document.createElement('p');
+            hint.style.cssText = 'font-size:13px;color:#b45309;background:#fef3c7;border-radius:8px;padding:8px;margin:8px 0;';
+            hint.textContent = '⚠️ 裁剪组件未能加载，点确认将直接使用原图';
+            box.appendChild(hint);
+          }
+        });
+      });
+    };
+    img.onerror = function () {
+      openModal('crop-modal');
+      var err = document.createElement('p');
+      err.style.cssText = 'font-size:13px;color:#dc2626;background:#fee2e2;border-radius:8px;padding:8px;margin:8px 0;';
+      err.textContent = '❌ 图片加载失败，无法裁剪，请重试';
+      box.appendChild(err);
+    };
     img.src = dataUrl;
-    box.appendChild(img);
-    openModal('crop-modal');
-    setTimeout(function () {
-      if (typeof Cropper !== 'undefined') {
-        if (cropInstance) cropInstance.destroy();
-        cropInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.9 });
-      } else {
-        var hint = document.createElement('p');
-        hint.style.cssText = 'font-size:13px;color:#b45309;background:#fef3c7;border-radius:8px;padding:8px;margin:8px 0;';
-        hint.textContent = '⚠️ 裁剪组件未能加载，将直接使用原图（可稍后刷新重试裁剪）';
-        box.parentNode.insertBefore(hint, box.nextSibling);
-      }
-    }, 100);
   }
   function confirmCrop() {
     if (cropInstance) {
@@ -249,7 +267,7 @@
       log('✂️ 已裁剪照片，点「保存」时自动上传到 images/ 并显示', 'ok');
       cropInstance.destroy(); cropInstance = null;
     } else {
-      // 组件未加载：直接使用原图
+      // 组件未初始化：直接使用原图
       var img0 = $('crop-img');
       if (img0 && img0.src) {
         pendingImage = img0.src;
@@ -257,7 +275,7 @@
         log('📷 已选择照片（原图，未裁剪）', 'ok');
       } else {
         pendingImage = null;
-        log('⚠️ 照片未选择，请重试', 'err');
+        log('⚠️ 照片加载失败，请重试', 'err');
       }
     }
     closeModal('crop-modal');
