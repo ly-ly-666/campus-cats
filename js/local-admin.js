@@ -24,6 +24,27 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // ---------- 配置（仓库/分支/Token）记忆 ----------
+  var CFG_KEY = 'campus-cats-local-cfg';
+  function saveCfg() {
+    try {
+      localStorage.setItem(CFG_KEY, JSON.stringify({
+        repo: $('cfg-repo').value.trim(),
+        branch: $('cfg-branch').value.trim() || 'main',
+        token: $('cfg-token').value.trim()
+      }));
+    } catch (e) {}
+  }
+  function loadCfg() {
+    try {
+      var c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+      if (c.repo) $('cfg-repo').value = c.repo;
+      if (c.branch) $('cfg-branch').value = c.branch;
+      if (c.token) $('cfg-token').value = c.token;
+    } catch (e) {}
+  }
+  
+
   // ---------- IndexedDB 持久化目录句柄 ----------
   function openDB() {
     return new Promise(function (resolve, reject) {
@@ -710,6 +731,13 @@
   // ---------- 事件绑定 ----------
   function bind() {
     initTagInput();
+    loadCfg();
+    ['cfg-repo', 'cfg-branch', 'cfg-token'].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener('input', saveCfg);
+      el.addEventListener('change', saveCfg);
+    });
     $('btn-pick').addEventListener('click', pickFolder);
     $('btn-save-all').addEventListener('click', saveAll);
     $('btn-pull').addEventListener('click', pullFromGitHub);
