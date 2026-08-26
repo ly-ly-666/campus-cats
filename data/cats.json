@@ -38,5 +38,24 @@
     "firstSeen": "2026-08",
     "leftAt": "",
     "caretaker": ""
+  },
+  {
+    "id": "cat003",
+    "name": "毛毛",
+    "nickname": "茅台",
+    "gender": "male",
+    "color": "白混合灰色",
+    "area": "图书馆正门",
+    "lat": 21.678429,
+    "lng": 110.921895,
+    "photo": "images/cat003.png",
+    "album": [],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "已绝育",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": ""
   }
 ]
