@@ -13,8 +13,76 @@
   var pendingAvatar = null;
   var pendingAvatarName = '';
   var cropInstance = null;
+  var map = null, markerLayer = null, tempMarker = null;
+  var CAMPUS_CENTER = [21.6795, 110.9226];
+  var pendingLatLng = null;
+  var TILES = [
+    { name: '高德', url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', att: '© 高德地图', max: 20, native: 18, subs: ['1', '2', '3', '4'] },
+    { name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', att: '© OpenStreetMap', max: 20, native: 19, subs: null }
+  ];
+  var tileIdx = 0, tileErrors = 0;
 
   function $(id) { return document.getElementById(id); }
+
+  // ---------- 地图 ----------
+  function ensureMap() {
+    if (map) return;
+    if (typeof L === 'undefined') { log('❌ Leaflet 未加载，请检查网络', 'err'); return; }
+    map = L.map('admin-map', { zoomControl: true }).setView(CAMPUS_CENTER, 16);
+    addTileLayer();
+    markerLayer = L.layerGroup().addTo(map);
+    map.on('click', function (e) {
+      pendingLatLng = { lat: +e.latlng.lat.toFixed(6), lng: +e.latlng.lng.toFixed(6) };
+      moveTempMarker(pendingLatLng);
+      if (!$('cat-modal').classList.contains('open')) {
+        openCatModal(-1);
+      }
+      if ($('f-lat') && pendingLatLng) $('f-lat').value = pendingLatLng.lat;
+      if ($('f-lng') && pendingLatLng) $('f-lng').value = pendingLatLng.lng;
+    });
+  }
+  function addTileLayer() {
+    if (!map) return;
+    var t = TILES[tileIdx];
+    var opts = { maxZoom: t.max, maxNativeZoom: t.native, attribution: t.att };
+    if (t.subs) opts.subdomains = t.subs;
+    var layer = L.tileLayer(t.url, opts);
+    layer.on('tileerror', function () {
+      tileErrors++;
+      if (tileErrors >= 6 && tileIdx < TILES.length - 1) { tileErrors = 0; tileIdx++; map.removeLayer(layer); addTileLayer(); log('网络原因，地图已切换为「' + TILES[tileIdx].name + '」', 'info'); }
+    });
+    layer.addTo(map);
+  }
+  function moveTempMarker(latlng) {
+    if (!markerLayer || !map) return;
+    if (tempMarker) markerLayer.removeLayer(tempMarker);
+    tempMarker = L.marker([latlng.lat, latlng.lng], { draggable: true }).addTo(markerLayer);
+    tempMarker.on('dragend', function () {
+      var ll = tempMarker.getLatLng();
+      pendingLatLng = { lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6) };
+      if ($('f-lat')) $('f-lat').value = pendingLatLng.lat;
+      if ($('f-lng')) $('f-lng').value = pendingLatLng.lng;
+    });
+    if (map.getZoom() < 16) map.setView([latlng.lat, latlng.lng], 16);
+  }
+  function renderMarkers() {
+    if (!markerLayer) return;
+    markerLayer.clearLayers();
+    cats.forEach(function (c, i) {
+      if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
+      var color = c.leftAt ? '#9ca3af' : (c.gender === 'male' ? '#3b82f6' : '#ec4899');
+      var m = L.circleMarker([c.lat, c.lng], { radius: 12, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(markerLayer);
+      m.options.catIndex = i;
+      m.bindTooltip(c.name + (c.leftAt ? '（过往）' : ''), { direction: 'top' });
+      m.on('click', function () { openCatModal(i); });
+      m.dragging.enable();
+      m.on('dragend', function () {
+        var idx = m.options.catIndex; var ll = m.getLatLng();
+        cats[idx].lat = +ll.lat.toFixed(6); cats[idx].lng = +ll.lng.toFixed(6);
+        renderMarkers();
+      });
+    });
+  }
   function log(msg, kind) {
     var box = $('log'); if (!box) return;
     var div = document.createElement('div');
@@ -30,6 +98,8 @@
       $('folder-path').textContent = dirHandle.name;
       log('✅ 已选择文件夹：' + dirHandle.name, 'ok');
       await loadProject();
+      ensureMap();
+      renderMarkers();
     } catch (e) {
       if (e.name !== 'AbortError') log('❌ 选择文件夹失败：' + e.message, 'err');
     }
@@ -102,6 +172,8 @@
       relations = [];
     }
     renderCats();
+    ensureMap();
+    renderMarkers();
   }
 
   async function saveAll() {
@@ -114,6 +186,7 @@
       log('❌ 保存失败：' + e.message, 'err');
     }
   }
+
 
   // ---------- 渲染 ----------
   function renderCats() {
@@ -177,6 +250,10 @@
     else { $('f-preview').src = ''; $('f-preview').classList.remove('show'); }
     pendingAvatar = null; pendingAvatarName = '';
     renderAlbum(c ? c.album : []);
+    if (map && c) {
+      pendingLatLng = { lat: c.lat, lng: c.lng };
+      moveTempMarker(pendingLatLng);
+    }
     openModal('cat-modal');
   }
 
