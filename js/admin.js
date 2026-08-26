@@ -19,6 +19,7 @@
   var pendingLatLng = null;    // 添加/编辑时选中的地图位置
   var pendingImage = null;     // 待上传的照片 dataURL
   var pendingImageName = '';   // 待上传照片文件名
+  var cropInstance = null;     // 裁剪实例
 
   function $(id) { return document.getElementById(id); }
 
@@ -257,6 +258,7 @@
       err.textContent = '❌ 图片加载失败，无法裁剪，请重试';
       box.appendChild(err);
     };
+    box.appendChild(img); // 必须先插入 DOM，Cropper 才能工作
     img.src = dataUrl;
   }
   function confirmCrop() {
