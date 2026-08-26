@@ -132,6 +132,13 @@ export function showModal(cat, cats, relations) {
     .map(([k, v]) => `<div class="modal-info-row"><span class="modal-info-key">${k}</span><span class="modal-info-val">${escapeHtml(v)}</span></div>`)
     .join('');
 
+  const album = Array.isArray(cat.album) ? cat.album : [];
+  const albumHtml = album.length
+    ? `<div class="modal-album">${album.map((src) => `
+        <div class="album-thumb"><img src="${photoUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
+      `).join('')}</div>`
+    : '<div class="relation-empty">暂无相册</div>';
+
   const modal = document.getElementById('modal');
   if (!modal) return;
   modal.innerHTML = `
@@ -151,8 +158,11 @@ export function showModal(cat, cats, relations) {
       </div>
       ${cat.description ? `<p class="modal-desc">${escapeHtml(cat.description)}</p>` : ''}
       <div class="modal-info">${infoHtml}</div>
+      <div style="margin:8px 0;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a></div>
       <h3 class="modal-section-title">关系</h3>
       <div class="modal-relations">${relationHtml}</div>
+      <h3 class="modal-section-title">相册</h3>
+      ${albumHtml}
     </div>`;
 
   modal.classList.add('open');

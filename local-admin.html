@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园猫 · 本地管理端</title>
+  <link rel="stylesheet" href="./vendor/cropper.min.css">
+  <style>
+    :root {
+      --primary: #f59e0b;
+      --primary-dark: #d97706;
+      --bg: #faf6ef;
+      --panel: #fff;
+      --text: #2d2a26;
+      --muted: #8a857d;
+      --border: #e8e1d6;
+      --male: #3b82f6;
+      --female: #ec4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    img { max-width: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .card h2 { font-size: 15px; margin-bottom: 6px; color: var(--primary-dark); }
+    .hint { font-size: 12px; color: var(--muted); margin: 4px 0 10px; line-height: 1.7; }
+    .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
+    .btn:hover { background: #fff7ed; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-green { background: #059669; border-color: #059669; color: #fff; font-weight: 600; }
+    .btn-green:hover { background: #047857; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+    .field input, .field select, .field textarea { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .folder-path { font-size: 12px; color: var(--muted); word-break: break-all; background: #f5f2ed; padding: 6px 10px; border-radius: 8px; }
+    .logbox { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; max-height: 180px; overflow: auto; }
+    .logbox .ok { color: #059669; } .logbox .err { color: #dc2626; } .logbox .info { color: var(--muted); }
+
+    .catcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 8px; }
+    .catcard { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    .catcard .th { height: 140px; background: #f0ebe2; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    .catcard .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .catcard .th .fallback { position: absolute; font-size: 48px; }
+    .catcard .bd { padding: 10px; }
+    .catcard .nm { font-weight: 700; font-size: 14px; }
+    .catcard .nick { color: var(--muted); font-size: 12px; margin-left: 4px; }
+    .catcard .meta { font-size: 12px; color: var(--muted); margin: 4px 0; }
+    .catcard .ops { display: flex; gap: 6px; margin-top: 6px; }
+
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-bg.open { display: flex; }
+    #crop-modal { z-index: 3000; }
+    .modal-panel { background: #fff; border-radius: 14px; width: 100%; max-width: 520px; max-height: 92vh; overflow: auto; padding: 20px; position: relative; }
+    .modal-panel h3 { font-size: 16px; margin-bottom: 14px; color: var(--primary-dark); }
+    .modal-close { position: absolute; top: 10px; right: 14px; border: none; background: none; font-size: 22px; cursor: pointer; color: var(--muted); }
+    .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .modal-actions .btn { flex: 1; }
+    .photo-preview { width: 100%; height: 150px; border-radius: 10px; object-fit: cover; background: #f0ebe2; margin: 8px 0; display: none; }
+    .photo-preview.show { display: block; }
+    .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 8px; }
+    .album-item { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #f0ebe2; border: 1px solid var(--border); position: relative; }
+    .album-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .album-item .del { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .hidden { display: none !important; }
+    details.help { margin-top: 8px; }
+    details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
+    details.help ol { font-size: 12px; color: var(--muted); line-height: 1.9; padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h2>🐱 校园猫本地管理端</h2>
+      <p class="hint">直接读写你电脑里的项目文件夹，改完一键推送到 GitHub 部署。</p>
+      <div class="row">
+        <button class="btn btn-primary" id="btn-pick">📁 选择项目文件夹</button>
+        <button class="btn" id="btn-save-all">💾 保存到本地</button>
+        <button class="btn btn-green" id="btn-push">🚀 推送到 GitHub</button>
+      </div>
+      <div class="folder-path" id="folder-path">尚未选择文件夹</div>
+      <div class="row" style="margin-top:14px;">
+        <div class="field"><label>仓库名</label><input id="cfg-repo" placeholder="如 ly-ly-666/campus-cats"></div>
+        <div class="field"><label>分支</label><input id="cfg-branch" value="main"></div>
+        <div class="field"><label>Token</label><input id="cfg-token" type="password" placeholder="github_pat_..."></div>
+      </div>
+      <details class="help"><summary>🔑 Token 怎么获取？</summary>
+        <ol>
+          <li>打开 <b>github.com/settings/tokens/new?type=beta</b></li>
+          <li>Repository access 选 Only select repositories → 勾选 campus-cats</li>
+          <li>Permissions → Contents 设为 Read and write</li>
+          <li>Generate 后复制 github_pat_... 到上面</li>
+        </ol>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2>猫咪列表</h2>
+        <button class="btn btn-primary" id="btn-add">＋ 添加猫咪</button>
+      </div>
+      <div id="cats-list" class="catcards"><p class="hint">请先选择项目文件夹。</p></div>
+    </section>
+
+    <section class="card">
+      <h2>操作日志</h2>
+      <div id="log" class="logbox"></div>
+    </section>
+  </div>
+
+  <!-- 裁剪弹窗 -->
+  <div class="modal-bg" id="crop-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="crop-close">×</button>
+      <h3>✂️ 裁剪头像</h3>
+      <div style="width:100%;height:300px;background:#f0ebe2;" id="crop-box"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="crop-ok">确认裁剪</button>
+        <button class="btn" id="crop-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <div class="modal-bg" id="cat-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="cat-close">×</button>
+      <h3 id="modal-title">编辑猫咪</h3>
+      <div class="field" style="margin-bottom:10px;">
+        <label>📷 头像</label>
+        <div class="row" style="margin-top:0;">
+          <button type="button" class="btn btn-sm" id="btn-avatar">🖼️ 选择头像</button>
+          <button type="button" class="btn btn-sm" id="btn-album-add">🖼️ 添加相册照片</button>
+        </div>
+        <input type="file" id="f-avatar" accept="image/*" style="display:none;">
+        <input type="file" id="f-album" accept="image/*" multiple style="display:none;">
+        <img id="f-preview" class="photo-preview" alt="头像预览">
+        <div class="album-grid" id="album-list"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>名字 *</label><input id="f-name" placeholder="如：小白"></div>
+        <div class="field"><label>外号</label><input id="f-nickname" placeholder="白猪"></div>
+        <div class="field"><label>性别</label><select id="f-gender"><option value="male">公</option><option value="female">母</option></select></div>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div class="field"><label>毛色</label><input id="f-color" placeholder="白色混合橙色"></div>
+        <div class="field"><label>区域</label><input id="f-area" placeholder="图书馆东门"></div>
+        <div class="field"><label>绝育状态</label><select id="f-status"><option>已绝育</option><option>未绝育</option></select></div>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div class="field"><label>纬度 *</label><input id="f-lat" type="number" step="any" placeholder="21.6785"></div>
+        <div class="field"><label>经度 *</label><input id="f-lng" type="number" step="any" placeholder="110.9221"></div>
+        <div class="field"><label>首次出现</label><input id="f-firstSeen" placeholder="2026-08"></div>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div class="field"><label>离开时间</label><input id="f-leftAt" placeholder="过往才填"></div>
+        <div class="field"><label>照料人</label><input id="f-caretaker" placeholder="选填"></div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>简介</label><textarea id="f-desc" rows="2" placeholder="性格/特征"></textarea></div>
+      <div class="field" style="margin-top:10px;"><label>档案故事</label><textarea id="f-story" rows="4" placeholder="这只猫的故事、来历、性格细节"></textarea></div>
+      <div class="field" style="margin-top:10px;"><label>档案标签（用逗号分隔）</label><input id="f-tags" placeholder="活泼,亲人,话痨"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="f-save">保存</button>
+        <button class="btn btn-danger" id="f-del">删除</button>
+        <button class="btn" id="f-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./vendor/cropper.min.js"></script>
+  <script src="./js/local-admin.js"></script>
+</body>
+</html>
