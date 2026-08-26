@@ -45,8 +45,9 @@ function addTileLayer(map) {
 function createCatIcon(cat) {
   const photo = photoUrl(cat.photo);
   const isPast = cat.leftAt ? true : false;
+  const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''));
   const html = `
-    <div class="cat-marker${isPast ? ' cat-marker-past' : ''}" data-cat-id="${cat.id}">
+    <div class="cat-marker${isPast ? ' cat-marker-past' : ''}${lifeRing}" data-cat-id="${cat.id}">
       <img src="${photo}" alt="" loading="lazy"
            onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">
       <span class="marker-fallback-icon">🐱</span>

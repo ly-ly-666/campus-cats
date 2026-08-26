@@ -58,11 +58,17 @@
     <!-- 地图视图 -->
     <section id="map-view" class="view active">
       <div id="map" class="map-container"></div>
-      <aside id="sidebar" class="sidebar">
-        <h2 class="sidebar-title">猫咪列表（<span id="cat-count">0</span>）</h2>
-        <div id="cat-list" class="cat-list"></div>
-      </aside>
+      <button id="list-fab" class="list-fab" title="猫咪列表">📋 <span id="fab-count">0</span> 只猫</button>
     </section>
+
+    <!-- 猫咪列表全屏浮层 -->
+    <div id="cat-panel" class="cat-panel" aria-hidden="true">
+      <div class="cat-panel-head">
+        <h2 class="sidebar-title">猫咪列表（<span id="cat-count">0</span>）</h2>
+        <button id="cat-panel-close" class="cat-panel-close" aria-label="关闭">×</button>
+      </div>
+      <div id="cat-list" class="cat-list"></div>
+    </div>
 
     <!-- 关系图视图 -->
     <section id="graph-view" class="view">
@@ -96,7 +102,7 @@
         <button class="btn btn-green" id="corr-copy">📋 复制内容发站长</button>
         <button class="btn" id="corr-mail">✉️ 用邮件发送</button>
       </div>
-      <p class="corr-note">复制后粘贴到微信发给站长即可。邮件地址在站长设置里配置。</p>
+      <p class="corr-note" id="corr-note">提交后会生成文字，复制后粘贴发微信给站长即可。</p>
     </div>
   </div>
 

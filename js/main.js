@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap } from './map.js';
 import { initGraph, resizeGraph } from './graph.js';
-import { renderCatList, showModal, bindTabs, initCorrection } from './ui.js';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel } from './ui.js';
 import { loadData } from './data.js';
 
 const loadingEl = document.getElementById('loading');
@@ -30,7 +30,7 @@ async function boot() {
     return;
   }
 
-  const { cats, relations } = data;
+  const { cats, relations, siteConfig } = data;
   if (!Array.isArray(cats) || !cats.length) {
     showError('猫咪数据为空，请检查 data/cats.json');
     return;
@@ -63,7 +63,8 @@ async function boot() {
   }
 
   // 列表
-  renderCatList(cats, (cat) => showModal(cat, cats, relations));
+  renderCatList(cats, (cat) => { closeCatPanel(); showModal(cat, cats, relations); });
+  bindCatPanel();
 
   // 标签页
   bindTabs(
@@ -75,7 +76,7 @@ async function boot() {
   window.addEventListener('resize', () => resizeGraph());
 
   // 更正信息入口
-  initCorrection(cats);
+  initCorrection(cats, siteConfig || {});
 
   // 键盘关闭弹窗（Esc）
   window.addEventListener('keydown', (e) => {

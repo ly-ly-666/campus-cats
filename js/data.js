@@ -6,7 +6,14 @@
  * @returns {Promise<{cats: Array, relations: Array}>} 包含 cats 与 relations 的对象
  */
 export async function loadData() {
-  let cats, relations;
+  let cats, relations, siteConfig = {};
+
+  try {
+    const cfgResp = await fetch('./data/site-config.json');
+    if (cfgResp.ok) siteConfig = await cfgResp.json();
+  } catch (e) {
+    siteConfig = {};
+  }
 
   try {
     const catResp = await fetch('./data/cats.json');
@@ -28,5 +35,5 @@ export async function loadData() {
     throw new Error(`无法加载 data/relations.json：${e.message}`);
   }
 
-  return { cats, relations };
+  return { cats, relations, siteConfig };
 }

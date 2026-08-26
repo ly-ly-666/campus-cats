@@ -43,7 +43,7 @@ export function renderCatList(cats, onSelect) {
   else if (cat.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:14px;">🏠 这只猫已被领养，开启新生活啦～</div>';
     return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
-        <div class="cat-item-photo">
+        <div class="cat-item-photo${cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''))}">
           <img src="${photo}" alt="" loading="lazy"
                onerror="this.style.display='none';this.parentElement.classList.add('cat-item-fallback');">
           <span class="cat-item-fallback-icon">🐱</span>
@@ -78,9 +78,11 @@ export function renderCatList(cats, onSelect) {
     });
   });
 
-  // 更新侧边栏标题中的猫咪数量
+  // 更新猫咪数量（浮层标题 + 浮动按钮）
   const countEl = document.getElementById('cat-count');
   if (countEl) countEl.textContent = String(cats.length);
+  const fabCount = document.getElementById('fab-count');
+  if (fabCount) fabCount.textContent = String(cats.length);
 }
 
 /**
@@ -221,6 +223,40 @@ export function bindTabs(views, opts = {}) {
  * 在页面右下角显示一条短暂的 toast 提示。
  * @param {string} message 提示内容
  */
+export function openCatPanel() {
+  const panel = document.getElementById('cat-panel');
+  if (!panel) return;
+  panel.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+export function closeCatPanel() {
+  const panel = document.getElementById('cat-panel');
+  if (!panel) return;
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+/**
+ * 绑定猫咪列表浮层按钮（地图下的 📋 按钮 + 关闭按钮）。
+ */
+export function bindCatPanel() {
+  const fab = document.getElementById('list-fab');
+  if (fab) fab.addEventListener('click', openCatPanel);
+  const closeBtn = document.getElementById('cat-panel-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeCatPanel);
+  const panel = document.getElementById('cat-panel');
+  if (panel) {
+    panel.addEventListener('click', (e) => {
+      if (e.target === panel) closeCatPanel();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('cat-panel') && document.getElementById('cat-panel').classList.contains('open')) {
+      closeCatPanel();
+    }
+  });
+}
 export function showToast(message) {
   const el = document.getElementById('toast');
   if (!el) return;
@@ -249,6 +285,10 @@ export function openCorrection(cats, catId) {
   }
   const txt = document.getElementById('corr-text');
   if (txt) txt.value = '';
+  const note = document.getElementById('corr-note');
+  if (note) note.textContent = '提交后会生成文字，点「复制」粘贴发微信给站长；或点「用邮件发送」自动发到站长邮箱（' + (_corrEmail || '未配置') + '）。';
+  const mailBtn = document.getElementById('corr-mail');
+  if (mailBtn) mailBtn.disabled = !_corrEmail;
   modal.classList.add('open');
   modal.style.display = 'flex';
 }
@@ -285,14 +325,16 @@ function mailCorrection() {
   const text = buildCorrectionText();
   const subject = encodeURIComponent('猫咪信息更正：' + (document.getElementById('corr-cat') && document.getElementById('corr-cat').selectedOptions[0] ? document.getElementById('corr-cat').selectedOptions[0].text : ''));
   const body = encodeURIComponent(text);
-  window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+  window.location.href = 'mailto:' + (_corrEmail || '') + '?subject=' + subject + '&body=' + body;
 }
 /**
  * 初始化更正信息入口：绑定浮动按钮 + 弹窗内按钮。
  * @param {Array} cats 猫咪数组（用于下拉选择）
  */
-export function initCorrection(cats) {
+let _corrEmail = '';
+export function initCorrection(cats, siteConfig) {
   _corrCats = Array.isArray(cats) ? cats : [];
+  if (siteConfig) _corrEmail = siteConfig.feedbackEmail || '';
   const fab = document.getElementById('corr-fab');
   if (fab) fab.addEventListener('click', () => openCorrection(_corrCats));
   const modal = document.getElementById('correction-modal');
