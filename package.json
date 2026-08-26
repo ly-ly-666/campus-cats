@@ -1,0 +1,12 @@
+{
+  "name": "campus-cats",
+  "version": "1.0.0",
+  "description": "校园猫咪地图与族谱网站（纯静态，无构建）",
+  "private": true,
+  "scripts": {
+    "start": "npx --yes serve -l 4173",
+    "dev": "start",
+    "validate": "node scripts/validate.mjs",
+    "build": "echo 纯静态站点无需构建"
+  }
+}
