@@ -78,8 +78,8 @@
     details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
     details.help ol { font-size: 12px; color: var(--muted); line-height: 1.9; padding-left: 18px; }
   </style>
-  <!-- Cropper.js（照片裁剪） -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+  <!-- Cropper.js（照片裁剪，组件内置在仓库，无需外网） -->
+  <link rel="stylesheet" href="./vendor/cropper.min.css">
 </head>
 <body>
   <header class="app-header">
@@ -225,8 +225,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
           onerror="window.__li=(window.__li||0)+1;if(window.__li===1){document.write('<script src=\'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\'><\/script>')}else if(window.__li===2){document.write('<script src=\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js\'><\/script>')}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"
-          onerror="(function(){var s=document.createElement('script');s.src='https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js';document.head.appendChild(s)})()"></script>
+  <script src="./vendor/cropper.min.js"></script>
 
   <script src="./js/admin.js"></script>
 </body>

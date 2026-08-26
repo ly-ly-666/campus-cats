@@ -227,10 +227,16 @@
     box.appendChild(img);
     openModal('crop-modal');
     setTimeout(function () {
-      if (typeof Cropper === 'undefined') { log('❌ 裁剪组件加载失败（网络原因），请刷新重试', 'err'); return; }
-      if (cropInstance) cropInstance.destroy();
-      cropInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.9 });
-    }, 80);
+      if (typeof Cropper !== 'undefined') {
+        if (cropInstance) cropInstance.destroy();
+        cropInstance = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.9 });
+      } else {
+        var hint = document.createElement('p');
+        hint.style.cssText = 'font-size:13px;color:#b45309;background:#fef3c7;border-radius:8px;padding:8px;margin:8px 0;';
+        hint.textContent = '⚠️ 裁剪组件未能加载，将直接使用原图（可稍后刷新重试裁剪）';
+        box.parentNode.insertBefore(hint, box.nextSibling);
+      }
+    }, 100);
   }
   function confirmCrop() {
     if (cropInstance) {
@@ -240,8 +246,16 @@
       log('✂️ 已裁剪照片，点「保存」时自动上传到 images/ 并显示', 'ok');
       cropInstance.destroy(); cropInstance = null;
     } else {
-      pendingImage = null;
-      log('⚠️ 裁剪未完成，请重试', 'err');
+      // 组件未加载：直接使用原图
+      var img0 = $('crop-img');
+      if (img0 && img0.src) {
+        pendingImage = img0.src;
+        $('f-preview').src = pendingImage; $('f-preview').classList.add('show');
+        log('📷 已选择照片（原图，未裁剪）', 'ok');
+      } else {
+        pendingImage = null;
+        log('⚠️ 照片未选择，请重试', 'err');
+      }
     }
     closeModal('crop-modal');
   }
