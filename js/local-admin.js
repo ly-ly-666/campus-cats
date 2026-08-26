@@ -751,6 +751,12 @@
     $('btn-pick').addEventListener('click', pickFolder);
     $('btn-save-all').addEventListener('click', saveAll);
     $('btn-pull').addEventListener('click', pullFromGitHub);
+    $('btn-preview').addEventListener('click', function () {
+      // 打开本地 index.html（用当前本地数据预览，不推 GitHub）
+      var base = window.location.href.replace(/local-admin\.html.*$/, '');
+      window.open(base + 'index.html?preview=1&t=' + Date.now(), '_blank');
+      log('👀 已在新标签打开预览（基于当前本地数据，不用推 GitHub）', 'info');
+    });
     $('btn-push').addEventListener('click', pushToGitHub);
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
     $('f-save').addEventListener('click', saveCat);
