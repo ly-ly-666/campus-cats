@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap } from './map.js';
 import { initGraph, resizeGraph } from './graph.js';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel } from './ui.js';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin } from './ui.js';
 import { loadData } from './data.js';
 
 const loadingEl = document.getElementById('loading');
@@ -65,6 +65,8 @@ async function boot() {
   // 列表
   renderCatList(cats, (cat) => { closeCatPanel(); showModal(cat, cats, relations); });
   bindCatPanel();
+  updateStats(cats);
+  bindJoin();
 
   // 标签页
   bindTabs(

@@ -102,6 +102,7 @@ export function showModal(cat, cats, relations) {
   else if (cat.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:14px;">🏠 这只猫已被领养，开启新生活啦～</div>';
   const infoRows = [
     ['性别', GENDER_LABEL[cat.gender] || cat.gender],
+    ['年龄', cat.age],
     ['外号', cat.nickname],
     ['毛色', cat.color],
     ['区域', cat.area],
@@ -240,6 +241,32 @@ export function closeCatPanel() {
 /**
  * 绑定猫咪列表浮层按钮（地图下的 📋 按钮 + 关闭按钮）。
  */
+/**
+ * 更新首页统计：已知流浪猫总数 + 已绝育数量。
+ */
+export function updateStats(cats) {
+  const list = Array.isArray(cats) ? cats : [];
+  const totalEl = document.getElementById('stat-total');
+  const neuEl = document.getElementById('stat-neutered');
+  if (totalEl) totalEl.textContent = String(list.length);
+  if (neuEl) neuEl.textContent = String(list.filter((c) => c.status === '已绝育').length);
+}
+
+/**
+ * 绑定「加入我们 / 关于油喵」折叠面板。
+ */
+export function bindJoin() {
+  const btn = document.getElementById('join-btn');
+  const panel = document.getElementById('join-panel');
+  if (!btn || !panel) return;
+  btn.addEventListener('click', () => {
+    const hidden = panel.hidden;
+    panel.hidden = !hidden;
+    btn.textContent = hidden ? '✕ 收起' : '💛 加入我们 · 关于油喵';
+    if (!hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
 export function bindCatPanel() {
   const fab = document.getElementById('list-fab');
   if (fab) fab.addEventListener('click', openCatPanel);

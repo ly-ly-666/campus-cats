@@ -368,6 +368,7 @@
     $('f-firstD').value = m && m[3] ? String(parseInt(m[3])) : '';
     $('f-leftAt').value = c ? (c.leftAt || '') : '';
     $('f-caretaker').value = c ? (c.caretaker || '') : '';
+    $('f-age').value = c ? (c.age || '') : '';
     $('f-desc').value = c ? (c.description || '') : '';
     $('f-story').value = c ? (c.story || '') : '';
     renderTagChips(c ? (c.tags || []) : []);
@@ -570,7 +571,8 @@
       life: $('f-life').value,
       firstSeen: buildDate($('f-firstY').value, $('f-firstM').value, $('f-firstD').value),
       leftAt: $('f-leftAt').value.trim(),
-      caretaker: $('f-caretaker').value.trim()
+      caretaker: $('f-caretaker').value.trim(),
+      age: $('f-age').value.trim()
     };
     if (isAdd) cats.push(cat); else cats[editIdx] = cat;
     await saveAll();

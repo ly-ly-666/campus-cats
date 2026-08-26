@@ -67,6 +67,7 @@ function render(cats, relations) {
   `;
 
   const items = [
+    ['年龄', cat.age],
     ['毛色', cat.color],
     ['常出现区域', cat.area],
     ['首次发现', cat.firstSeen],
