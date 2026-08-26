@@ -162,8 +162,8 @@
     markerLayer.clearLayers();
     cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
-      var isMissing = c.status === '失踪';
-      var isAdopted = c.status === '已领养';
+      var isMissing = c.life === '失踪';
+      var isAdopted = c.life === '已领养';
       var color = c.leftAt ? '#9ca3af' : (isMissing ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : '#ec4899')));
       var size = isMissing ? 32 : 24;
       var pulse = isMissing ? 'animation:cat-missing-pulse 1.5s infinite;' : '';
@@ -292,6 +292,15 @@
 
 
   // ---------- 渲染 ----------
+  function normalizeCats() {
+    (cats || []).forEach(function (c) {
+      if (!c.life) {
+        if (c.status === '已领养') { c.life = '已领养'; c.status = '未绝育'; }
+        else if (c.status === '失踪') { c.life = '失踪'; c.status = '未绝育'; }
+        else c.life = '在校';
+      }
+    });
+  }
   function renderCats() {
     var box = $('cats-list');
     if (!cats.length) { box.innerHTML = '<p class="hint">还没有猫咪，点右上角「添加猫咪」。</p>'; return; }
@@ -299,16 +308,16 @@
       var photo = c.photo || 'images/placeholder.svg';
       var fallback = photo.indexOf('placeholder') >= 0 ? '' : '<span class="fallback">🐱</span>';
       var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
-    function statusBadge(s) {
-      if (s === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
-      if (s === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
+    function statusBadge(c) {
+      if (c.life === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
+      if (c.life === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
       return '';
     }
       return '<div class="catcard">' +
         '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' + fallback + '</div>' +
         '<div class="bd">' +
-        '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c.status) + '</div>' +
-        '<div class="meta">' + (c.gender === 'male' ? '公' : '母') + ' · ' + esc(c.status || '') + ' · 📍 ' + esc(c.area || '') + '</div>' +
+        '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
+        '<div class="meta">' + (c.gender === 'male' ? '公' : '母') + ' · 绝育:' + esc(c.status || '未绝育') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
         '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
         '<div class="ops"><button class="btn btn-sm" data-edit="' + i + '">编辑</button>' +
         '<button class="btn btn-sm btn-danger" data-del="' + i + '">删除</button></div>' +
@@ -346,6 +355,7 @@
     $('f-color').value = c ? (c.color || '') : '';
     $('f-area').value = c ? (c.area || '') : '';
     $('f-status').value = c ? (c.status || '未绝育') : '未绝育';
+    $('f-life').value = c ? (c.life || '在校') : '在校';
     $('f-lat').value = c ? c.lat : '';
     $('f-lng').value = c ? c.lng : '';
     var fs = c ? (c.firstSeen || '') : '';
@@ -368,8 +378,8 @@
     }
     var statusBanner = '';
     if (c) {
-      if (c.status === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音/小红书/B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
-      else if (c.status === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:8px 14px;border-radius:10px;margin-bottom:10px;">🏠 这只猫已被领养，开启新生活啦～</div>';
+      if (c.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音/小红书/B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
+      else if (c.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:8px 14px;border-radius:10px;margin-bottom:10px;">🏠 这只猫已被领养，开启新生活啦～</div>';
     }
     var banner = $('cat-status-banner');
     if (banner) { banner.innerHTML = statusBanner; banner.style.display = statusBanner ? '' : 'none'; }
@@ -553,6 +563,7 @@
       story: $('f-story').value.trim(),
       tags: getCurrentTags(),
       status: $('f-status').value,
+      life: $('f-life').value,
       firstSeen: buildDate($('f-firstY').value, $('f-firstM').value, $('f-firstD').value),
       leftAt: $('f-leftAt').value.trim(),
       caretaker: $('f-caretaker').value.trim()

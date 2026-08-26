@@ -38,8 +38,8 @@ export function renderCatList(cats, onSelect) {
   listEl.innerHTML = cats.map((cat) => {
     const photo = photoUrl(cat.photo);
   let statusBanner = '';
-  if (cat.status === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音 / 小红书 / B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
-  else if (cat.status === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:14px;">🏠 这只猫已被领养，开启新生活啦～</div>';
+  if (cat.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音 / 小红书 / B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
+  else if (cat.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:14px;">🏠 这只猫已被领养，开启新生活啦～</div>';
     return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
         <div class="cat-item-photo">
@@ -54,8 +54,8 @@ export function renderCatList(cats, onSelect) {
             ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : 'female'}">${GENDER_LABEL[cat.gender] || cat.gender}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
-            ${cat.status === '失踪' ? '<span class="tag" style="background:#dc2626;color:#fff;">⚠️ 失踪</span>' : ''}
-            ${cat.status === '已领养' ? '<span class="tag" style="background:#10b981;color:#fff;">🏠 已领养</span>' : ''}
+            ${cat.life === '失踪' ? '<span class="tag" style="background:#dc2626;color:#fff;">⚠️ 失踪</span>' : ''}
+            ${cat.life === '已领养' ? '<span class="tag" style="background:#10b981;color:#fff;">🏠 已领养</span>' : ''}
           </div>
           <div class="cat-item-area">📍 ${escapeHtml(cat.area || '')}</div>
         </div>
