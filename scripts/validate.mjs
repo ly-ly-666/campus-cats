@@ -18,7 +18,7 @@ function ok(msg) {
 const VALID_GENDERS = new Set(["male", "female"]);
 const VALID_STATUSES = new Set(["已绝育", "未绝育"]);
 const VALID_RELATIONS = new Set(["配偶", "父子", "母子", "兄弟姐妹", "朋友"]);
-const REQUIRED_CAT_FIELDS = ["id", "name", "gender", "color", "area", "lat", "lng", "description", "status", "firstSeen"];
+const REQUIRED_CAT_FIELDS = ["id", "name", "gender", "lat", "lng", "status"];
 const REQUIRED_RELATION_FIELDS = ["from", "to", "relation"];
 
 // ---------- load ----------
@@ -85,7 +85,7 @@ for (let i = 0; i < cats.length; i++) {
   }
 
   // firstSeen YYYY-MM
-  if (c.firstSeen && !/^\d{4}-\d{2}$/.test(c.firstSeen)) {
+  if (c.firstSeen && !/^\d{4}(-\d{2})?$/.test(c.firstSeen)) {
     error(idx + " firstSeen 格式无效 (应为 YYYY-MM): " + c.firstSeen);
   }
 

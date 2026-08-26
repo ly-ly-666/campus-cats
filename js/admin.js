@@ -233,7 +233,7 @@
       photo: photo,
       description: $('f-desc').value.trim(),
       status: $('f-status').value,
-      firstSeen: $('f-firstSeen').value.trim(),
+      firstSeen: $('f-firstSeen').value.trim() || currentMonth(),
       leftAt: $('f-leftAt').value.trim() || '',
       caretaker: $('f-caretaker').value.trim()
     };
@@ -347,7 +347,7 @@
     var ids = {};
     cats.forEach(function (c, i) {
       var p = 'cats[' + i + '] ';
-      ['id', 'name', 'gender', 'color', 'area', 'lat', 'lng', 'description', 'status'].forEach(function (f) {
+      ['id', 'name', 'gender', 'lat', 'lng', 'status'].forEach(function (f) {
         if (c[f] === undefined || c[f] === null || c[f] === '') errors.push(p + '缺必填：' + f);
       });
       if (c.id) { if (ids[c.id]) errors.push(p + 'id 重复：' + c.id); ids[c.id] = true; }
@@ -355,7 +355,7 @@
       if (STATUSES.indexOf(c.status) < 0) errors.push(p + 'status 无效');
       if (isNaN(c.lat) || c.lat < -90 || c.lat > 90) errors.push(p + '纬度无效');
       if (isNaN(c.lng) || c.lng < -180 || c.lng > 180) errors.push(p + '经度无效');
-      if (c.firstSeen && !/^\d{4}-\d{2}$/.test(c.firstSeen)) errors.push(p + 'firstSeen 应为 YYYY-MM');
+      if (c.firstSeen && !/^\d{4}(-\d{2})?$/.test(c.firstSeen)) errors.push(p + 'firstSeen 格式：YYYY 或 YYYY-MM');
       if (c.leftAt && !/^\d{4}-\d{2}$/.test(c.leftAt)) errors.push(p + 'leftAt 应为 YYYY-MM');
     });
     (relations || []).forEach(function (r, i) {
