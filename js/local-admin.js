@@ -593,6 +593,8 @@
       // 同步图片
       var remoteCats = JSON.parse(catsText);
       await syncImages(remoteCats, repo, branch, headers);
+      // 重写 cats.json 用本地 LF
+      await writeTextFile(CATS_PATH, JSON.stringify(remoteCats, null, 2) + '\n');
 
       // 拉取 relations.json
       var r2 = await fetch('https://api.github.com/repos/' + repo + '/contents/' + RELS_PATH + q, { headers: headers });
@@ -665,11 +667,11 @@
       var catsSha = await getFileSha(repo, branch, CATS_PATH, token);
       var relsSha = await getFileSha(repo, branch, RELS_PATH, token);
 
-      // 推送 JSON
+      // 推送 JSON（GitHub 要求 content 是二进制的 base64 编码）
       var catsText = await readTextFile(CATS_PATH);
       var relsText = await readTextFile(RELS_PATH);
-      await githubPut(repo, branch, CATS_PATH, catsText, token, catsSha);
-      await githubPut(repo, branch, RELS_PATH, relsText, token, relsSha);
+      await githubPut(repo, branch, CATS_PATH, utf8ToB64(catsText), token, catsSha);
+      await githubPut(repo, branch, RELS_PATH, utf8ToB64(relsText), token, relsSha);
 
       // 推送图片
       for (var i = 0; i < cats.length; i++) {
@@ -702,9 +704,10 @@
   }
 
   async function githubPut(repo, branch, path, content, token, sha) {
+    // content 已经是 GitHub API 要求的 base64 编码的二进制内容（由 dataUrlToBase64 或 utf8ToB64 处理过）
     var body = {
       message: 'data: 本地管理端更新 ' + path,
-      content: (typeof content === 'string' && content.indexOf('data:image') === 0) ? content.split(',')[1] : btoa(unescape(encodeURIComponent(content))),
+      content: content,
       branch: branch
     };
     if (sha) body.sha = sha;
@@ -734,8 +737,13 @@
 
   function dataUrlToBase64(dataUrl) {
     // GitHub API 的 content 字段要求是「二进制」的 base64 编码
+    // dataURL 已经是 base64 文本，需要先 atob 解码成二进制字符串再 btoa 重编码
     var raw = atob(dataUrl.split(',')[1]);
     return btoa(raw);
+  }
+  function utf8ToB64(str) {
+    // 把 UTF-8 文本转成 base64 编码的二进制（GitHub API content 字段要求）
+    return btoa(unescape(encodeURIComponent(str)));
   }
 
   // ---------- 事件绑定 ----------
