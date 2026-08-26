@@ -413,6 +413,55 @@
     });
   }
 
+  // ---------- 粘贴截图支持（Ctrl+V） ----------
+  // 0 = 未激活；1 = 粘贴到头像（走裁剪）；2 = 粘贴到相册
+  var pasteTarget = 0;
+  function setPasteMode(mode) {
+    pasteTarget = mode;
+    var hint = $('paste-hint');
+    var btn = $('btn-paste');
+    if (mode === 1) {
+      if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘成<b>头像</b>（会弹出裁剪）'; hint.style.display = ''; }
+      if (btn) { btn.textContent = '🎯 准备粘头像'; btn.style.background = '#dbeafe'; }
+    } else if (mode === 2) {
+      if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘到<b>相册</b>（直接保存）'; hint.style.display = ''; }
+      if (btn) { btn.textContent = '🖼️ 准备粘相册'; btn.style.background = '#dcfce7'; }
+    } else {
+      if (hint) hint.style.display = 'none';
+      if (btn) { btn.textContent = '📋 粘贴截图'; btn.style.background = ''; }
+    }
+  }
+  function handlePastedImage(blob) {
+    if (!blob || !blob.type || blob.type.indexOf('image') !== 0) {
+      log('❌ 剪贴板里没找到图片', 'err');
+      return;
+    }
+    var file = new File([blob], 'pasted-' + Date.now() + '.png', { type: blob.type });
+    var reader = new FileReader();
+    reader.onload = async function (e) {
+      var dataUrl = e.target.result;
+      if (pasteTarget === 1) {
+        pendingAvatarName = file.name;
+        openCropModal(dataUrl);
+        log('📋 已粘贴截图，请裁剪后点「确认」', 'ok');
+      } else if (pasteTarget === 2) {
+        if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
+        var c = cats[editIdx];
+        if (!c) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); setPasteMode(0); return; }
+        if (!c.album) c.album = [];
+        var ext = (file.name.split('.').pop() || 'png').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'png';
+        var name = c.id + '_album_' + Date.now() + '.' + ext;
+        var path = IMAGES_DIR + '/' + name;
+        await writeImageFile(path, dataUrl);
+        c.album.push(path);
+        renderAlbum(c.album);
+        log('📋 已粘贴截图到相册：' + path, 'ok');
+      }
+      setPasteMode(0);
+    };
+    reader.readAsDataURL(blob);
+  }
+
   function openCropModal(dataUrl) {
     var box = $('crop-box');
     box.innerHTML = '';
@@ -768,7 +817,7 @@
     $('btn-push').addEventListener('click', pushToGitHub);
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
     $('f-save').addEventListener('click', saveCat);
-    $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); });
+    $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); setPasteMode(0); });
     $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
     $('f-del').addEventListener('click', function () {
       if (editIdx < 0) { closeModal('cat-modal'); return; }
@@ -781,6 +830,32 @@
     $('btn-avatar').addEventListener('click', function () { $('f-avatar').click(); });
     $('f-avatar').addEventListener('change', onAvatarChange);
     $('btn-album-add').addEventListener('click', function () { $('f-album').click(); });
+
+    // 粘贴截图按钮：循环 0→头像→相册→0
+    $('btn-paste').addEventListener('click', function () {
+      if (!$('cat-modal').classList.contains('open')) {
+        log('❌ 请先打开一只猫的编辑弹窗', 'err');
+        return;
+      }
+      if (pasteTarget === 0) setPasteMode(1);
+      else if (pasteTarget === 1) setPasteMode(2);
+      else setPasteMode(0);
+    });
+
+    // 全局监听 Ctrl+V
+    document.addEventListener('paste', function (e) {
+      if (pasteTarget === 0) return;
+      if (!$('cat-modal').classList.contains('open')) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); return; }
+      var items = (e.clipboardData || window.clipboardData).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file' && items[i].type.indexOf('image') === 0) {
+          handlePastedImage(items[i].getAsFile());
+          e.preventDefault();
+          return;
+        }
+      }
+      log('❌ 剪贴板里没图片（先截图再用 Ctrl+V）', 'err');
+    });
     $('f-album').addEventListener('change', onAlbumAdd);
     $('crop-ok').addEventListener('click', confirmCrop);
     $('crop-cancel').addEventListener('click', cancelCrop);

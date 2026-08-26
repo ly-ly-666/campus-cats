@@ -1,4 +1,91 @@
+
+/* ---------- 猫协宣传条（最显眼） ---------- */
+.cat-promo {
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 50%, #fdba74 100%);
+  border-bottom: 1px solid #fb923c;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.cat-promo::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 90% 50%, rgba(255,255,255,.4), transparent 50%);
+  pointer-events: none;
+}
+.cat-promo-inner {
+  max-width: 980px; margin: 0 auto;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  position: relative;
+}
+.cat-promo-logo {
+  font-size: 36px; line-height: 1; flex-shrink: 0;
+  background: #fff; border-radius: 50%;
+  width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+.cat-promo-text { flex: 1; min-width: 200px; }
+.cat-promo-title { font-size: 16px; font-weight: 700; color: #7c2d12; }
+.cat-promo-desc { font-size: 12px; color: #9a3412; margin-top: 3px; line-height: 1.5; }
+.cat-promo-accounts {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  background: rgba(255,255,255,.6); border-radius: 999px; padding: 6px 12px;
+}
+.cat-promo-tag {
+  background: #ea580c; color: #fff; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+}
+.cat-promo-name { font-size: 12px; color: #7c2d12; font-weight: 600; }
+@media (max-width: 600px) {
+  .cat-promo-logo { width: 44px; height: 44px; font-size: 28px; }
+  .cat-promo-title { font-size: 14px; }
+}
+
 :root {
+
+/* ---------- 猫协宣传条（最显眼） ---------- */
+.cat-promo {
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 50%, #fdba74 100%);
+  border-bottom: 1px solid #fb923c;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.cat-promo::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 90% 50%, rgba(255,255,255,.4), transparent 50%);
+  pointer-events: none;
+}
+.cat-promo-inner {
+  max-width: 980px; margin: 0 auto;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  position: relative;
+}
+.cat-promo-logo {
+  font-size: 36px; line-height: 1; flex-shrink: 0;
+  background: #fff; border-radius: 50%;
+  width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+.cat-promo-text { flex: 1; min-width: 200px; }
+.cat-promo-title { font-size: 16px; font-weight: 700; color: #7c2d12; }
+.cat-promo-desc { font-size: 12px; color: #9a3412; margin-top: 3px; line-height: 1.5; }
+.cat-promo-accounts {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  background: rgba(255,255,255,.6); border-radius: 999px; padding: 6px 12px;
+}
+.cat-promo-tag {
+  background: #ea580c; color: #fff; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+}
+.cat-promo-name { font-size: 12px; color: #7c2d12; font-weight: 600; }
+@media (max-width: 600px) {
+  .cat-promo-logo { width: 44px; height: 44px; font-size: 28px; }
+  .cat-promo-title { font-size: 14px; }
+}
+
+
   --primary: #f59e0b;
   --primary-dark: #d97706;
   --bg: #faf6ef;
