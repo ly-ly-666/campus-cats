@@ -24,10 +24,80 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // ---------- IndexedDB 持久化目录句柄 ----------
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open('campus-cats-db', 1);
+      req.onupgradeneeded = function () { req.result.createObjectStore('handles'); };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function saveDirHandle(handle) {
+    return openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').put(handle, 'projectDir');
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = function () { reject(tx.error); };
+      });
+    });
+  }
+  function loadDirHandle() {
+    return openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction('handles', 'readonly');
+        var req = tx.objectStore('handles').get('projectDir');
+        req.onsuccess = function () { resolve(req.result || null); };
+        req.onerror = function () { reject(req.error); };
+      });
+    }).catch(function () { return null; });
+  }
+  async function autoConnect() {
+    var handle = await loadDirHandle();
+    if (!handle) {
+      log('👋 请先点「📁 选择项目文件夹」授权一次，之后会自动记忆', 'info');
+      return;
+    }
+    try {
+      var perm = await handle.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        dirHandle = handle;
+        $('folder-path').textContent = handle.name + '（✅ 已自动关联）';
+        $('btn-pick').textContent = '📁 更换文件夹';
+        log('✅ 已自动关联文件夹：' + handle.name, 'ok');
+        await loadProject();
+        ensureMap();
+        renderMarkers();
+      } else {
+        log('ℹ️ 检测到上次文件夹「' + (handle.name || '') + '」，点下方「📁 一键重新连接」可自动恢复', 'info');
+        $('btn-pick').textContent = '📁 一键重新连接「' + (handle.name || '') + '」';
+        $('btn-pick').onclick = async function () {
+          try {
+            var p2 = await handle.requestPermission({ mode: 'readwrite' });
+            if (p2 === 'granted') {
+              dirHandle = handle;
+              $('folder-path').textContent = handle.name + '（✅ 已关联）';
+              $('btn-pick').textContent = '📁 更换文件夹';
+              $('btn-pick').onclick = pickFolder;
+              log('✅ 已恢复文件夹：' + handle.name, 'ok');
+              await loadProject();
+              ensureMap();
+              renderMarkers();
+            }
+          } catch (e) { log('❌ 恢复失败：' + e.message, 'err'); }
+        };
+      }
+    } catch (e) {
+      log('⚠️ 自动关联失败：' + e.message, 'err');
+    }
+  }
+
   // ---------- 地图 ----------
   function ensureMap() {
     if (map) return;
-    if (typeof L === 'undefined') { log('❌ Leaflet 未加载，请检查网络', 'err'); return; }
+    if (typeof L === 'undefined') { log('❌ Leaflet 未加载（vendor/leaflet.min.js 缺失？）', 'err'); return; }
+    // 默认 marker 图标不需要（用 circleMarker 和 divIcon）
     map = L.map('admin-map', { zoomControl: true }).setView(CAMPUS_CENTER, 16);
     addTileLayer();
     markerLayer = L.layerGroup().addTo(map);
@@ -56,7 +126,8 @@
   function moveTempMarker(latlng) {
     if (!markerLayer || !map) return;
     if (tempMarker) markerLayer.removeLayer(tempMarker);
-    tempMarker = L.marker([latlng.lat, latlng.lng], { draggable: true }).addTo(markerLayer);
+    var tempIcon = L.divIcon({ className: '', html: '<div style="width:20px;height:20px;border-radius:50%;background:#f59e0b;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>', iconSize: [20, 20], iconAnchor: [10, 10] });
+    tempMarker = L.marker([latlng.lat, latlng.lng], { icon: tempIcon, draggable: true }).addTo(markerLayer);
     tempMarker.on('dragend', function () {
       var ll = tempMarker.getLatLng();
       pendingLatLng = { lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6) };
@@ -97,6 +168,8 @@
       dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
       $('folder-path').textContent = dirHandle.name;
       log('✅ 已选择文件夹：' + dirHandle.name, 'ok');
+      await saveDirHandle(dirHandle);
+      $('btn-pick').textContent = '📁 更换文件夹';
       await loadProject();
       ensureMap();
       renderMarkers();
@@ -522,5 +595,5 @@
   }
 
   bind();
-  log('👋 请先选择项目文件夹，然后就可以编辑猫咪和相册了', 'info');
+  autoConnect();
 })();
