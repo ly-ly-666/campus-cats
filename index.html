@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园猫咪地图与族谱</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">🐱 校园猫咪地图与族谱</h1>
+    <nav class="tab-bar" aria-label="视图切换">
+      <button class="tab-btn active" data-tab="map" type="button">🗺️ 地图分布</button>
+      <button class="tab-btn" data-tab="graph" type="button">🌳 亲戚关系</button>
+    </nav>
+  </header>
+
+  <main class="app-main">
+    <!-- 地图视图 -->
+    <section id="map-view" class="view active">
+      <div id="map" class="map-container"></div>
+      <aside id="sidebar" class="sidebar">
+        <h2 class="sidebar-title">猫咪列表（<span id="cat-count">0</span>）</h2>
+        <div id="cat-list" class="cat-list"></div>
+      </aside>
+    </section>
+
+    <!-- 关系图视图 -->
+    <section id="graph-view" class="view">
+      <div id="graph" class="graph-container"></div>
+    </section>
+  </main>
+
+  <!-- 详情弹窗 -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true"></div>
+
+  <!-- 加载提示 -->
+  <div id="loading" class="loading">正在加载猫咪数据…</div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.5.1/dist/echarts.min.js"></script>
+  <!-- 入口模块 -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
