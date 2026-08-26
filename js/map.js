@@ -1,5 +1,11 @@
 // map.js — 地图模块（Leaflet 初始化与圆形猫咪标记）
 import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS } from './config.js';
+const IMG_CACHE_BUST = Date.now();
+function photoUrl(src) {
+  if (!src) return DEFAULT_PHOTO;
+  if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
+  return src + '?v=' + IMG_CACHE_BUST;
+}
 import { showToast } from './ui.js';
 
 let currentProviderIdx = 0;
@@ -37,7 +43,7 @@ function addTileLayer(map) {
  * 背景显示猫照片，照片加载失败时兜底为底色 + 猫图标。
  */
 function createCatIcon(cat) {
-  const photo = cat.photo || DEFAULT_PHOTO;
+  const photo = photoUrl(cat.photo);
   const isPast = cat.leftAt ? true : false;
   const html = `
     <div class="cat-marker${isPast ? ' cat-marker-past' : ''}" data-cat-id="${cat.id}">

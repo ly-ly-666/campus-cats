@@ -14,6 +14,7 @@
   ];
 
   var state = { repo: '', branch: 'main', token: '', cats: [], relations: [], catsSha: null, relsSha: null };
+  var IMG_CACHE_BUST = Date.now();
   var map = null, markerLayer = null, tempMarker = null, tileIdx = 0, tileErrors = 0;
   var editIndex = -1;          // 当前编辑的猫咪索引；-1 = 添加
   var pendingLatLng = null;    // 添加/编辑时选中的地图位置
@@ -22,6 +23,11 @@
   var cropInstance = null;     // 裁剪实例
 
   function $(id) { return document.getElementById(id); }
+  function photoUrl(src) {
+    if (!src) return 'images/placeholder.svg';
+    if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
+    return src + '?v=' + IMG_CACHE_BUST;
+  }
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -144,6 +150,7 @@
       var color = c.leftAt ? '#9ca3af' : (c.gender === 'male' ? '#3b82f6' : '#ec4899');
       var m = L.circleMarker([c.lat, c.lng], { radius: 12, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 }).addTo(markerLayer);
       m.options.catIndex = i;
+      m.photoUrl = photoUrl(c.photo);
       m.bindTooltip(c.name + (c.leftAt ? '（过往）' : ''), { direction: 'top' });
       m.on('click', function () { openCatModal(i); });
       m.dragging.enable();
@@ -189,7 +196,7 @@
     $('f-photo').value = c ? (c.photo || '') : '';
     // 预览当前照片
     if (c && c.photo) {
-      $('f-preview').src = c.photo; $('f-preview').classList.add('show');
+      $('f-preview').src = photoUrl(c.photo); $('f-preview').classList.add('show');
     } else {
       $('f-preview').classList.remove('show');
     }
@@ -334,9 +341,29 @@
     var path = 'images/' + id + '.' + ext;
     var base64 = dataUrl.split(',')[1];
     log('⏳ 正在上传照片 → ' + path + ' …', 'info');
-    return apiPut('/repos/' + state.repo + '/contents/' + path, { message: 'data: 上传照片 ' + fileName, content: base64, branch: state.branch })
-      .then(function () { log('✅ 照片已上传：' + path, 'ok'); return path; })
-      .catch(function (e) { log('❌ 照片上传失败：' + e.message + '（检查 Token 是否有 Contents 写权限）', 'err'); return null; });
+    return doUpload(path, base64, fileName)
+      .catch(function (e) {
+        var msg = e.message || '';
+        if (msg.indexOf('sha') >= 0 || msg.indexOf('422') >= 0) {
+          log('ℹ️ 该照片已存在，正在获取 sha 后覆盖…', 'info');
+          return apiGet('/repos/' + state.repo + '/contents/' + path + '?ref=' + encodeURIComponent(state.branch))
+            .then(function (info) {
+              return doUpload(path, base64, fileName, info && info.sha);
+            })
+            .catch(function (e2) {
+              log('❌ 照片上传失败：' + e2.message, 'err');
+              return null;
+            });
+        }
+        log('❌ 照片上传失败：' + e.message + '（检查 Token 是否有 Contents 写权限）', 'err');
+        return null;
+      });
+  }
+  function doUpload(path, base64, fileName, sha) {
+    var body = { message: 'data: 上传/更新照片 ' + fileName, content: base64, branch: state.branch };
+    if (sha) body.sha = sha;
+    return apiPut('/repos/' + state.repo + '/contents/' + path, body)
+      .then(function () { log('✅ 照片已上传：' + path, 'ok'); return path; });
   }
 
   function deleteCat() {
@@ -359,10 +386,10 @@
     var box = $('cats-list'); if (!box) return;
     var html = '';
     state.cats.forEach(function (c, i) {
-      var photo = c.photo || 'images/placeholder.svg';
+      var photo = photoUrl(c.photo);
       var past = c.leftAt ? '<span class="tag tag-past">过往</span>' : '';
       html += '<div class="catcard">' +
-        '<div class="th"><img src="' + esc(photo) + '" alt="" onerror="this.style.display=\'none\'"><span style="font-size:40px;">🐱</span></div>' +
+        '<div class="th"><img src="' + esc(photo) + '" alt="" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'cat-item-fallback\');" onload="this.parentNode.classList.remove(\'cat-item-fallback\');"><span style="font-size:40px;">🐱</span></div>' +
         '<div class="bd">' +
         '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + '</div>' +
         '<div class="meta">' + past + ' ' + (c.gender === 'male' ? '公' : '母') + ' · ' + esc(c.status || '') + '</div>' +

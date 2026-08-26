@@ -1,5 +1,11 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO } from './config.js';
+const IMG_CACHE_BUST = Date.now();
+function photoUrl(src) {
+  if (!src) return DEFAULT_PHOTO;
+  if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
+  return src + '?v=' + IMG_CACHE_BUST;
+}
 
 /**
  * 对字符串进行 HTML 转义，防止 XSS。
@@ -30,7 +36,7 @@ export function renderCatList(cats, onSelect) {
   if (!listEl) return;
 
   listEl.innerHTML = cats.map((cat) => {
-    const photo = cat.photo || DEFAULT_PHOTO;
+    const photo = photoUrl(cat.photo);
     return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
         <div class="cat-item-photo">
@@ -80,7 +86,7 @@ export function showModal(cat, cats, relations) {
   if (!cat) return;
   const catById = new Map(cats.map((c) => [c.id, c]));
 
-  const photo = cat.photo || DEFAULT_PHOTO;
+  const photo = photoUrl(cat.photo);
   const infoRows = [
     ['性别', GENDER_LABEL[cat.gender] || cat.gender],
     ['外号', cat.nickname],
