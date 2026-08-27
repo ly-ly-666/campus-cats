@@ -5,6 +5,7 @@ import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, close
 import { loadData } from './data.js';
 
 window.__splashStart = performance.now();
+setTimeout(function() { var s = document.getElementById('splash'); if (s) { s.classList.add('fade-out'); s.addEventListener('transitionend', function() { s.remove(); }, { once: true }); setTimeout(function() { if (s.parentNode) s.remove(); }, 800); } }, 6000);
 const loadingEl = document.getElementById('loading');
 
 function setLoading(text) {
@@ -14,6 +15,7 @@ function setLoading(text) {
 }
 
 function showError(message) {
+  dismissSplash();
   if (loadingEl) {
     loadingEl.innerHTML = '<span class="loading-error">⚠️ ' + message + '</span>';
     loadingEl.style.display = 'flex';
