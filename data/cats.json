@@ -40,7 +40,7 @@
     "album": [
       "images/cat002_album_1787767551598.jpg"
     ],
-    "description": "乖顺,酷似虎皮面包",
+    "description": "广油老资历,乖顺,酷似虎皮面包,平时爱在花坛竹竿上趴着(传闻压断了几根竹竿)",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -48,7 +48,7 @@
     "firstSeen": "2026-08",
     "leftAt": "",
     "caretaker": "",
-    "age": "",
+    "age": "大约八岁",
     "events": []
   },
   {
@@ -86,7 +86,7 @@
     "lng": 110.923274,
     "photo": "images/cat004.jpg",
     "album": [],
-    "description": "",
+    "description": "封面为年年大战蜜蜂三天三夜的情况展示",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -94,7 +94,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "events": []
   },
   {
     "id": "cat005",
@@ -205,7 +206,7 @@
   {
     "id": "cat009",
     "name": "奶油",
-    "nickname": "",
+    "nickname": "白袜体育生",
     "gender": "male",
     "color": "白猫",
     "area": "五区门口",
@@ -223,7 +224,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "events": []
   },
   {
     "id": "cat010",
@@ -717,7 +719,7 @@
     "lng": 110.921786,
     "photo": "images/cat032.jpg",
     "album": [],
-    "description": "",
+    "description": "极品好猫,假如你有一天,你被一只猫撞了,那绝对是乔乔在蹭你",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -874,7 +876,7 @@
       "images/cat039_album_1787840701361.jpg",
       "images/cat039_album_1787840720922.jpg"
     ],
-    "description": "很聪明能打的一直小猫,2026年寒假失踪",
+    "description": "很聪明能打的一直小猫,曾一段时间在图书馆正门称霸,后面2026年寒假失踪,可能去闯荡江湖了",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -1063,7 +1065,7 @@
     "album": [
       "images/cat047_album_1787828494085.jpg"
     ],
-    "description": "喜欢板鸭趴,曾经由于蹲在楼道,被学生上课一直摸而不耐烦",
+    "description": "之前在一区宿舍常驻,喜欢板鸭趴,曾经由于蹲在楼道,被学生上课一直摸而不耐烦,曾几度跑进宿舍,在蚊帐上享皇帝般的待遇.然后抓了只老师带回宿舍报答,同学们为其尖叫呐喊",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -1228,9 +1230,9 @@
     "story": "",
     "tags": [],
     "status": "未知",
-    "life": "失踪",
+    "life": "在校",
     "firstSeen": "",
-    "leftAt": "",
+    "leftAt": "生病去世了",
     "caretaker": "",
     "age": "",
     "events": []
@@ -1300,6 +1302,30 @@
     "tags": [],
     "status": "未知",
     "life": "失踪已久",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": []
+  },
+  {
+    "id": "cat058",
+    "name": "黄豆",
+    "nickname": "",
+    "gender": "",
+    "color": "",
+    "area": "花坛",
+    "lat": 21.679012,
+    "lng": 110.921556,
+    "photo": "images/cat058.jpg",
+    "album": [
+      "images/cat058_album_1787842003183.jpg"
+    ],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "已领养",
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
