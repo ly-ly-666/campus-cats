@@ -416,15 +416,15 @@
   {
     "id": "cat020",
     "name": "小q",
-    "nickname": "",
-    "gender": "male",
+    "nickname": "外号：Q奶，QQ肠",
+    "gender": "female",
     "color": "",
     "area": "",
     "lat": 21.677293,
     "lng": 110.923039,
     "photo": "images/cat020.jpg",
     "album": [],
-    "description": "年年的老母亲",
+    "description": "很霸气的长相，是年年的妈妈。有点怕人（饿了除外），喜欢睡觉。",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -488,7 +488,7 @@
     "lng": 110.922369,
     "photo": "images/cat023.jpg",
     "album": [],
-    "description": "",
+    "description": "怕人，到处乱窜，鲜少出现",
     "story": "",
     "tags": [],
     "status": "未绝育",
@@ -496,7 +496,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "events": []
   },
   {
     "id": "cat024",
