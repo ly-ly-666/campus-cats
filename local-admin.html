@@ -80,6 +80,12 @@
     .event-item .ev-imgs .thumb-wrap { position: relative; }
     .event-item .ev-imgs .thumb-wrap .del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; }
     .event-item .ev-del { flex-shrink: 0; }
+    .rel-list { display: flex; flex-direction: column; gap: 6px; }
+    .rel-item { display: flex; align-items: center; gap: 8px; background: #fffdf9; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; flex-wrap: wrap; }
+    .rel-item .rel-a { font-weight: 600; color: var(--primary-dark); }
+    .rel-item .rel-type { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+    .rel-item .rel-note { color: var(--muted); font-size: 12px; }
+    .rel-item .rel-del { margin-left: auto; }
     @keyframes cat-missing-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,.7); } 50% { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(220,38,38,0); } }
     .hidden { display: none !important; }
     details.help { margin-top: 8px; }
@@ -127,6 +133,27 @@
       </div>
       <div class="field" style="margin-top:8px;"><input id="admin-cat-search" type="search" placeholder="🔍 搜索猫咪（名字 / 外号 / 毛色 / 区域）" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"></div>
       <div id="cats-list" class="catcards"><p class="hint">请先选择项目文件夹。</p></div>
+    </section>
+
+    <section class="card">
+      <h2>🪢 关系管理</h2>
+      <p class="hint">给猫咪建立关系网（血缘 / 配偶 / 朋友）。</p>
+      <div class="grid3" id="rel-form-row" style="margin-top:4px;">
+        <div class="field"><label>猫咪 A</label><select id="rel-from"></select></div>
+        <div class="field"><label>关系</label><select id="rel-type">
+          <option value="配偶">配偶</option>
+          <option value="父子">父子</option>
+          <option value="母子">母子</option>
+          <option value="兄弟姐妹">兄弟姐妹</option>
+          <option value="朋友">朋友</option>
+        </select></div>
+        <div class="field"><label>猫咪 B</label><select id="rel-to"></select></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1;"><label>备注（选填）</label><input id="rel-note" placeholder="如：猫妈妈是小白"></div>
+        <button class="btn btn-primary" id="btn-rel-add" style="align-self:flex-end;">＋ 添加关系</button>
+      </div>
+      <div id="rel-list" class="rel-list" style="margin-top:10px;"></div>
     </section>
 
     <section class="card">

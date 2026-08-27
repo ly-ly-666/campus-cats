@@ -311,6 +311,8 @@
     renderCats();
     ensureMap();
     renderMarkers();
+    renderRelSelects();
+    renderRelList();
   }
 
   async function saveAll() {
@@ -400,6 +402,68 @@
       searchEl._bound = true;
       searchEl.addEventListener('input', function () { renderFiltered(searchEl.value); });
     }
+  }
+
+  // ---------- 关系管理 ----------
+  function renderRelSelects() {
+    var from = $('rel-from');
+    var to = $('rel-to');
+    if (!from || !to) return;
+    var opts = cats.map(function (c) {
+      return '<option value="' + c.id + '">' + esc(c.name || c.id) + '</option>';
+    }).join('');
+    var keepFrom = from.value;
+    var keepTo = to.value;
+    from.innerHTML = opts;
+    to.innerHTML = opts;
+    if (keepFrom && cats.some(function (c) { return c.id === keepFrom; })) from.value = keepFrom;
+    if (keepTo && cats.some(function (c) { return c.id === keepTo; })) to.value = keepTo;
+  }
+
+  function renderRelList() {
+    var box = $('rel-list');
+    if (!box) return;
+    if (!relations.length) {
+      box.innerHTML = '<p class="hint" style="margin:0;">还没有关系记录，用上面选择两只猫建立关系。</p>';
+      return;
+    }
+    var nameOf = function (id) {
+      var c = cats.find(function (x) { return x.id === id; });
+      return c ? c.name : id;
+    };
+    box.innerHTML = relations.map(function (r, i) {
+      return '<div class="rel-item">' +
+        '<span class="rel-a">' + esc(nameOf(r.from)) + '</span>' +
+        '<span class="rel-type">' + esc(r.relation || '关系') + '</span>' +
+        '<span class="rel-a">' + esc(nameOf(r.to)) + '</span>' +
+        (r.note ? '<span class="rel-note">（' + esc(r.note) + '）</span>' : '') +
+        '<button class="btn btn-sm btn-danger rel-del" data-rel-idx="' + i + '">删除</button>' +
+        '</div>';
+    }).join('');
+    box.querySelectorAll('[data-rel-idx]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        relations.splice(Number(b.dataset.relIdx), 1);
+        renderRelList();
+        log('🗑️ 已删除关系', 'info');
+      });
+    });
+  }
+
+  function addRelation() {
+    var from = $('rel-from') ? $('rel-from').value : '';
+    var to = $('rel-to') ? $('rel-to').value : '';
+    var type = $('rel-type') ? $('rel-type').value : '';
+    var note = $('rel-note') ? $('rel-note').value.trim() : '';
+    if (!from || !to || !type) { log('❌ 请选择两只猫和关系类型', 'err'); return; }
+    if (from === to) { log('❌ 不能选同一只猫', 'err'); return; }
+    var dup = relations.some(function (r) {
+      return (r.from === from && r.to === to && r.relation === type) || (r.from === to && r.to === from && r.relation === type);
+    });
+    if (dup) { log('⚠️ 这两只猫已经存在这个关系了', 'err'); return; }
+    relations.push({ from: from, to: to, relation: type, note: note });
+    renderRelList();
+    if ($('rel-note')) $('rel-note').value = '';
+    log('✅ 已添加关系，记得点「💾 保存到本地」', 'ok');
   }
 
   function esc(s) {
@@ -771,6 +835,8 @@
     closeModal('cat-modal');
     renderCats();
     renderMarkers();
+    renderRelSelects();
+    renderRelList();
     pendingAvatar = null;
   }
 
@@ -1091,6 +1157,7 @@
     });
     $('btn-push').addEventListener('click', pushToGitHub);
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
+    if ($('btn-rel-add')) $('btn-rel-add').addEventListener('click', function () { addRelation(); });
     $('f-save').addEventListener('click', saveCat);
     $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); setPasteMode(0); });
     $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
