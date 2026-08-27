@@ -458,8 +458,10 @@ export function updateStats(cats) {
   const list = Array.isArray(cats) ? cats : [];
   const totalEl = document.getElementById('stat-total');
   const neuEl = document.getElementById('stat-neutered');
+  const fabEl = document.getElementById('fab-count');
   if (totalEl) totalEl.textContent = String(list.length);
   if (neuEl) neuEl.textContent = String(list.filter((c) => c.status === '已绝育').length);
+  if (fabEl) fabEl.textContent = String(list.length);
 }
 
 /**

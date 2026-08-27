@@ -678,3 +678,88 @@ body { display: flex; flex-direction: column; }
 .story-item-imgs img { width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border, #e8e1d6); cursor: zoom-in; }
 @media (max-width: 768px) { .story-item-imgs img { width: 90px; height: 90px; } }
 .search-life-past { background: #9ca3af; color: #fff; padding: 1px 6px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+
+/* 故事集视图可滚动 */
+#stories-view { padding: 0; overflow-y: auto; flex-direction: column; }
+.stories-timeline { max-width: 720px; margin: 0 auto; }
+
+/* ---------- 地图内搜索定位 ---------- */
+.map-search {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 1100; width: min(420px, calc(100% - 24px));
+  display: flex; flex-direction: column;
+}
+.map-search-input {
+  width: 100%; height: 40px; padding: 0 14px;
+  border: 1px solid #e5e0d8; border-radius: 999px;
+  font-size: 14px; color: var(--text); background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,.14); outline: none;
+}
+.map-search-input:focus { border-color: var(--primary); box-shadow: 0 2px 12px rgba(249,115,22,.25); }
+.map-search-results {
+  margin-top: 6px; background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.16);
+  max-height: 320px; overflow-y: auto; padding: 4px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.map-search-results[hidden] { display: none; }
+.map-search-item {
+  display: flex; flex-direction: column; gap: 2px; text-align: left;
+  padding: 8px 10px; border: none; border-radius: 8px; background: transparent;
+  cursor: pointer; font: inherit;
+}
+.map-search-item:hover, .map-search-item.active { background: #fff7ed; }
+.map-search-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.map-search-area { font-size: 12px; color: var(--muted); }
+.map-search-empty { padding: 12px 10px; font-size: 13px; color: var(--muted); text-align: center; }
+.search-life { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; }
+.search-life-missing { background: #dc2626; }
+.search-life-missing-old { background: #9f1239; }
+.search-life-adopted { background: #10b981; }
+
+/* ---------- 圈圈状态图例 ---------- */
+.map-legend {
+  position: absolute; right: 14px; bottom: 28px; z-index: 1100;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+}
+.map-legend-toggle {
+  border: 1px solid #e5e0d8; border-radius: 999px; cursor: pointer;
+  background: #fff; color: #b45309; font-size: 13px; font-weight: 600;
+  padding: 8px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
+}
+.map-legend-toggle:hover { background: #fff7ed; }
+.map-legend-body {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.16); padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.map-legend-body[hidden] { display: none; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); white-space: nowrap; }
+.legend-swatch {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid #fff; background: #ffd9a8;
+}
+.legend-swatch-normal { box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.legend-swatch-missing { box-shadow: 0 0 0 4px rgba(220,38,38,.9); animation: cat-pulse 1.5s infinite; }
+.legend-swatch-missing-old { box-shadow: 0 0 0 4px #9f1239; }
+.legend-swatch-adopted { box-shadow: 0 0 0 4px #10b981; }
+.legend-swatch-past { filter: grayscale(0.85) opacity(0.75); box-shadow: 0 0 0 3px #cbd5e1; }
+
+/* 列表入口更醒目 */
+.list-fab {
+  position: absolute; left: 14px; bottom: 28px; z-index: 900;
+  background: #fff; border: 1px solid #e5e0d8; color: #b45309;
+  font-size: 14px; font-weight: 600; padding: 10px 16px;
+  border-radius: 999px; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15);
+}
+.list-fab:hover { background: #fff7ed; }
+.fab-count-badge {
+  display: inline-block; min-width: 20px; text-align: center;
+  background: #f97316; color: #fff; border-radius: 999px;
+  font-size: 12px; font-weight: 700; padding: 1px 6px; margin-left: 4px;
+}
+@media (max-width: 768px) {
+  .map-search { top: 8px; width: calc(100% - 16px); }
+  .map-legend { right: 10px; bottom: 20px; }
+}

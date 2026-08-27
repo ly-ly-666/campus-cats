@@ -1,5 +1,5 @@
 // main.js — 入口模块（装配并启动应用）
-import { initMap } from './map.js';
+import { initMap, initMapSearch } from './map.js';
 import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js';
 import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, prefetchCatOriginals } from './ui.js';
 import { loadData } from './data.js';
@@ -34,6 +34,19 @@ function dismissSplash() {
   }, minWait);
 }
 
+// 圈圈状态图例：展开/收起（默认收起，不遮挡地图主干）
+function bindMapLegend() {
+  const toggle = document.getElementById('map-legend-toggle');
+  const body = document.getElementById('map-legend-body');
+  if (!toggle || !body) return;
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    body.hidden = expanded;
+    toggle.textContent = expanded ? '🔍 圈圈含义' : '✕ 收起图例';
+  });
+}
+
 async function boot() {
   setLoading('正在加载猫咪数据…');
   let data;
@@ -63,6 +76,7 @@ async function boot() {
   let map = null;
   try {
     map = initMap('map', cats, (cat) => showModal(cat, cats, relations));
+    if (map) { initMapSearch(map, cats); bindMapLegend(); }
   } catch (e) {
     console.error('地图初始化失败', e);
     if (typeof L === 'undefined') {

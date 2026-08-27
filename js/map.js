@@ -114,3 +114,78 @@ export function initMap(containerId, cats, onCatClick) {
 
   return map;
 }
+/**
+ * 地图内搜索：按 名字/外号/毛色/区域 模糊搜索猫咪，选中后 flyTo 定位并打开标记气泡。
+ * 需要 index.html 中有 #map-search 输入框与 #map-search-results 结果容器。
+ * @param {L.Map} map Leaflet 地图实例
+ * @param {Array} cats 猫咪数组
+ */
+export function initMapSearch(map, cats) {
+  const input = document.getElementById('map-search-input');
+  const resultsEl = document.getElementById('map-search-results');
+  if (!input || !resultsEl || !map) return;
+
+  const markers = new Map(); // cat.id -> marker
+  cats.forEach((c) => {
+    const m = map.eachLayer ? null : null;
+  });
+  // 收集地图上已有的标记（带 data-cat-id）
+  map.eachLayer((layer) => {
+    if (layer && layer.options && layer.options.icon) {
+      const el = layer.getElement ? layer.getElement() : null;
+      const idEl = el && el.querySelector ? el.querySelector('[data-cat-id]') : null;
+      if (idEl && idEl.dataset && idEl.dataset.catId) markers.set(idEl.dataset.catId, layer);
+    }
+  });
+
+  function catHaystack(c) {
+    return [c.name, c.nickname, c.color, c.area].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  function renderResults(list) {
+    if (!list.length) {
+      resultsEl.innerHTML = '<div class="map-search-empty">没有找到匹配的猫咪</div>';
+      resultsEl.hidden = false;
+      return;
+    }
+    resultsEl.innerHTML = list.map((c) => {
+      const lifeTag = c.life === '失踪' ? '<span class="search-life search-life-missing">失踪</span>'
+        : (c.life === '失踪已久' ? '<span class="search-life search-life-missing-old">失踪已久</span>'
+        : (c.life === '已领养' ? '<span class="search-life search-life-adopted">已领养</span>'
+        : (c.life === '去喵星了' || c.leftAt ? '<span class="search-life search-life-past">去喵星</span>' : '')));
+      return '<button type="button" class="map-search-item" data-id="' + c.id + '">'
+        + '<span class="map-search-name">' + c.name + lifeTag + '</span>'
+        + (c.area ? '<span class="map-search-area">📍 ' + c.area + '</span>' : '')
+        + '</button>';
+    }).join('');
+    resultsEl.hidden = false;
+  }
+
+  function doSearch(q) {
+    const s = (q || '').trim().toLowerCase();
+    if (!s) { resultsEl.hidden = true; resultsEl.innerHTML = ''; return; }
+    const list = cats.filter((c) => catHaystack(c).indexOf(s) >= 0).slice(0, 8);
+    renderResults(list);
+  }
+
+  input.addEventListener('input', () => doSearch(input.value));
+  input.addEventListener('focus', () => { if (input.value.trim()) doSearch(input.value); });
+
+  resultsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.map-search-item');
+    if (!btn) return;
+    const cat = cats.find((c) => c.id === btn.dataset.id);
+    if (!cat) return;
+    const marker = markers.get(cat.id);
+    if (map && typeof map.flyTo === 'function' && typeof cat.lat === 'number') {
+      map.flyTo([cat.lat, cat.lng], 19, { duration: 0.8 });
+      if (marker) setTimeout(() => marker.openPopup(), 850);
+    }
+    input.value = cat.name;
+    resultsEl.hidden = true;
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#map-search')) resultsEl.hidden = true;
+  });
+}

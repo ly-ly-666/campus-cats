@@ -86,7 +86,28 @@
     <!-- 地图视图 -->
     <section id="map-view" class="view active">
       <div id="map" class="map-container"></div>
-      <button id="list-fab" class="list-fab" title="猫咪列表">📋 <span id="fab-count">0</span> 只猫</button>
+
+      <!-- 地图内搜索：按 名字/外号/毛色/区域 快速定位到猫咪 -->
+      <div class="map-search" id="map-search">
+        <input id="map-search-input" class="map-search-input" type="search"
+               placeholder="🔍 搜索并定位猫咪（名字 / 外号 / 毛色 / 区域）"
+               aria-label="在地图上搜索并定位猫咪" autocomplete="off">
+        <div id="map-search-results" class="map-search-results" role="listbox" hidden></div>
+      </div>
+
+      <!-- 圈圈状态图例（可展开/收起，默认收起，不遮挡地图主干） -->
+      <div class="map-legend" id="map-legend">
+        <button type="button" class="map-legend-toggle" id="map-legend-toggle" aria-expanded="false" aria-controls="map-legend-body">🔍 圈圈含义</button>
+        <div class="map-legend-body" id="map-legend-body" hidden>
+          <div class="legend-item"><span class="legend-swatch legend-swatch-normal"></span>在校（无圈）</div>
+          <div class="legend-item"><span class="legend-swatch legend-swatch-missing"></span>失踪（红圈闪烁）</div>
+          <div class="legend-item"><span class="legend-swatch legend-swatch-missing-old"></span>失踪已久（深红）</div>
+          <div class="legend-item"><span class="legend-swatch legend-swatch-adopted"></span>已领养（绿）</div>
+          <div class="legend-item"><span class="legend-swatch legend-swatch-past"></span>灰色 = 去喵星 / 过往</div>
+        </div>
+      </div>
+
+      <button id="list-fab" class="list-fab" title="打开猫咪列表，可搜索猫咪">📋 猫咪列表（可搜索） <span id="fab-count" class="fab-count-badge">0</span></button>
     </section>
 
     <!-- 猫咪列表全屏浮层 -->
