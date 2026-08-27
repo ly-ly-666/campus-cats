@@ -662,7 +662,8 @@
         '<div class="ev-row"><input class="ev-date" type="date" data-ev="' + i + '" value="' + esc(ev.date) + '">' +
         '<input class="ev-text" type="text" placeholder="事件描述，如：5月12日在图书馆绝育、打了疫苗" data-ev="' + i + '" value="' + esc(ev.text) + '">' +
         '<button class="btn btn-sm btn-danger ev-del" data-ev="' + i + '">删除</button></div>' +
-        '<div class="ev-row"><button class="btn btn-sm" data-ev-img="' + i + '">🖼️ 加截图</button></div>' +
+        '<div class="ev-row"><button class="btn btn-sm" data-ev-img="' + i + '">🖼️ 加截图</button>' +
+          '<button class="btn btn-sm" data-ev-paste="' + i + '" style="margin-left:4px">📋 粘贴截图</button></div>' +
         '<div class="ev-imgs">' + imgs + '</div>' +
         '</div>';
     }).join('');
@@ -678,9 +679,13 @@
     box.querySelectorAll('.ev-del').forEach(function (b) {
       b.addEventListener('click', function () { _pendingEvents.splice(Number(b.dataset.ev), 1); refreshEvents(); });
     });
-    // 加截图
+    // 加截图（文件选择）
     box.querySelectorAll('[data-ev-img]').forEach(function (b) {
       b.addEventListener('click', function () { _evtImgTarget = Number(b.dataset.evImg); $('f-event-img').click(); });
+    });
+    // 粘贴截图到事件
+    box.querySelectorAll('[data-ev-paste]').forEach(function (b) {
+      b.addEventListener('click', function () { _evtImgTarget = Number(b.dataset.evPaste); setPasteMode(3); });
     });
     // 删除某张截图
     box.querySelectorAll('.del[data-img]').forEach(function (b) {
@@ -780,6 +785,9 @@
     } else if (mode === 2) {
       if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘到<b>相册</b>（直接保存）'; hint.style.display = ''; }
       if (btn) { btn.textContent = '🖼️ 准备粘相册'; btn.style.background = '#dcfce7'; }
+    } else if (mode === 3) {
+      if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘到<b>事件</b>（直接保存）'; hint.style.display = ''; }
+      if (btn) { btn.textContent = '📋 准备粘事件'; btn.style.background = '#fef3c7'; }
     } else {
       if (hint) hint.style.display = 'none';
       if (btn) { btn.textContent = '📋 粘贴截图'; btn.style.background = ''; }
@@ -810,6 +818,18 @@
         c.album.push(path);
         renderAlbum(c.album);
         log('📋 已粘贴截图到相册：' + path, 'ok');
+      } else if (pasteTarget === 3) {
+        if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
+        var ev = _pendingEvents[_evtImgTarget];
+        if (!ev) { log('❌ 请先添加一个事件', 'err'); setPasteMode(0); return; }
+        if (!ev.images) ev.images = [];
+        var compressed = await compressImage(dataUrl, 1600, 0.85);
+        var name = cats[editIdx].id + '_event_' + Date.now() + '.jpg';
+        var path = IMAGES_DIR + '/' + name;
+        await writeImageFileWithThumb(path, compressed);
+        ev.images.push({ path: path });
+        refreshEvents();
+        log('📋 已粘贴截图到事件：' + path, 'ok');
       }
       setPasteMode(0);
     };
