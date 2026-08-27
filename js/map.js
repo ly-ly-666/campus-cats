@@ -48,9 +48,8 @@ function createCatIcon(cat) {
   const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''));
   const html = `
     <div class="cat-marker${isPast ? ' cat-marker-past' : ''}${lifeRing}" data-cat-id="${cat.id}">
-      <img src="${photo}" alt="" loading="lazy" title="点击放大"
-           onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');"
-           onclick="event.stopPropagation(); if(window.openLightbox) window.openLightbox(this.src, '${cat.name}');">
+      <img src="${photo}" alt="" loading="lazy"
+           onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">
       <span class="marker-fallback-icon">🐱</span>
     </div>`;
   return L.divIcon({
