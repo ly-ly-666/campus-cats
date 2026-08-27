@@ -1,6 +1,6 @@
 // graph.js — 关系图模块（ECharts graph / force 力导向）
 import { RELATION_STYLE } from './config.js';
-import { escapeHtml } from './ui.js';
+import { escapeHtml, thumbUrl } from './ui.js';
 
 // 记录全局唯一的 chart 实例，供绑定 resize 使用
 let currentChart = null;
@@ -10,7 +10,7 @@ const GENDER_COLOR = { male: '#3b82f6', female: '#ec4899', unknown: '#9ca3af' };
 function graphPhoto(cat) {
   const p = cat.photo || '';
   if (!p || p.indexOf('placeholder') >= 0) return '';
-  return p;
+  return thumbUrl(p); // 关系图节点头像用缩略图，快
 }
 
 function genderLabel(cat) {

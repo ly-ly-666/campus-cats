@@ -6,7 +6,7 @@ function photoUrl(src) {
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
   return src + '?v=' + IMG_CACHE_BUST;
 }
-import { showToast } from './ui.js';
+import { showToast, thumbUrl } from './ui.js';
 
 let currentProviderIdx = 0;
 let tileErrors = 0;
@@ -49,7 +49,7 @@ function createCatIcon(cat) {
   const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''));
   const hasPhoto = !!cat.photo && cat.photo.indexOf('placeholder') < 0;
   const imgHtml = hasPhoto
-    ? `<img class="cat-marker-img" src="${photoUrl(cat.photo)}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">`
+    ? `<img class="cat-marker-img" src="${thumbUrl(cat.photo)}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">`
     : '';
   const html = `
     <div class="cat-marker${isPast ? ' cat-marker-past' : ''}${lifeRing}" data-cat-id="${cat.id}">

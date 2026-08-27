@@ -7,6 +7,19 @@ function photoUrl(src) {
   return src + '?v=' + IMG_CACHE_BUST;
 }
 
+/**
+ * 生成缩略图路径：预览场景（地图/列表/相册/事件小图）用低码率小图，加载快；
+ * 点击看详情 / 放大（lightbox）时再用原图。外链/data 图没有缩略图，直接返回原图。
+ */
+export function thumbUrl(src) {
+  if (!src) return DEFAULT_PHOTO;
+  if (/^https?:/i.test(src) || /^data:/i.test(src)) return src;
+  const clean = String(src).split('?')[0];
+  const name = clean.replace(/^.*[\\/]/, '');
+  const jpg = name.replace(/\.[^.]+$/, '') + '.jpg';
+  return 'images/thumb/' + jpg + '?v=' + IMG_CACHE_BUST;
+}
+
 /** 生成猫咪名字首字占位图（SVG data URL），避免页面加载时并发请求 39 张照片 */
 function initialsPlaceholder(name) {
   const s = (name || '?').charAt(0).toUpperCase().replace(/[$`]/g, '?');
@@ -77,7 +90,7 @@ export function renderCatList(cats, onSelect) {
     }
 
     listEl.innerHTML = filtered.map((cat) => {
-      const photo = photoUrl(cat.photo);
+      const photo = thumbUrl(cat.photo); // 列表预览用缩略图，点开详情才看原图
       return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
         <div class="cat-item-photo${cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''))}">
@@ -201,7 +214,7 @@ export function showModal(cat, cats, relations) {
   const album = Array.isArray(cat.album) ? cat.album : [];
   const albumHtml = album.length
     ? `<div class="modal-album">${album.map((src) => `
-        <div class="album-thumb"><img src="${photoUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
+        <div class="album-thumb"><img src="${thumbUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(src)}"></div>
       `).join('')}</div>`
     : '<div class="relation-empty">暂无相册</div>';
 
@@ -333,10 +346,10 @@ export function renderEventsTimeline(cats) {
 
   box.innerHTML = allEvents.map((item) => {
     const cat = item.cat;
-    const photo = photoUrl(cat.photo);
+    const photo = thumbUrl(cat.photo); // 时间线头像用缩略图
     const imgs = item.images.length
       ? '<div class="tl-event-imgs">' + item.images.map((src) => {
-          return '<img src="' + photoUrl(src) + '" alt="" loading="lazy" onclick="openLightbox(this.src)">';
+          return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="openLightbox(this.dataset.full)">';
         }).join('') + '</div>'
       : '';
     return `
