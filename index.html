@@ -71,8 +71,13 @@
     <!-- 猫咪列表全屏浮层 -->
     <div id="cat-panel" class="cat-panel" aria-hidden="true">
       <div class="cat-panel-head">
-        <h2 class="sidebar-title">猫咪列表（<span id="cat-count">0</span>）</h2>
-        <button id="cat-panel-close" class="cat-panel-close" aria-label="关闭">×</button>
+        <div class="cat-panel-head-top">
+          <h2 class="sidebar-title">猫咪列表（<span id="cat-count">0</span>）</h2>
+          <button id="cat-panel-close" class="cat-panel-close" aria-label="关闭">×</button>
+        </div>
+        <div class="cat-search-wrap">
+          <input id="cat-search" class="cat-search" type="search" placeholder="🔍 搜索猫咪（名字 / 外号 / 毛色 / 区域）" aria-label="搜索猫咪">
+        </div>
       </div>
       <div id="cat-list" class="cat-list"></div>
     </div>

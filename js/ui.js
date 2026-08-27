@@ -35,13 +35,30 @@ export function renderCatList(cats, onSelect) {
   const listEl = document.getElementById('cat-list');
   if (!listEl) return;
 
-  listEl.innerHTML = cats.map((cat) => {
-    const photo = photoUrl(cat.photo);
-  let statusBanner = '';
-  if (cat.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音 / 小红书 / B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
-  else if (cat.life === '失踪已久') statusBanner = '<div style="background:#9f1239;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫已失踪很久了。若你还见过它，请给猫协留言（抖音 / 小红书 / B 站「这里油只喵」），任何线索都很宝贵。</div>';
-  else if (cat.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:14px;">🏠 这只猫已被领养，开启新生活啦～</div>';
-    return `
+  const allCats = Array.isArray(cats) ? cats : [];
+
+  // 内部渲染函数：根据关键词过滤后渲染
+  function renderFiltered(keyword) {
+    const kw = (keyword || '').trim().toLowerCase();
+    const filtered = kw
+      ? allCats.filter((cat) => {
+          const hay = [
+            cat.name, cat.nickname, cat.color, cat.area,
+            cat.caretaker, cat.age, cat.description,
+            (cat.tags || []).join(' ')
+          ].join(' ').toLowerCase();
+          return hay.indexOf(kw) >= 0;
+        })
+      : allCats;
+
+    if (!filtered.length) {
+      listEl.innerHTML = '<div class="cat-list-empty">😿 没找到匹配「' + escapeHtml(keyword || '') + '」的猫咪</div>';
+      return;
+    }
+
+    listEl.innerHTML = filtered.map((cat) => {
+      const photo = photoUrl(cat.photo);
+      return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
         <div class="cat-item-photo${cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''))}">
           <img src="${photo}" alt="" loading="lazy"
@@ -62,35 +79,40 @@ export function renderCatList(cats, onSelect) {
           <div class="cat-item-area">📍 ${escapeHtml(cat.area || '')}</div>
         </div>
       </div>`;
-  }).join('');
+    }).join('');
 
-  listEl.querySelectorAll('.cat-item').forEach((el) => {
-    const id = el.dataset.catId;
-    const cat = cats.find((c) => c.id === id);
-    if (!cat) return;
-    const handler = () => typeof onSelect === 'function' && onSelect(cat);
-    el.addEventListener('click', handler);
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handler();
-      }
+    listEl.querySelectorAll('.cat-item').forEach((el) => {
+      const id = el.dataset.catId;
+      const cat = allCats.find((c) => c.id === id);
+      if (!cat) return;
+      const handler = () => typeof onSelect === 'function' && onSelect(cat);
+      el.addEventListener('click', handler);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handler();
+        }
+      });
     });
-  });
+  }
+
+  // 初始渲染全部
+  renderFiltered('');
+
+  // 绑定搜索框
+  const searchEl = document.getElementById('cat-search');
+  if (searchEl && !searchEl._bound) {
+    searchEl._bound = true;
+    searchEl.addEventListener('input', () => renderFiltered(searchEl.value));
+  }
 
   // 更新猫咪数量（浮层标题 + 浮动按钮）
   const countEl = document.getElementById('cat-count');
-  if (countEl) countEl.textContent = String(cats.length);
+  if (countEl) countEl.textContent = String(allCats.length);
   const fabCount = document.getElementById('fab-count');
-  if (fabCount) fabCount.textContent = String(cats.length);
+  if (fabCount) fabCount.textContent = String(allCats.length);
 }
 
-/**
- * 弹出猫咪详情弹窗，展示猫咪信息及其全部关系（含反向关系）。
- * @param {Object} cat 当前猫咪
- * @param {Array} cats 猫咪数组
- * @param {Array} relations 关系数组
- */
 export function showModal(cat, cats, relations) {
   if (!cat) return;
   const catById = new Map(cats.map((c) => [c.id, c]));

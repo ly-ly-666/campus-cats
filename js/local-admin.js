@@ -237,6 +237,36 @@
     await w.close();
   }
 
+  // 图片压缩：最长边超过 1600px 缩到 1600，统一转 JPEG(0.85)，透明背景填白。失败回退原图。
+  function compressImage(dataUrl, maxSide, quality) {
+    maxSide = maxSide || 1600;
+    quality = typeof quality === 'number' ? quality : 0.85;
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          if (!w || !h) { resolve(dataUrl); return; }
+          var longest = Math.max(w, h);
+          var scale = longest > maxSide ? maxSide / longest : 1;
+          var tw = Math.max(1, Math.round(w * scale));
+          var th = Math.max(1, Math.round(h * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = tw;
+          canvas.height = th;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, tw, th);
+          ctx.drawImage(img, 0, 0, tw, th);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (e) { resolve(dataUrl); }
+      };
+      img.onerror = function () { resolve(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
   async function writeImageFile(path, dataUrl) {
     var parts = path.split('/');
     var name = parts.pop();
@@ -492,16 +522,16 @@
     for (var i = 0; i < files.length; i++) {
       var f = files[i];
       var dataUrl = await readFileAsDataURL(f);
-      var ext = (f.name.split('.').pop() || 'png').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'png';
+      var compressed = await compressImage(dataUrl, 1600, 0.85);
       // 若已有 id，直接落盘；否则暂存 dataUrl，saveCat 时落盘
       if (editIdx >= 0 && cats[editIdx]) {
-        var name = cats[editIdx].id + '_event_' + Date.now() + '_' + i + '.' + ext;
+        var name = cats[editIdx].id + '_event_' + Date.now() + '_' + i + '.jpg';
         var path = IMAGES_DIR + '/' + name;
-        await writeImageFile(path, dataUrl);
+        await writeImageFile(path, compressed);
         ev.images.push({ path: path });
         log('✅ 已保存事件截图：' + path, 'ok');
       } else {
-        ev.images.push({ dataUrl: dataUrl, ext: ext });
+        ev.images.push({ dataUrl: compressed, ext: 'jpg' });
       }
     }
     refreshEvents();
@@ -527,12 +557,13 @@
     for (var i = 0; i < files.length; i++) {
       var f = files[i];
       var dataUrl = await readFileAsDataURL(f);
-      var ext = (f.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
-      var name = c.id + '_album_' + Date.now() + '_' + i + '.' + ext;
+      log('  压缩中：' + f.name + ' ...', 'info');
+      var compressed = await compressImage(dataUrl, 1600, 0.85);
+      var name = c.id + '_album_' + Date.now() + '_' + i + '.jpg';
       var path = IMAGES_DIR + '/' + name;
-      await writeImageFile(path, dataUrl);
+      await writeImageFile(path, compressed);
       c.album.push(path);
-      log('✅ 已添加相册照片：' + path, 'ok');
+      log('✅ 已添加相册照片（已压缩）：' + path, 'ok');
     }
     renderAlbum(c.album);
     $('f-album').value = '';
@@ -582,10 +613,10 @@
         var c = cats[editIdx];
         if (!c) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); setPasteMode(0); return; }
         if (!c.album) c.album = [];
-        var ext = (file.name.split('.').pop() || 'png').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'png';
-        var name = c.id + '_album_' + Date.now() + '.' + ext;
+        var compressed = await compressImage(dataUrl, 1600, 0.85);
+        var name = c.id + '_album_' + Date.now() + '.jpg';
         var path = IMAGES_DIR + '/' + name;
-        await writeImageFile(path, dataUrl);
+        await writeImageFile(path, compressed);
         c.album.push(path);
         renderAlbum(c.album);
         log('📋 已粘贴截图到相册：' + path, 'ok');
