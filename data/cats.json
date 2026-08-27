@@ -245,7 +245,7 @@
     "id": "cat012",
     "name": "小布丁",
     "nickname": "",
-    "gender": "",
+    "gender": "male",
     "color": "狸花猫",
     "area": "",
     "lat": 21.678437,
@@ -260,7 +260,8 @@
     "firstSeen": "2026-08",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "events": []
   },
   {
     "id": "cat013",
