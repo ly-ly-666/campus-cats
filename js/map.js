@@ -6,7 +6,7 @@ function photoUrl(src) {
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
   return src + '?v=' + IMG_CACHE_BUST;
 }
-import { showToast, thumbUrl } from './ui.js';
+import { showToast, thumbUrl, gentleLeftAt } from './ui.js';
 
 let currentProviderIdx = 0;
 let tileErrors = 0;
