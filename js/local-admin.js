@@ -650,7 +650,10 @@
     var photo = isAdd ? 'images/placeholder.svg' : (cats[editIdx].photo || 'images/placeholder.svg');
 
     if (pendingAvatar) {
-      var ext = (pendingAvatarName.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
+      // 优先从 dataUrl 的 MIME 推断真实格式，避免「.png 装着 JPEG」导致图片不显示
+      var mimeExt = (pendingAvatar.match(/^data:image\/(png|jpeg|gif|webp);/i) || [])[1] || '';
+      mimeExt = mimeExt === 'jpeg' ? 'jpg' : mimeExt;
+      var ext = mimeExt || (pendingAvatarName.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
       var path = IMAGES_DIR + '/' + id + '.' + ext;
       await writeImageFile(path, pendingAvatar);
       photo = path;

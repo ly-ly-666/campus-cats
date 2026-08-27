@@ -513,3 +513,15 @@ body { display: flex; flex-direction: column; }
 .modal-event-text { font-size: 14px; margin-top: 3px; line-height: 1.6; }
 .modal-event-imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px; }
 .modal-event-imgs img { aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; width: 100%; }
+/* ---------- 图片放大查看器 lightbox ---------- */
+.lightbox { position: fixed; inset: 0; z-index: 99999; display: none; align-items: center; justify-content: center; }
+.lightbox.open { display: flex; }
+.lightbox-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.82); cursor: zoom-out; }
+.lightbox-body { position: relative; z-index: 1; max-width: 92vw; max-height: 92vh; display: flex; flex-direction: column; align-items: center; }
+.lightbox-img { max-width: 92vw; max-height: 84vh; object-fit: contain; border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,.5); }
+.lightbox-caption { color: #fff; font-size: 14px; margin-top: 10px; text-align: center; }
+.lightbox-close { position: absolute; top: -6px; right: -6px; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,.18); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; }
+.lightbox-close:hover { background: rgba(255,255,255,.35); }
+
+/* 地图标记头像可点击放大 */
+.cat-marker img { cursor: zoom-in; }

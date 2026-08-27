@@ -170,7 +170,7 @@ export function showModal(cat, cats, relations) {
     <div class="modal-panel">
       <button class="modal-close" data-close="1" aria-label="关闭">×</button>
       <div class="modal-header">
-        <img class="modal-photo" src="${photo}" alt="" onerror="this.src='${DEFAULT_PHOTO}'">
+        <img class="modal-photo" src="${photo}" alt="" onerror="this.src='${DEFAULT_PHOTO}'" onclick="openLightbox(this.src, '${escapeHtml(cat.name)}')" style="cursor:zoom-in;">
         <div class="modal-title-block">
           <h2 class="modal-name">${escapeHtml(cat.name)}</h2>
           <div class="modal-tags">
@@ -389,3 +389,41 @@ export function initCorrection(cats, siteConfig) {
     if (btn) openCorrection(_corrCats, btn.dataset.catId);
   });
 }
+/**
+ * 通用图片放大查看器（lightbox）。点击头像 / 相册图 / 事件截图会调用它。
+ * @param {string} src 图片地址（可以是 dataURL 或路径）
+ * @param {string} [caption] 可选：图片下方说明文字
+ */
+export function openLightbox(src, caption) {
+  if (!src) return;
+  let box = document.getElementById('lightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'lightbox';
+    box.className = 'lightbox';
+    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><img class="lightbox-img" alt=""><div class="lightbox-caption"></div></div>';
+    document.body.appendChild(box);
+  }
+  box.querySelector('.lightbox-img').src = src;
+  const cap = box.querySelector('.lightbox-caption');
+  cap.textContent = caption || '';
+  cap.style.display = caption ? '' : 'none';
+  box.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  var box = document.getElementById('lightbox');
+  if (!box) return;
+  box.classList.remove('open');
+  document.body.style.overflow = '';
+}
+export function initLightbox() {
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.lightbox-backdrop') || e.target.closest('.lightbox-close')) closeLightbox();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+}
+// 挂到 window，供地图标记等内联 onclick 使用
+window.openLightbox = openLightbox;
