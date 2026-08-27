@@ -20,6 +20,57 @@ export function thumbUrl(src) {
   return 'images/thumb/' + jpg + '?v=' + IMG_CACHE_BUST;
 }
 
+/**
+ * 后台预取图片到浏览器缓存（渐进式加载）：
+ * 缩略图先显示 → 空闲时慢慢把原图拉进缓存 → 用户看详情/放大时原图秒开。
+ * 利用 requestIdleCallback（不支持则 setTimeout），低频小并发，不抢关键带宽。
+ * @param {string[]|string} urls 原图 URL 列表
+ * @param {Object} [opts] { delay } 初始延迟 ms
+ */
+const _prefetchQueue = [];
+let _prefetchScheduled = false;
+export function prefetchImages(urls, opts = {}) {
+  const list = (Array.isArray(urls) ? urls : [urls]).map(String).filter((u) => u && !u.startsWith('data:'));
+  if (!list.length || typeof Image === 'undefined') return;
+  _prefetchQueue.push(...list);
+  if (_prefetchScheduled) return;
+  _prefetchScheduled = true;
+  const BATCH = 4;          // 每批并发数
+  const GAP = 250;          // 批间隔 ms，慢慢拉不抢带宽
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+  idle(() => {
+    const drain = () => {
+      _prefetchScheduled = false;
+      const batch = _prefetchQueue.splice(0, BATCH);
+      if (!batch.length) return;
+      batch.forEach((u) => { try { var img = new Image(); img.src = u; } catch (e) {} });
+      if (_prefetchQueue.length) {
+        _prefetchScheduled = true;
+        setTimeout(drain, GAP);
+      }
+    };
+    setTimeout(drain, opts.delay != null ? opts.delay : 0);
+  });
+}
+
+/**
+ * 预取所有猫的原图（渐进式加载）：头像优先，相册/事件图稍后。
+ * 缩略图先显示，原图在后台慢慢拉进缓存，详情/放大时秒开。
+ * @param {Array} cats 猫咪数组
+ */
+export function prefetchCatOriginals(cats) {
+  const list = Array.isArray(cats) ? cats : [];
+  const photos = [];
+  const extras = [];
+  list.forEach((cat) => {
+    if (cat.photo && cat.photo.indexOf('placeholder') < 0) photos.push(photoUrl(cat.photo));
+    (cat.album || []).forEach((src) => extras.push(photoUrl(src)));
+    (cat.events || []).forEach((ev) => (ev.images || []).forEach((src) => extras.push(photoUrl(src))));
+  });
+  prefetchImages(photos, { delay: 0 });    // 头像最常用，先拉
+  prefetchImages(extras, { delay: 2000 }); // 相册/事件图，后拉
+}
+
 /** 生成猫咪名字首字占位图（SVG data URL），避免页面加载时并发请求 39 张照片 */
 function initialsPlaceholder(name) {
   const s = (name || '?').charAt(0).toUpperCase().replace(/[$`]/g, '?');
@@ -151,6 +202,10 @@ export function showModal(cat, cats, relations) {
   const catById = new Map(cats.map((c) => [c.id, c]));
 
   const photo = photoUrl(cat.photo);
+  // 用户在查看这只猫，后台预取它的相册/事件原图，避免点开时等待
+  const _catExtras = []
+    .concat(cat.album || [], (cat.events || []).map((ev) => ev.images || []).flat());
+  if (_catExtras.length) prefetchImages(_catExtras.map((s) => photoUrl(s)), { delay: 0 });
   let statusBanner = '';
   if (cat.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音 / 小红书 / B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
   else if (cat.life === '失踪已久') statusBanner = '<div style="background:#9f1239;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫已失踪很久了。若你还见过它，请给猫协留言（抖音 / 小红书 / B 站「这里油只喵」），任何线索都很宝贵。</div>';
