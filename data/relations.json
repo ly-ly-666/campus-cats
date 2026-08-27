@@ -16,5 +16,17 @@
     "to": "cat038",
     "relation": "母子",
     "note": ""
+  },
+  {
+    "from": "cat015",
+    "to": "cat051",
+    "relation": "母子",
+    "note": ""
+  },
+  {
+    "from": "cat015",
+    "to": "cat052",
+    "relation": "母子",
+    "note": ""
   }
 ]
