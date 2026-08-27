@@ -137,18 +137,20 @@
 
     <section class="card">
       <h2>🪢 关系管理</h2>
-      <p class="hint">给猫咪建立关系网（血缘 / 配偶 / 朋友）。</p>
+      <p class="hint">给猫咪建立关系网（血缘 / 配偶 / 朋友）。<b style="color:#d97706;">带方向的：左边是父母，右边是孩子。</b></p>
       <div class="grid3" id="rel-form-row" style="margin-top:4px;">
-        <div class="field"><label>猫咪 A</label><select id="rel-from"></select></div>
+        <div class="field"><label id="rel-label-a">猫咪 A</label><input id="rel-from" list="rel-from-list" placeholder="🔍 输入搜索或选择"></div>
         <div class="field"><label>关系</label><select id="rel-type">
           <option value="配偶">配偶</option>
-          <option value="父子">父子</option>
-          <option value="母子">母子</option>
+          <option value="父子">父子（左＝父，右＝子）</option>
+          <option value="母子">母子（左＝母，右＝子）</option>
           <option value="兄弟姐妹">兄弟姐妹</option>
           <option value="朋友">朋友</option>
         </select></div>
-        <div class="field"><label>猫咪 B</label><select id="rel-to"></select></div>
+        <div class="field"><label id="rel-label-b">猫咪 B</label><input id="rel-to" list="rel-to-list" placeholder="🔍 输入搜索或选择"></div>
       </div>
+      <datalist id="rel-from-list"></datalist>
+      <datalist id="rel-to-list"></datalist>
       <div class="row">
         <div class="field" style="flex:1;"><label>备注（选填）</label><input id="rel-note" placeholder="如：猫妈妈是小白"></div>
         <button class="btn btn-primary" id="btn-rel-add" style="align-self:flex-end;">＋ 添加关系</button>

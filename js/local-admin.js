@@ -313,6 +313,7 @@
     renderMarkers();
     renderRelSelects();
     renderRelList();
+    updateRelLabels();
   }
 
   async function saveAll() {
@@ -405,19 +406,31 @@
   }
 
   // ---------- 关系管理 ----------
+  // 生成「名称 (id)」显示串，避免重名歧义
+  function relDisplay(c) {
+    return c.name + ' (' + c.id + ')';
+  }
+  function relParse(display) {
+    var m = (display || '').match(/\(([^)]*)\)\s*$/);
+    if (m) return m[1];
+    // 回退：直接按名称匹配
+    var c = cats.find(function (x) { return (x.name === display); });
+    return c ? c.id : '';
+  }
+
   function renderRelSelects() {
     var from = $('rel-from');
     var to = $('rel-to');
     if (!from || !to) return;
     var opts = cats.map(function (c) {
-      return '<option value="' + c.id + '">' + esc(c.name || c.id) + '</option>';
+      return '<option value="' + esc(relDisplay(c)) + '">' + esc(relDisplay(c)) + '</option>';
     }).join('');
-    var keepFrom = from.value;
-    var keepTo = to.value;
-    from.innerHTML = opts;
-    to.innerHTML = opts;
-    if (keepFrom && cats.some(function (c) { return c.id === keepFrom; })) from.value = keepFrom;
-    if (keepTo && cats.some(function (c) { return c.id === keepTo; })) to.value = keepTo;
+    var dlFrom = $('rel-from-list');
+    var dlTo = $('rel-to-list');
+    if (dlFrom) dlFrom.innerHTML = opts;
+    if (dlTo) dlTo.innerHTML = opts;
+    from.value = '';
+    to.value = '';
   }
 
   function renderRelList() {
@@ -450,8 +463,10 @@
   }
 
   function addRelation() {
-    var from = $('rel-from') ? $('rel-from').value : '';
-    var to = $('rel-to') ? $('rel-to').value : '';
+    var fromDisplay = $('rel-from') ? $('rel-from').value.trim() : '';
+    var toDisplay = $('rel-to') ? $('rel-to').value.trim() : '';
+    var from = relParse(fromDisplay);
+    var to = relParse(toDisplay);
     var type = $('rel-type') ? $('rel-type').value : '';
     var note = $('rel-note') ? $('rel-note').value.trim() : '';
     if (!from || !to || !type) { log('❌ 请选择两只猫和关系类型', 'err'); return; }
@@ -463,7 +478,22 @@
     relations.push({ from: from, to: to, relation: type, note: note });
     renderRelList();
     if ($('rel-note')) $('rel-note').value = '';
+    if ($('rel-from')) $('rel-from').value = '';
+    if ($('rel-to')) $('rel-to').value = '';
     log('✅ 已添加关系，记得点「💾 保存到本地」', 'ok');
+  }
+
+  // 根据关系类型动态更新 A/B 的方向提示
+  function updateRelLabels() {
+    var type = $('rel-type') ? $('rel-type').value : '';
+    var la = $('rel-label-a');
+    var lb = $('rel-label-b');
+    if (!la || !lb) return;
+    if (type === '父子') { la.textContent = '爸爸（父）'; lb.textContent = '孩子'; }
+    else if (type === '母子') { la.textContent = '妈妈（母）'; lb.textContent = '孩子'; }
+    else if (type === '兄弟姐妹') { la.textContent = '猫咪 A'; lb.textContent = '猫咪 B'; }
+    else if (type === '配偶') { la.textContent = '猫咪 A'; lb.textContent = '猫咪 B'; }
+    else { la.textContent = '朋友 A'; lb.textContent = '朋友 B'; }
   }
 
   function esc(s) {
@@ -1158,6 +1188,7 @@
     $('btn-push').addEventListener('click', pushToGitHub);
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
     if ($('btn-rel-add')) $('btn-rel-add').addEventListener('click', function () { addRelation(); });
+    if ($('rel-type')) $('rel-type').addEventListener('change', updateRelLabels);
     $('f-save').addEventListener('click', saveCat);
     $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); setPasteMode(0); });
     $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
