@@ -46,9 +46,6 @@ export function escapeHtml(str) {
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
 const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
 
-const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
-const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
-
 /**
  * 渲染猫咪列表。
  * @param {Array} cats 猫咪数组
@@ -529,3 +526,4 @@ export function initLightbox() {
   });
 }
 // 挂到 window，供地图标记等内联 onclick 使用
+window.openLightbox = openLightbox;
