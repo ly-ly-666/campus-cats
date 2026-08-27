@@ -20,9 +20,12 @@ function genderLabel(cat) {
 }
 
 // 边/关系的方向化描述：明确谁是谁的妈妈 / 爸爸 / 孩子
+// 兼容两种入参：原始关系对象(from/to) 与 ECharts edge 数据(source/target)
 function relationDesc(rel, nameOf) {
-  const a = nameOf(rel.from);
-  const b = nameOf(rel.to);
+  const from = rel.from != null ? rel.from : rel.source;
+  const to = rel.to != null ? rel.to : rel.target;
+  const a = from != null ? nameOf(from) : '';
+  const b = to != null ? nameOf(to) : '';
   switch (rel.relation) {
     case '母子': return `${a} 是 ${b} 的妈妈`;
     case '父子': return `${a} 是 ${b} 的爸爸`;
@@ -93,7 +96,7 @@ export function initGraph(containerId, cats, relations) {
   // 猫 id -> 名字
   const nameOf = (id) => {
     const c = cats.find((x) => x.id === id);
-    return c ? c.name : id;
+    return c ? c.name : (id != null ? String(id) : '未知');
   };
 
   // 边：按 RELATION_STYLE 取样式，带方向箭头与方向化描述
