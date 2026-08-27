@@ -14,7 +14,17 @@ function escapeHtml(str) {
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
-  return src + '?v=' + Date.now();
+  return src + '?v=2'; // 固定版本号，浏览器可正常缓存（改图后手动+1）
+}
+
+// 预览用缩略图（快），点击看原图（高清）
+function thumbUrl(src) {
+  if (!src) return DEFAULT_PHOTO;
+  if (/^https?:/i.test(src) || /^data:/i.test(src)) return src;
+  const clean = String(src).split('?')[0];
+  const name = clean.replace(/^.*[\\/]/, '');
+  const jpg = name.replace(/\.[^.]+$/, '') + '.jpg';
+  return 'images/thumb/' + jpg + '?v=2';
 }
 
 function showToast(message) {
@@ -86,7 +96,7 @@ function render(cats, relations) {
       evts.slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); }).map(function (ev) {
         var imgs = Array.isArray(ev.images) && ev.images.length
           ? '<div class="event-imgs">' + ev.images.map(function (src) {
-            return '<img src="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.src,\'_blank\')">';
+            return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full,\'_blank\')">';
           }).join('') + '</div>'
           : '';
         return '<div class="event-tl-item">' +
@@ -101,7 +111,7 @@ function render(cats, relations) {
   const album = Array.isArray(cat.album) ? cat.album : [];
   const albumHtml = album.length
     ? '<div class="profile-album">' + album.map(function (src) {
-      return '<img src="' + photoUrl(src) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+      return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
     }).join('') + '</div>'
     : '<p class="hint">暂无相册照片</p>';
 
@@ -144,7 +154,7 @@ function render(cats, relations) {
   `;
 
   document.querySelectorAll('.profile-album img').forEach(function (img) {
-    img.addEventListener('click', function () { window.open(img.src, '_blank'); });
+    img.addEventListener('click', function () { window.open(img.dataset.full || img.src, '_blank'); });
   });
 }
 

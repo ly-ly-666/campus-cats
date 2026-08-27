@@ -11,9 +11,9 @@
     "photo": "images/cat001.jpg",
     "album": [
       "images/cat001_album_1787764928408_0.jpg",
-      "images/cat001_album_1787767505259.png",
-      "images/cat001_album_1787767520084.png",
-      "images/cat001_album_1787767590093.png",
+      "images/cat001_album_1787767505259.jpg",
+      "images/cat001_album_1787767520084.jpg",
+      "images/cat001_album_1787767590093.jpg",
       "images/cat001_album_1787812115676.jpg"
     ],
     "description": "脾气很好。经常睡在图书馆门口或者里面。有时会在图书馆里面巡逻。心情不好时有概率会抓人。被人类骚扰到厌烦时会咬人（假咬，起恐吓威慑作用）",
@@ -38,7 +38,7 @@
     "lng": 110.921918,
     "photo": "images/cat002.jpg",
     "album": [
-      "images/cat002_album_1787767551598.png"
+      "images/cat002_album_1787767551598.jpg"
     ],
     "description": "乖顺,酷似虎皮面包",
     "story": "",
@@ -60,7 +60,7 @@
     "lng": 110.921904,
     "photo": "images/cat003.jpg",
     "album": [
-      "images/cat003_album_1787804750731.png"
+      "images/cat003_album_1787804750731.jpg"
     ],
     "description": "",
     "story": "",
@@ -188,7 +188,7 @@
     "lng": 110.923642,
     "photo": "images/cat009.jpg",
     "album": [
-      "images/cat009_album_1787805451454.png"
+      "images/cat009_album_1787805451454.jpg"
     ],
     "description": "",
     "story": "",
@@ -211,7 +211,7 @@
     "lng": 110.92366,
     "photo": "images/cat010.jpg",
     "album": [
-      "images/cat010_album_1787805469731.png"
+      "images/cat010_album_1787805469731.jpg"
     ],
     "description": "",
     "story": "",

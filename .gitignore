@@ -17,3 +17,7 @@ Python/
 
 # 本地项目记忆库（不上传）
 .project-memory/
+
+# 调试截图
+_shot*.png
+*.png.bak
