@@ -1077,6 +1077,14 @@
             var dataUrl = await readImageAsDataURL(path);
             var changed = await putIfChanged(repo, branch, path, dataUrlToBase64(dataUrl), token);
             if (changed) putCount++; else skipCount++;
+            // 顺带推送对应缩略图（images/thumb/同名.jpg），保证前端预览有头像
+            var thumbName = path.replace(/^.*\//, '').replace(/\.[^.]+$/, '') + '.jpg';
+            var thumbPath = 'images/thumb/' + thumbName;
+            if (await fileExists(thumbPath)) {
+              var tDataUrl = await readImageAsDataURL(thumbPath);
+              var tChanged = await putIfChanged(repo, branch, thumbPath, dataUrlToBase64(tDataUrl), token);
+              if (tChanged) putCount++; else skipCount++;
+            }
           }
         }
       }
