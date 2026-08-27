@@ -283,6 +283,20 @@
     await w.close();
   }
 
+  // 保存图片 + 自动生成缩略图（images/thumb/同名.jpg），前端预览立即有头像/相册小图
+  async function writeImageFileWithThumb(path, dataUrl) {
+    await writeImageFile(path, dataUrl);
+    try {
+      var parts = path.split('/');
+      var name = parts.pop();
+      var thumbName = name.replace(/\.[^.]+$/, '') + '.jpg';
+      var thumbData = await compressImage(dataUrl, 160, 0.78);
+      await writeImageFile('images/thumb/' + thumbName, thumbData);
+    } catch (e) {
+      log('⚠️ 缩略图生成失败（不影响原图保存）：' + e.message, 'warn');
+    }
+  }
+
   async function fileExists(path) {
     try {
       var parts = path.split('/');
@@ -654,7 +668,7 @@
       if (editIdx >= 0 && cats[editIdx]) {
         var name = cats[editIdx].id + '_event_' + Date.now() + '_' + i + '.jpg';
         var path = IMAGES_DIR + '/' + name;
-        await writeImageFile(path, compressed);
+        await writeImageFileWithThumb(path, compressed);
         ev.images.push({ path: path });
         log('✅ 已保存事件截图：' + path, 'ok');
       } else {
@@ -688,7 +702,7 @@
       var compressed = await compressImage(dataUrl, 1600, 0.85);
       var name = c.id + '_album_' + Date.now() + '_' + i + '.jpg';
       var path = IMAGES_DIR + '/' + name;
-      await writeImageFile(path, compressed);
+      await writeImageFileWithThumb(path, compressed);
       c.album.push(path);
       log('✅ 已添加相册照片（已压缩）：' + path, 'ok');
     }
@@ -743,7 +757,7 @@
         var compressed = await compressImage(dataUrl, 1600, 0.85);
         var name = c.id + '_album_' + Date.now() + '.jpg';
         var path = IMAGES_DIR + '/' + name;
-        await writeImageFile(path, compressed);
+        await writeImageFileWithThumb(path, compressed);
         c.album.push(path);
         renderAlbum(c.album);
         log('📋 已粘贴截图到相册：' + path, 'ok');
@@ -813,7 +827,7 @@
       mimeExt = mimeExt === 'jpeg' ? 'jpg' : mimeExt;
       var ext = mimeExt || (pendingAvatarName.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
       var path = IMAGES_DIR + '/' + id + '.' + ext;
-      await writeImageFile(path, pendingAvatar);
+      await writeImageFileWithThumb(path, pendingAvatar);
       photo = path;
       log('✅ 已保存头像：' + path, 'ok');
     }
@@ -850,7 +864,7 @@
           if (im.indexOf('data:') === 0) {
             var ext = (im.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png';
             var p = IMAGES_DIR + '/' + id + '_event_' + Date.now() + '_' + ej + '.' + ext;
-            await writeImageFile(p, im);
+            await writeImageFileWithThumb(p, im);
             finalImgs.push(p);
             log('✅ 已保存事件截图：' + p, 'ok');
           } else {

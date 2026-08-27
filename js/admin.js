@@ -336,6 +336,34 @@
     log('✅ 已保存猫咪「' + name + '」' + (photo.indexOf('images/') === 0 ? '（照片：' + photo + '）' : '') + '，别忘了点 ⑤ 保存到 GitHub', 'ok');
   }
 
+  // 生成缩略图 dataURL（160px JPEG，0.78 质量），失败返回 ''
+  function makeThumb(dataUrl, size) {
+    size = size || 160;
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          if (!w || !h) { resolve(''); return; }
+          var longest = Math.max(w, h);
+          var scale = longest > size ? size / longest : 1;
+          var tw = Math.max(1, Math.round(w * scale));
+          var th = Math.max(1, Math.round(h * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = tw; canvas.height = th;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, tw, th);
+          ctx.drawImage(img, 0, 0, tw, th);
+          resolve(canvas.toDataURL('image/jpeg', 0.78));
+        } catch (e) { resolve(''); }
+      };
+      img.onerror = function () { resolve(''); };
+      img.src = dataUrl;
+    });
+  }
+
   function uploadPhoto(id, dataUrl, fileName) {
     var ext = (fileName.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
     var path = 'images/' + id + '.' + ext;
@@ -360,6 +388,18 @@
         }
         log('❌ 照片上传失败：' + e.message + '（检查 Token 是否有 Contents 写权限）', 'err');
         return null;
+      })
+      .then(function (finalResult) {
+        // 自动生成并上传缩略图（images/thumb/<id>.jpg），失败不影响主流程
+        if (finalResult) {
+          makeThumb(dataUrl).then(function (thumbData) {
+            if (!thumbData) return;
+            var rawT = atob(thumbData.split(',')[1]);
+            var base64T = btoa(rawT);
+            return doUpload('images/thumb/' + id + '.jpg', base64T, id + '.jpg').catch(function () {});
+          });
+        }
+        return finalResult;
       });
   }
   function doUpload(path, base64, fileName, sha) {
