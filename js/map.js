@@ -1,6 +1,6 @@
 // map.js — 地图模块（Leaflet 初始化与圆形猫咪标记）
 import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS } from './config.js';
-const IMG_CACHE_BUST = Date.now();
+const IMG_CACHE_BUST = 'v1'; // 固定版本，浏览器可正常缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;

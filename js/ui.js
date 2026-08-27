@@ -1,10 +1,30 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO } from './config.js';
-const IMG_CACHE_BUST = 'v1'; // 改版本号时更新这里，浏览器即可重新缓存
+const IMG_CACHE_BUST = 'v2'; // 改版本号时更新这里，浏览器即可重新缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
   return src + '?v=' + IMG_CACHE_BUST;
+}
+
+/** 生成猫咪名字首字占位图（SVG data URL），避免页面加载时并发请求 39 张照片 */
+function initialsPlaceholder(name) {
+  const s = (name || '?').charAt(0).toUpperCase().replace(/[$`]/g, '?');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="40" fill="#ffd9a8"/>
+    <text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" font-size="36" font-weight="700" fill="#7c4a1e" font-family="system-ui,-apple-system,sans-serif">${s}</text>
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
+/** 把 cat-list 里的占位图换成真实照片（面板打开时调用） */
+export function loadCatListPhotos() {
+  const list = document.getElementById('cat-list');
+  if (!list) return;
+  list.querySelectorAll('img[data-real-src]').forEach((img) => {
+    img.src = img.dataset.realSrc;
+    delete img.dataset.realSrc;
+  });
 }
 
 /**
@@ -23,6 +43,9 @@ export function escapeHtml(str) {
 }
 
 /** 性别 / 绝育状态中文标签 */
+const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
+const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
+
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
 const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
 
@@ -61,7 +84,7 @@ export function renderCatList(cats, onSelect) {
       return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
         <div class="cat-item-photo${cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''))}">
-          <img src="${photo}" alt="" loading="lazy"
+          <img src="${initialsPlaceholder(cat.name)}" data-real-src="${photo}" alt=""
                onerror="this.style.display='none';this.parentElement.classList.add('cat-item-fallback');">
           <span class="cat-item-fallback-icon">🐱</span>
         </div>
@@ -263,6 +286,8 @@ export function openCatPanel() {
   panel.classList.add('open');
   panel.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  // 面板打开后才加载真实照片，避免页面加载时并发 39 张图卡死
+  loadCatListPhotos();
 }
 export function closeCatPanel() {
   const panel = document.getElementById('cat-panel');
@@ -504,4 +529,3 @@ export function initLightbox() {
   });
 }
 // 挂到 window，供地图标记等内联 onclick 使用
-window.openLightbox = openLightbox;
