@@ -43,12 +43,17 @@ function addTileLayer(map) {
  * 背景显示猫照片，照片加载失败时兜底为底色 + 猫图标。
  */
 function createCatIcon(cat) {
-  // 地图标记不加载真实头像，只显示占位符（首字母圆圈），避免首屏加载 39 张图卡死
+  // 圆形标记：显示真实头像（缓存已固定，浏览器可正常缓存），加载失败时兜底显示名字首字
   const initial = (cat.name || '?')[0];
   const isPast = cat.leftAt ? true : false;
   const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''));
+  const hasPhoto = !!cat.photo && cat.photo.indexOf('placeholder') < 0;
+  const imgHtml = hasPhoto
+    ? `<img class="cat-marker-img" src="${photoUrl(cat.photo)}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">`
+    : '';
   const html = `
     <div class="cat-marker${isPast ? ' cat-marker-past' : ''}${lifeRing}" data-cat-id="${cat.id}">
+      ${imgHtml}
       <span class="marker-letter">${initial}</span>
     </div>`;
   return L.divIcon({

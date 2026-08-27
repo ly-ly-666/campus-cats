@@ -241,6 +241,12 @@ body { display: flex; flex-direction: column; }
   position: relative;
 }
 .cat-marker .marker-letter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
   font-size: 20px;
   font-weight: 700;
   color: #7c4a1e;
@@ -249,6 +255,12 @@ body { display: flex; flex-direction: column; }
   user-select: none;
 }
 .cat-marker .marker-letter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
   font-size: 20px;
   font-weight: 700;
   color: #7c4a1e;
@@ -257,10 +269,13 @@ body { display: flex; flex-direction: column; }
   user-select: none;
 }
 .cat-marker img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  z-index: 1;
 }
 .cat-marker.marker-fallback img { display: none; }
 .cat-marker.marker-fallback .marker-fallback-icon { display: block; }
