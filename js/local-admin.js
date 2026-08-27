@@ -750,17 +750,17 @@
     log('⏳ 开始推送到 GitHub…', 'info');
     try {
       var q = '?ref=' + encodeURIComponent(branch);
-      // 获取当前 sha（如果存在）
-      var catsSha = await getFileSha(repo, branch, CATS_PATH, token);
-      var relsSha = await getFileSha(repo, branch, RELS_PATH, token);
+      var putCount = 0, skipCount = 0;
 
       // 推送 JSON（GitHub 要求 content 是二进制的 base64 编码）
       var catsText = await readTextFile(CATS_PATH);
       var relsText = await readTextFile(RELS_PATH);
-      await githubPut(repo, branch, CATS_PATH, utf8ToB64(catsText), token, catsSha);
-      await githubPut(repo, branch, RELS_PATH, utf8ToB64(relsText), token, relsSha);
+      var r1 = await putIfChanged(repo, branch, CATS_PATH, utf8ToB64(catsText), token);
+      var r2 = await putIfChanged(repo, branch, RELS_PATH, utf8ToB64(relsText), token);
+      if (r1) putCount++; else skipCount++;
+      if (r2) putCount++; else skipCount++;
 
-      // 推送图片
+      // 推送图片（只传有变化的）
       for (var i = 0; i < cats.length; i++) {
         var c = cats[i];
         var photos = [c.photo].concat(c.album || []).filter(function (p) { return p && p.indexOf('placeholder') < 0; });
@@ -768,12 +768,16 @@
           var path = photos[j];
           if (await fileExists(path)) {
             var dataUrl = await readImageAsDataURL(path);
-            var sha = await getFileSha(repo, branch, path, token);
-            await githubPut(repo, branch, path, dataUrlToBase64(dataUrl), token, sha);
+            var changed = await putIfChanged(repo, branch, path, dataUrlToBase64(dataUrl), token);
+            if (changed) putCount++; else skipCount++;
           }
         }
       }
-      log('🎉 全部推送完成！公开站点将自动更新', 'ok');
+      if (putCount === 0) {
+        log('✅ 没有需要更新的文件（' + skipCount + ' 个文件均未变化）', 'ok');
+      } else {
+        log('🎉 推送完成！本次更新 ' + putCount + ' 个文件，跳过 ' + skipCount + ' 个未变化文件', 'ok');
+      }
     } catch (e) {
       var msg = e.message || '';
       if (msg.indexOf('AbortError') >= 0 || msg.indexOf('abort') >= 0) {
@@ -786,6 +790,22 @@
     }
   }
 
+  // 只有当 GitHub 上的内容与本地不一样时才上传；返回 true=上传了, false=未变跳过
+  async function putIfChanged(repo, branch, path, localB64, token) {
+    var info = await getFileInfo(repo, branch, path, token);
+    if (info && info.sha) {
+      var remoteB64 = (info.content || '').replace(/\n/g, '');
+      var localB64_ = (localB64 || '').replace(/\n/g, '');
+      // 比对内容：一样则跳过
+      if (remoteB64 === localB64_) {
+        log('  ⏭ 跳过（未变化）：' + path, 'info');
+        return false;
+      }
+    }
+    await githubPut(repo, branch, path, localB64, token, info ? info.sha : null);
+    return true;
+  }
+
   function fetchWithTimeout(url, opts, ms) {
     ms = ms || 20000; // 默认 20 秒超时
     var ctrl = new AbortController();
@@ -793,15 +813,19 @@
     return fetch(url, Object.assign({}, opts, { signal: ctrl.signal })).finally(function () { clearTimeout(t); });
   }
 
-  async function getFileSha(repo, branch, path, token) {
+  async function getFileInfo(repo, branch, path, token) {
     try {
       var res = await fetchWithTimeout('https://api.github.com/repos/' + repo + '/contents/' + path + '?ref=' + encodeURIComponent(branch), {
         headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' }
       });
       if (!res.ok) return null;
       var j = await res.json();
-      return j.sha || null;
+      return { sha: j.sha || null, content: j.content || '' }; // content 是 GitHub 上的 base64 文本
     } catch (e) { return null; }
+  }
+  async function getFileSha(repo, branch, path, token) {
+    var info = await getFileInfo(repo, branch, path, token);
+    return info ? info.sha : null;
   }
 
   async function githubPut(repo, branch, path, content, token, sha) {
