@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap } from './map.js';
 import { initGraph, resizeGraph } from './graph.js';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox } from './ui.js';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline } from './ui.js';
 import { loadData } from './data.js';
 
 const loadingEl = document.getElementById('loading');
@@ -68,10 +68,11 @@ async function boot() {
   updateStats(cats);
   bindJoin();
   initLightbox();
+  renderEventsTimeline(cats);
 
   // 标签页
   bindTabs(
-    { map: '#map-view', graph: '#graph-view' },
+    { map: '#map-view', graph: '#graph-view', events: '#events-view' },
     { onGraphShow: () => resizeGraph() }
   );
 

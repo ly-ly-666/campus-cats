@@ -30,6 +30,7 @@
     <nav class="tab-bar" aria-label="视图切换">
       <button class="tab-btn active" data-tab="map" type="button">🗺️ 地图分布</button>
       <button class="tab-btn" data-tab="graph" type="button">🌳 亲戚关系</button>
+      <button class="tab-btn" data-tab="events" type="button">📅 最近事件</button>
       <a class="tab-btn" href="./admin.html" title="在线编辑数据并自动部署" style="display:none">⚙️ 编辑</a>
     </nav>
   </header>
@@ -79,6 +80,11 @@
     <!-- 关系图视图 -->
     <section id="graph-view" class="view">
       <div id="graph" class="graph-container"></div>
+    </section>
+
+    <!-- 最近事件视图（所有猫的事件汇总时间线） -->
+    <section id="events-view" class="view">
+      <div id="events-timeline" class="events-timeline"></div>
     </section>
   </main>
 

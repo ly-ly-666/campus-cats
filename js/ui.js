@@ -255,6 +255,62 @@ export function closeCatPanel() {
 /**
  * 更新首页统计：已知流浪猫总数 + 已绝育数量。
  */
+/**
+ * 渲染「最近事件」总入口：汇总所有猫咪的事件，按日期倒序展示。
+ * @param {Array} cats
+ */
+export function renderEventsTimeline(cats) {
+  const box = document.getElementById('events-timeline');
+  if (!box) return;
+  const list = Array.isArray(cats) ? cats : [];
+
+  // 汇总：每条事件带上猫咪信息
+  const allEvents = [];
+  list.forEach((cat) => {
+    (cat.events || []).forEach((ev) => {
+      allEvents.push({ cat, date: ev.date || '', text: ev.text || '', images: ev.images || [] });
+    });
+  });
+
+  // 按日期倒序（有日期的在前），无日期的排最后
+  allEvents.sort((a, b) => {
+    const da = a.date || '';
+    const db = b.date || '';
+    if (da && db) return db.localeCompare(da);
+    if (da) return -1;
+    if (db) return 1;
+    return 0;
+  });
+
+  if (!allEvents.length) {
+    box.innerHTML = '<div class="events-empty">📅 还没有记录事件～<br>等猫咪们有新动态（绝育、救助、新照）就会出现在这里。</div>';
+    return;
+  }
+
+  box.innerHTML = allEvents.map((item) => {
+    const cat = item.cat;
+    const photo = photoUrl(cat.photo);
+    const imgs = item.images.length
+      ? '<div class="tl-event-imgs">' + item.images.map((src) => {
+          return '<img src="' + photoUrl(src) + '" alt="" loading="lazy" onclick="openLightbox(this.src)">';
+        }).join('') + '</div>'
+      : '';
+    return `
+      <div class="tl-event" data-cat-id="${cat.id}">
+        <img class="tl-event-avatar" src="${photo}" alt="" onerror="this.src='${DEFAULT_PHOTO}'"
+             onclick="location.href='profile.html#' + this.parentElement.dataset.catId">
+        <div class="tl-event-body">
+          <div class="tl-event-head">
+            <span class="tl-event-date">${escapeHtml(item.date) || '未注明日期'}</span>
+            <a class="tl-event-cat" href="./profile.html#${cat.id}">${escapeHtml(cat.name)}</a>
+          </div>
+          <div class="tl-event-text">${escapeHtml(item.text) || ''}</div>
+          ${imgs}
+        </div>
+      </div>`;
+  }).join('');
+}
+
 export function updateStats(cats) {
   const list = Array.isArray(cats) ? cats : [];
   const totalEl = document.getElementById('stat-total');
