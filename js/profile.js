@@ -27,6 +27,18 @@ function thumbUrl(src) {
   return 'images/thumb/' + jpg + '?v=2';
 }
 
+// 关系的方向化描述：如"小q 是 年年的妈妈" / "A 与 B 是配偶"
+function relationDescText(type, aName, bName) {
+  switch (type) {
+    case '母子': return aName + ' 是 ' + bName + ' 的妈妈';
+    case '父子': return aName + ' 是 ' + bName + ' 的爸爸';
+    case '兄弟姐妹': return aName + ' 与 ' + bName + ' 是兄弟姐妹';
+    case '配偶': return aName + ' 与 ' + bName + ' 是配偶';
+    case '朋友': return aName + ' 与 ' + bName + ' 是朋友';
+    default: return aName + ' ' + (type || '') + ' ' + bName;
+  }
+}
+
 function showToast(message) {
   var el = document.getElementById('toast');
   if (!el) return;
@@ -128,8 +140,11 @@ function render(cats, relations) {
   });
   const relHtml = relItems.length
     ? relItems.map(function (item) {
-      return '<div class="relation-item"><span class="relation-type">' + (item.reverse ? '↔ ' : '') + escapeHtml(item.type) + '</span>' +
-        '<span class="relation-other">→ ' + escapeHtml(item.other.name) + '</span>' +
+      // 方向化：无论从哪只猫看，都显示"谁是谁的妈妈"等明确描述
+      const aName = item.reverse ? item.other.name : cat.name;
+      const bName = item.reverse ? cat.name : item.other.name;
+      const desc = relationDescText(item.type, aName, bName);
+      return '<div class="relation-item"><span class="relation-desc">🐾 ' + escapeHtml(desc) + '</span>' +
         (item.note ? '<span class="relation-note">（' + escapeHtml(item.note) + '）</span>' : '') + '</div>';
     }).join('')
     : '<p class="hint">暂无关系记录</p>';
