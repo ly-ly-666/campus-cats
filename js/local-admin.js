@@ -4,11 +4,13 @@
 
   var CATS_PATH = 'data/cats.json';
   var RELS_PATH = 'data/relations.json';
+  var SITE_CFG_PATH = 'data/site-config.json';
   var IMAGES_DIR = 'images';
 
   var dirHandle = null;
   var cats = [];
   var relations = [];
+  var siteConfig = {};
   var editIdx = -1;
   var pendingAvatar = null;
   var pendingAvatarName = '';
@@ -322,12 +324,19 @@
     } catch (e) {
       relations = [];
     }
+    try {
+      var cfgText = await readTextFile(SITE_CFG_PATH);
+      siteConfig = JSON.parse(cfgText) || {};
+    } catch (e) {
+      siteConfig = {};
+    }
     renderCats();
     ensureMap();
     renderMarkers();
     renderRelSelects();
     renderRelList();
     updateRelLabels();
+    renderStoryOrder();
   }
 
   async function saveAll() {
@@ -335,10 +344,53 @@
     try {
       await writeTextFile(CATS_PATH, JSON.stringify(cats, null, 2) + '\n');
       await writeTextFile(RELS_PATH, JSON.stringify(relations, null, 2) + '\n');
+      if (siteConfig && typeof siteConfig === 'object') {
+        await writeTextFile(SITE_CFG_PATH, JSON.stringify(siteConfig, null, 2) + '\n');
+      }
       log('✅ 已保存到本地文件', 'ok');
     } catch (e) {
       log('❌ 保存失败：' + e.message, 'err');
     }
+  }
+  // ---------- 故事集展示顺序 ----------
+  function catHasStories(c) {
+    return (Array.isArray(c.stories) && c.stories.length) || (c.story && String(c.story).trim());
+  }
+  function catStoryCount(c) {
+    return Array.isArray(c.stories) && c.stories.length ? c.stories.length : (String(c.story || '').trim() ? 1 : 0);
+  }
+  function renderStoryOrder() {
+    var box = $('story-order-list');
+    if (!box) return;
+    var storyCats = (cats || []).filter(catHasStories);
+    if (!storyCats.length) { box.innerHTML = '<p class="hint" style="margin:0;">还没有任何故事，先给猫咪添加故事后再来调整顺序。</p>'; return; }
+    // 建立 id -> cat 的映射
+    var catById = {};
+    storyCats.forEach(function (c) { catById[c.id] = c; });
+    var existingOrder = Array.isArray(siteConfig.storyOrder) ? siteConfig.storyOrder.slice() : [];
+    var inOrder = {};
+    existingOrder.forEach(function (id) { inOrder[id] = true; });
+    // 组合顺序：已有 storyOrder（仅保留有故事的） + 其余有故事但未列入的猫（按 cats 顺序）
+    var order = existingOrder.filter(function (id) { return catById[id]; });
+    storyCats.forEach(function (c) { if (!inOrder[c.id]) order.push(c.id); });
+    siteConfig.storyOrder = order;
+
+    function swap(i, j) { var t = order[i]; order[i] = order[j]; order[j] = t; siteConfig.storyOrder = order.slice(); renderStoryOrder(); }
+    box.innerHTML = order.map(function (id, i) {
+      var c = catById[id];
+      var n = catStoryCount(c);
+      var up = i > 0 ? '<button type="button" class="btn btn-sm so-up" data-i="' + i + '" title="上移">▲</button>' : '';
+      var down = i < order.length - 1 ? '<button type="button" class="btn btn-sm so-down" data-i="' + i + '" title="下移">▼</button>' : '';
+      return '<div class="so-item" style="display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">'
+        + '<span style="font-weight:700;color:#b45309;min-width:26px;">#' + (i + 1) + '</span>'
+        + '<img src="' + esc((c.photo || '').indexOf('placeholder') >= 0 ? '' : c.photo) + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;background:#ffd9a8;" alt="" onerror="this.style.visibility=\'hidden\'">'
+        + '<span style="flex:1;font-size:14px;font-weight:600;">' + esc(c.name) + '</span>'
+        + '<span style="font-size:12px;color:var(--muted);">' + n + ' 篇</span>'
+        + '<span style="display:flex;gap:4px;">' + up + down + '</span>'
+        + '</div>';
+    }).join('');
+    box.querySelectorAll('.so-up').forEach(function (b) { b.addEventListener('click', function () { var i = Number(b.dataset.i); if (i > 0) swap(i, i - 1); }); });
+    box.querySelectorAll('.so-down').forEach(function (b) { b.addEventListener('click', function () { var i = Number(b.dataset.i); if (i < order.length - 1) swap(i, i + 1); }); });
   }
 
 
@@ -607,6 +659,7 @@
       if (c.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音/小红书/B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
       else if (c.life === '失踪已久') statusBanner = '<div style="background:#9f1239;color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:10px;font-weight:600;">⚠️ 这只猫已失踪很久了。若你还见过它，请给猫协留言（抖音/小红书/B 站「这里油只喵」），任何线索都很宝贵。</div>';
       else if (c.life === '已领养') statusBanner = '<div style="background:#10b981;color:#fff;padding:8px 14px;border-radius:10px;margin-bottom:10px;">🏠 这只猫已被领养，开启新生活啦～</div>';
+      else if (c.life === '去喵星了') statusBanner = '<div style="background:#57534e;color:#fff;padding:8px 14px;border-radius:10px;margin-bottom:10px;">🕊️ 这只猫已去喵星了。它的照片和故事我们会一直保留纪念。</div>';
     }
     var banner = $('cat-status-banner');
     if (banner) { banner.innerHTML = statusBanner; banner.style.display = statusBanner ? '' : 'none'; }
@@ -707,11 +760,16 @@
     });
     refreshStories();
   }
+  // 从故事 id 提取时间戳（s_<ts>_xxx），用于按时间排序
+  function storyTs(s) {
+    var m = String((s && s.id) || '').match(/_?(\d{10,13})/);
+    return m ? Number(m[1]) : 0;
+  }
   function refreshStories() {
     var box = $('stories-editor');
     if (!box) return;
     if (!_pendingStories.length) { box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有多篇故事，点下方「添加故事」来创建。</p>'; return; }
-    box.innerHTML = _pendingStories.map(function (s, i) {
+    box.innerHTML = '<div class="story-sort-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" class="btn btn-sm" id="btn-story-sort" title="按故事时间先后自动排序（早的在前）">⏰ 按时间排序</button><span class="hint" style="margin:0;">▲▼ 也可手动拖动顺序</span></div>' + _pendingStories.map(function (s, i) {
       var imgs = (s.images || []).map(function (im, j) {
         var src = im.path || im.dataUrl || '';
         return '<div class="thumb-wrap"><img class="thumb" src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'"><button class="del" data-si="' + i + '" data-img="' + j + '">×</button></div>';
@@ -726,6 +784,12 @@
     box.querySelectorAll('[data-story-img]').forEach(function (b) { b.addEventListener('click', function () { _storyImgTarget = Number(b.dataset.storyImg); $('f-story-img').click(); }); });
     box.querySelectorAll('[data-story-paste]').forEach(function (b) { b.addEventListener('click', function () { _storyImgTarget = Number(b.dataset.storyPaste); setPasteMode(4); }); });
     box.querySelectorAll('.del[data-img]').forEach(function (b) { b.addEventListener('click', function () { _pendingStories[Number(b.dataset.si)].images.splice(Number(b.dataset.img), 1); refreshStories(); }); });
+    var sortBtn = box.querySelector('#btn-story-sort');
+    if (sortBtn) sortBtn.addEventListener('click', function () {
+      _pendingStories.sort(function (a, b) { return storyTs(a) - storyTs(b); });
+      refreshStories();
+      log('⏰ 已按时间先后排序（早的在前）', 'info');
+    });
   }
   function getStories() {
     return _pendingStories.map(function (s) { return { id: s.id || '', title: s.title || '', content: s.content || '', images: (s.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean) }; }).filter(function (s) { return s.title || s.content || s.images.length; });

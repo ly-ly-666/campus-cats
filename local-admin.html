@@ -172,6 +172,13 @@
     </section>
 
     <section class="card">
+      <h2>📖 故事集展示顺序</h2>
+      <p class="hint">调整「故事集」页面里各只猫故事的先后顺序（从上到下依次展示）。▲▼ 上移/下移后点「保存」即可生效；未列出的猫排在最末尾。</p>
+      <div id="story-order-list" class="story-order-list"></div>
+      <p class="hint" style="margin-top:8px;">💡 单只猫内多篇故事的顺序，在猫咪「编辑」弹窗的「📖 多篇故事」里调整。</p>
+    </section>
+
+    <section class="card">
       <h2>操作日志</h2>
       <div id="log" class="logbox"></div>
     </section>
@@ -219,7 +226,7 @@
         <div class="field"><label>毛色</label><input id="f-color" placeholder="白色混合橙色"></div>
         <div class="field"><label>区域</label><input id="f-area" placeholder="图书馆东门"></div>
         <div class="field"><label>绝育状态（选填）</label><select id="f-status"><option value="">未知</option><option>已绝育</option><option>未绝育</option></select></div>
-        <div class="field"><label>猫咪状态</label><select id="f-life"><option value="在校">在校</option><option value="已领养">已领养</option><option value="失踪">失踪</option><option value="失踪已久">失踪已久</option></select></div>
+        <div class="field"><label>猫咪状态</label><select id="f-life"><option value="在校">在校</option><option value="已领养">已领养</option><option value="失踪">失踪</option><option value="失踪已久">失踪已久</option><option value="去喵星了">去喵星了（离世）</option></select></div>
       </div>
       <div class="grid3" style="margin-top:10px;">
         <div class="field"><label>纬度 *</label><input id="f-lat" type="number" step="any" placeholder="21.6785"></div>

@@ -123,7 +123,25 @@ export function initMap(containerId, cats, onCatClick) {
 export function initMapSearch(map, cats) {
   const input = document.getElementById('map-search-input');
   const resultsEl = document.getElementById('map-search-results');
+  const toggle = document.getElementById('map-search-toggle');
+  const box = document.getElementById('map-search-box');
   if (!input || !resultsEl || !map) return;
+
+  function openBox() {
+    if (!box) return;
+    box.hidden = false;
+    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+    setTimeout(() => { try { input.focus(); } catch (e) {} }, 30);
+  }
+  function closeBox() {
+    if (box) box.hidden = true;
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    resultsEl.hidden = true;
+  }
+  if (toggle) toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (box && box.hidden) openBox(); else closeBox();
+  });
 
   const markers = new Map(); // cat.id -> marker
   cats.forEach((c) => {
@@ -182,10 +200,10 @@ export function initMapSearch(map, cats) {
       if (marker) setTimeout(() => marker.openPopup(), 850);
     }
     input.value = cat.name;
-    resultsEl.hidden = true;
+    closeBox();
   });
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#map-search')) resultsEl.hidden = true;
+    if (!e.target.closest('#map-search')) closeBox();
   });
 }

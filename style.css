@@ -41,8 +41,6 @@
   .cat-promo-title { font-size: 14px; }
 }
 
-:root {
-
 /* ---------- 猫协宣传条（最显眼） ---------- */
 .cat-promo {
   background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 50%, #fdba74 100%);
@@ -86,6 +84,7 @@
 }
 
 
+:root {
   --primary: #f59e0b;
   --primary-dark: #d97706;
   --bg: #faf6ef;
@@ -333,7 +332,7 @@ body { display: flex; flex-direction: column; }
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000; /* 详情卡片必须盖住地图控件（搜索栏/图例 1100） */
 }
 .modal.open { display: flex; }
 
@@ -491,9 +490,30 @@ body { display: flex; flex-direction: column; }
   .cat-list { padding: 10px; }
 }
 .site-disclaimer {
-  max-width: 980px; margin: 0 auto; padding: 5px 16px;
+  max-width: 980px; margin: 0 auto; padding: 6px 16px;
   font-size: 10px; color: #b45309; background: transparent;
   line-height: 1.5;
+}
+/* 默认（桌面端，任何窗口宽度）：显示「⚠️ 站点声明」标识行 + 完整声明正文 */
+.site-disclaimer-summary {
+  list-style: none; cursor: pointer;
+  display: inline-flex;
+  align-items: center; gap: 4px;
+  color: #b45309; font-size: 11px; font-weight: 600;
+}
+.site-disclaimer-summary::-webkit-details-marker { display: none; }
+.site-disclaimer-summary:hover { opacity: 0.85; }
+/* 桌面端：不显示「（点击展开）」提示（声明已完整显示） */
+.disc-expand-hint { display: none; }
+.site-disclaimer-body { margin-top: 2px; }
+.site-disclaimer:not([open]) > .site-disclaimer-body { display: block; }
+/* 手机端才折叠：显示「点击展开」提示，收起正文 */
+@media (max-width: 600px) {
+  .site-disclaimer { padding: 4px 12px; }
+  .site-disclaimer-summary { display: inline-flex; }
+  .disc-expand-hint { display: inline; }
+  .site-disclaimer:not([open]) > .site-disclaimer-body { display: none; }
+  .site-disclaimer-body { margin-top: 4px; }
 }
 @keyframes cat-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.7); } 50% { box-shadow: 0 0 0 14px rgba(220,38,38,0); } }
 .cat-marker.ring-missing { animation: cat-pulse 1.5s infinite; box-shadow: 0 0 0 4px rgba(220,38,38,.9); }
@@ -620,12 +640,14 @@ body { display: flex; flex-direction: column; }
   position: fixed; inset: 0; z-index: 999999;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(180deg, #fffbf5 0%, #fef3c7 100%);
-  opacity: 0; animation: splashFadeIn 1.2s 0.3s ease forwards;
+  opacity: 1; animation: splashFadeIn 1.2s 0.3s ease; /* 无 forwards，动画结束回落到静态 1，淡出过渡正常触发 */
   transition: opacity 0.6s ease;
 }
 .splash-overlay.fade-out {
   opacity: 0 !important; pointer-events: none;
 }
+/* 淡出时不设 animation:none —— 那会在浮动/旋转动画中途瞬间复位 transform，造成“卡一下”。
+   让 splash-content 的浮动动画自然继续，配合 .splash-overlay 的 opacity 过渡即可丝滑淡出。 */
 .splash-content {
   text-align: center;
   animation: splashFloat 2.5s ease-in-out infinite;
@@ -674,6 +696,12 @@ body { display: flex; flex-direction: column; }
 .story-item-title { font-size: 15px; font-weight: 700; color: var(--primary-dark, #d97706); margin-bottom: 6px; }
 .story-item-no-title { color: var(--muted, #8a857d); font-style: italic; font-weight: 400; }
 .story-item-content { font-size: 14px; line-height: 1.7; color: var(--text, #2d2a26); white-space: pre-line; }
+.story-fold-btn {
+  display: block; margin-top: 8px; padding: 5px 12px;
+  border: 1px solid #fdba74; background: #fff7ed; color: #d97706;
+  border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.story-fold-btn:hover { background: #ffedd5; }
 .story-item-imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .story-item-imgs img { width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border, #e8e1d6); cursor: zoom-in; }
 @media (max-width: 768px) { .story-item-imgs img { width: 90px; height: 90px; } }
@@ -683,12 +711,24 @@ body { display: flex; flex-direction: column; }
 #stories-view { padding: 0; overflow-y: auto; flex-direction: column; }
 .stories-timeline { max-width: 720px; margin: 0 auto; }
 
-/* ---------- 地图内搜索定位 ---------- */
+/* ---------- 地图内搜索定位（左上角收起按钮，展开时不挡中央猫咪） ---------- */
 .map-search {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-  z-index: 1100; width: min(420px, calc(100% - 24px));
-  display: flex; flex-direction: column;
+  position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+  z-index: 1100; width: auto;
+  display: flex; flex-direction: column-reverse; /* 结果/输入框在按钮上方弹出，不挡底部 */
+  align-items: center; gap: 6px;
 }
+.map-search-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 40px; padding: 0 16px;
+  border: 1px solid #e5e0d8; border-radius: 999px;
+  font-size: 14px; font-weight: 600; color: #b45309;
+  background: #fff; cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.map-search-toggle:hover { background: #fff7ed; }
+.map-search-box { display: flex; flex-direction: column; gap: 6px; width: min(340px, calc(100vw - 44px)); }
+.map-search-box[hidden] { display: none; }
 .map-search-input {
   width: 100%; height: 40px; padding: 0 14px;
   border: 1px solid #e5e0d8; border-radius: 999px;
@@ -760,6 +800,24 @@ body { display: flex; flex-direction: column; }
   font-size: 12px; font-weight: 700; padding: 1px 6px; margin-left: 4px;
 }
 @media (max-width: 768px) {
-  .map-search { top: 8px; width: calc(100% - 16px); }
+  .map-search { bottom: 84px; }
+  .map-search-toggle { height: 38px; padding: 0 12px; font-size: 13px; }
+  .map-search-box { width: min(300px, calc(100vw - 20px)); }
   .map-legend { right: 10px; bottom: 20px; }
+}
+
+/* ---------- 手机端适配：压缩顶部区块，让地图更大 ---------- */
+@media (max-width: 600px) {
+  .app-header { padding: 6px 10px; gap: 4px; }
+  .app-title { font-size: 15px; }
+  .tab-btn { padding: 6px 10px; font-size: 12px; }
+  /* 宣传条：压缩（保留标题+描述小字，账号占位大则隐藏） */
+  .cat-promo { padding: 8px 12px; }
+  .cat-promo-inner { gap: 8px; }
+  .cat-promo-logo { width: 30px; height: 30px; font-size: 18px; }
+  .cat-promo-title { font-size: 12px; }
+  .cat-promo-desc { font-size: 11px; margin-top: 2px; }
+  .cat-promo-accounts { display: none; }
+  /* 统计条压缩 */
+  .site-stats { font-size: 11px; padding: 2px 10px; gap: 12px; }
 }

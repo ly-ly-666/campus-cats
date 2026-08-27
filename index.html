@@ -6,15 +6,15 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://webrd0s.is.autonavi.com">
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-  <title>校园猫咪地图与族谱 · 广东石油化工学院官渡校区</title>
+  <title>广油猫咪地图与族谱 · 广东石油化工学院官渡校区</title>
   <meta name="description" content="广东石油化工学院官渡校区校园流浪猫地图与族谱，记录每只猫咪的分布、故事与亲缘关系，由爱猫同学自发维护。">
   <meta name="theme-color" content="#ff9f43">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E">
   <!-- Open Graph / 社交分享卡片 -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="校园猫咪地图与族谱">
+  <meta property="og:title" content="广油猫咪地图与族谱">
   <meta property="og:description" content="广油官渡校区校园流浪猫地图与族谱，记录每只猫咪的分布、故事与亲缘关系。">
-  <meta property="og:site_name" content="校园猫咪地图">
+  <meta property="og:site_name" content="广油猫咪地图">
   <meta name="twitter:card" content="summary">
 
   <!-- Leaflet CSS（多 CDN 回退：jsdelivr → unpkg → cdnjs） -->
@@ -34,7 +34,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=5">
 </head>
 <body>
   <!-- 加载页 -->
@@ -46,7 +46,7 @@
   </div>
 
   <header class="app-header">
-    <h1 class="app-title">🐱 校园猫咪地图与族谱</h1>
+    <h1 class="app-title">🐱 广油猫咪地图与族谱</h1>
     <nav class="tab-bar" aria-label="视图切换">
       <button class="tab-btn active" data-tab="map" type="button">🗺️ 地图分布</button>
       <button class="tab-btn" data-tab="graph" type="button">🌳 亲戚关系</button>
@@ -61,7 +61,7 @@
     <div class="cat-promo-inner">
       <div class="cat-promo-logo">🐱</div>
       <div class="cat-promo-text">
-        <div class="cat-promo-title">校园猫咪地图 · 给每只小猫一个家</div>
+        <div class="cat-promo-title">广油猫咪地图 · 记住它们，也记住我们</div>
         <div class="cat-promo-desc">本站由爱猫同学自发维护（与猫协无关）。所有内容仅作校园猫记录，如需认领 / 救助 / 投诉请联系猫协官方账号。</div>
       </div>
       <div class="cat-promo-accounts">
@@ -73,8 +73,11 @@
     </div>
   </section>
 
-  <!-- 免责声明 -->
-  <p class="site-disclaimer">本站为广东石油化工学院（官渡校区）爱猫同学自发维护，与广油官微及「这里油只喵」志愿组织无官方隶属关系。内容仅供参考，猫猫信息可能滞后，如有错误欢迎指正。</p>
+  <!-- 免责声明（手机端可点击展开，桌面端完整显示） -->
+  <details class="site-disclaimer" id="site-disclaimer">
+    <summary class="site-disclaimer-summary">⚠️ 站点声明<span class="disc-expand-hint">（点击展开）</span></summary>
+    <p class="site-disclaimer-body">本站为广东石油化工学院（官渡校区）爱猫同学自发维护，与广油官微及「这里油只喵」志愿组织无官方隶属关系。内容仅供参考，猫猫信息可能滞后，如有错误欢迎指正。</p>
+  </details>
 
   <!-- 统计条 -->
   <div class="site-stats" id="site-stats">
@@ -87,12 +90,17 @@
     <section id="map-view" class="view active">
       <div id="map" class="map-container"></div>
 
-      <!-- 地图内搜索：按 名字/外号/毛色/区域 快速定位到猫咪 -->
+      <!-- 地图内搜索：左上角收起按钮，点击展开，不遮挡地图中央猫咪 -->
       <div class="map-search" id="map-search">
-        <input id="map-search-input" class="map-search-input" type="search"
-               placeholder="🔍 搜索并定位猫咪（名字 / 外号 / 毛色 / 区域）"
-               aria-label="在地图上搜索并定位猫咪" autocomplete="off">
-        <div id="map-search-results" class="map-search-results" role="listbox" hidden></div>
+        <button type="button" class="map-search-toggle" id="map-search-toggle" aria-expanded="false" aria-controls="map-search-box" aria-label="搜索猫咪">
+          🔍 <span class="map-search-toggle-text">搜索猫咪</span>
+        </button>
+        <div class="map-search-box" id="map-search-box" hidden>
+          <input id="map-search-input" class="map-search-input" type="search"
+                 placeholder="搜索并定位猫咪（名字 / 外号 / 毛色 / 区域）"
+                 aria-label="在地图上搜索并定位猫咪" autocomplete="off">
+          <div id="map-search-results" class="map-search-results" role="listbox" hidden></div>
+        </div>
       </div>
 
       <!-- 圈圈状态图例（可展开/收起，默认收起，不遮挡地图主干） -->

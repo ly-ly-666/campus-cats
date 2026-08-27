@@ -540,7 +540,7 @@ function buildCorrectionText() {
   const txt = document.getElementById('corr-text');
   const catName = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : '';
   const body = (txt && txt.value || '').trim();
-  return '【猫咪信息更正】\n🐱 猫咪：' + catName + '\n✍️ 更正内容：' + (body || '（未填写）') + '\n\n—— 来自校园猫咪地图访客';
+  return '【猫咪信息更正】\n🐱 猫咪：' + catName + '\n✍️ 更正内容：' + (body || '（未填写）') + '\n\n—— 来自广油猫咪地图访客';
 }
 function copyCorrection() {
   const text = buildCorrectionText();
@@ -630,9 +630,53 @@ export function initLightbox() {
 /**
  * 渲染「故事集」视图：按猫聚合展示所有故事
  */
-export function renderStoriesTimeline(cats) {
+// 故事内容超过该长度时折叠展示，点击「展开全文」查看全部
+const STORY_TRUNCATE = 280;
+
+function storyContentHtml(s, catId, idx) {
+  const text = s.content || '';
+  if (text.length <= STORY_TRUNCATE) {
+    return '<div class="story-item-content">' + escapeHtml(text) + '</div>';
+  }
+  const id = 'sc-' + catId + '-' + idx;
+  const preview = text.slice(0, STORY_TRUNCATE);
+  return '<div class="story-item-content">'
+    + '<span class="story-content-preview">' + escapeHtml(preview) + '…</span>'
+    + '<button type="button" class="story-fold-btn" data-act="expand" data-id="' + id + '" aria-expanded="false">展开全文 ▾</button>'
+    + '<span class="story-content-full" id="' + id + '" hidden>' + escapeHtml(text) + '</span>'
+    + '</div>';
+}
+
+export function renderStoriesTimeline(cats, siteConfig) {
   const box = document.getElementById('stories-timeline');
   if (!box) return;
+  // 事件委托：展开/收起（只绑一次）
+  if (!box.__storyFoldBound) {
+    box.addEventListener('click', (e) => {
+      const btn = e.target.closest ? e.target.closest('.story-fold-btn') : null;
+      if (!btn) return;
+      const item = btn.closest('.story-item');
+      if (!item) return;
+      const preview = item.querySelector('.story-content-preview');
+      const full = item.querySelector('.story-content-full');
+      if (!preview || !full) return;
+      if (btn.dataset.act === 'expand') {
+        preview.style.display = 'none';
+        full.hidden = false;
+        btn.textContent = '收起 ▲';
+        btn.dataset.act = 'collapse';
+        btn.setAttribute('aria-expanded', 'true');
+      } else {
+        preview.style.display = '';
+        full.hidden = true;
+        btn.textContent = '展开全文 ▾';
+        btn.dataset.act = 'expand';
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    box.__storyFoldBound = true;
+  }
+
   const list = Array.isArray(cats) ? cats : [];
   const catStories = [];
   list.forEach((cat) => {
@@ -644,15 +688,25 @@ export function renderStoriesTimeline(cats) {
     }
     if (stories.length) catStories.push({ cat, stories });
   });
+  // 按管理端配置的故事集全局顺序（storyOrder）排序；未配置的猫排在后面
+  const storyOrder = (siteConfig && Array.isArray(siteConfig.storyOrder)) ? siteConfig.storyOrder : [];
+  if (storyOrder.length) {
+    const orderIdx = new Map(storyOrder.map((id, i) => [id, i]));
+    catStories.sort((a, b) => {
+      const ia = orderIdx.has(a.cat.id) ? orderIdx.get(a.cat.id) : Number.MAX_SAFE_INTEGER;
+      const ib = orderIdx.has(b.cat.id) ? orderIdx.get(b.cat.id) : Number.MAX_SAFE_INTEGER;
+      return ia - ib;
+    });
+  }
   if (!catStories.length) {
     box.innerHTML = '<div class="events-empty">📖 还没有故事，等猫咪们的日常被记录下来～</div>';
     return;
   }
   box.innerHTML = catStories.map(({ cat, stories }) => {
     const photo = thumbUrl(cat.photo);
-    const storyItems = stories.map((s) => {
+    const storyItems = stories.map((s, si) => {
       const titleHtml = s.title ? '<div class="story-item-title">' + escapeHtml(s.title) + '</div>' : '<div class="story-item-title story-item-no-title">无标题</div>';
-      const contentHtml = s.content ? '<div class="story-item-content">' + escapeHtml(s.content) + '</div>' : '';
+      const contentHtml = s.content ? storyContentHtml(s, cat.id, si) : '';
       const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">').join('') + '</div>' : '';
       return '<div class="story-item">' + titleHtml + contentHtml + imgsHtml + '</div>';
     }).join('');

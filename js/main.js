@@ -66,9 +66,6 @@ async function boot() {
 
   setLoading('');
 
-  // 淡出加载页
-  dismissSplash();
-
   // 缩略图已就绪后，后台慢慢预取原图（渐进式加载：预览快，详情秒开）
   prefetchCatOriginals(cats);
 
@@ -112,7 +109,7 @@ async function boot() {
   bindJoin();
   initLightbox();
   renderEventsTimeline(cats);
-  renderStoriesTimeline(cats);
+  renderStoriesTimeline(cats, siteConfig);
 
   // 标签页
   bindTabs(
@@ -152,6 +149,9 @@ async function boot() {
       window.__closeModal();
     }
   });
+
+  // 所有内容渲染完成后，再淡出加载页（避免同步渲染阻塞主线程导致淡出不丝滑）
+  dismissSplash();
 }
 
 boot();
