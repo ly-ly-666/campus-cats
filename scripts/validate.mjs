@@ -88,6 +88,25 @@ for (let i = 0; i < cats.length; i++) {
   if (c.firstSeen && !/^\d{4}(-\d{2})?$/.test(c.firstSeen)) {
     error(idx + " firstSeen 格式无效 (应为 YYYY-MM): " + c.firstSeen);
   }
+  // stories 数组校验
+  if (c.stories !== undefined && c.stories !== null) {
+    if (!Array.isArray(c.stories)) {
+      error(idx + " stories 应为数组: " + JSON.stringify(c.stories));
+    } else {
+      for (let si = 0; si < c.stories.length; si++) {
+        const s = c.stories[si]; const sidx = idx + ".stories[" + si + "]";
+        if (!s || typeof s !== "object") { error(sidx + " 故事条目应为对象"); continue; }
+        if (!s.id || typeof s.id !== "string" || !s.id.trim()) error(sidx + " 缺少 id 或 id 为空");
+        if (s.title !== undefined && typeof s.title !== "string") error(sidx + " title 应为字符串");
+        if (s.content !== undefined && typeof s.content !== "string") error(sidx + " content 应为字符串");
+        if (s.images !== undefined) {
+          if (!Array.isArray(s.images)) error(sidx + " images 应为字符串数组");
+          else { for (let ii = 0; ii < s.images.length; ii++) { if (typeof s.images[ii] !== "string") error(sidx + ".images[" + ii + "] 应为字符串路径"); } }
+        }
+      }
+    }
+  }
+
 
   // nickname 可选字符串
   if (c.nickname !== undefined && c.nickname !== null && typeof c.nickname !== "string") {

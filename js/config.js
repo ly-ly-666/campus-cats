@@ -3,6 +3,10 @@
 // 校区中心坐标（广东石油化工学院官渡校区），Leaflet 使用 [lat, lng] 顺序
 export const CAMPUS_CENTER = [21.6795, 110.9226];
 
+// 以 campus 中心为圆心，半径约 1km 的矩形边界（plain arrays，map.js 中转为 L.latLngBounds）
+export const MAP_BOUNDS_SW = [CAMPUS_CENTER[0] - 0.009, CAMPUS_CENTER[1] - 0.0097];
+export const MAP_BOUNDS_NE = [CAMPUS_CENTER[0] + 0.009, CAMPUS_CENTER[1] + 0.0097];
+
 // 地图初始缩放级别
 export const DEFAULT_ZOOM = 17;
 

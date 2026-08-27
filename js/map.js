@@ -1,5 +1,5 @@
 // map.js — 地图模块（Leaflet 初始化与圆形猫咪标记）
-import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS } from './config.js';
+import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS, MAP_BOUNDS_SW, MAP_BOUNDS_NE } from './config.js';
 const IMG_CACHE_BUST = 'v1'; // 固定版本，浏览器可正常缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
@@ -45,7 +45,7 @@ function addTileLayer(map) {
 function createCatIcon(cat) {
   // 圆形标记：显示真实头像（缓存已固定，浏览器可正常缓存），加载失败时兜底显示名字首字
   const initial = (cat.name || '?')[0];
-  const isPast = cat.leftAt ? true : false;
+  const isPast = cat.life === '去喵星了' || cat.leftAt ? true : false;
   const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''));
   const hasPhoto = !!cat.photo && cat.photo.indexOf('placeholder') < 0;
   const imgHtml = hasPhoto
@@ -77,7 +77,15 @@ export function initMap(containerId, cats, onCatClick) {
   if (!container) throw new Error('找不到地图容器 #' + containerId);
   if (typeof L === 'undefined') throw new Error('Leaflet 地图库未加载（CDN 访问失败）');
 
-  const map = L.map(containerId, { zoomControl: true }).setView(CAMPUS_CENTER, DEFAULT_ZOOM);
+  const bounds = L.latLngBounds(MAP_BOUNDS_SW, MAP_BOUNDS_NE);
+  const map = L.map(containerId, { zoomControl: true, maxBounds: bounds, maxBoundsViscosity: 1.0 }).setView(CAMPUS_CENTER, DEFAULT_ZOOM);
+
+  // 蒙版：半透明矩形覆盖 maxBounds 范围外
+  const maskStyle = { fillColor: '#f5f0e8', fillOpacity: 0.45, stroke: false, interactive: false };
+  L.rectangle([[bounds.getNorthEast().lat, -180], [90, 180]], maskStyle).addTo(map);
+  L.rectangle([[-90, -180], [bounds.getSouthWest().lat, 180]], maskStyle).addTo(map);
+  L.rectangle([[bounds.getSouthWest().lat, -180], [bounds.getNorthEast().lat, bounds.getSouthWest().lng]], maskStyle).addTo(map);
+  L.rectangle([[bounds.getSouthWest().lat, bounds.getNorthEast().lng], [bounds.getNorthEast().lat, 180]], maskStyle).addTo(map);
 
   addTileLayer(map);
 
@@ -88,11 +96,12 @@ export function initMap(containerId, cats, onCatClick) {
     const marker = L.marker([cat.lat, cat.lng], { icon: createCatIcon(cat) })
       .addTo(map);
 
+    const gentleLeft = gentleLeftAt(cat);
     const popupLines = [
-      '<strong>' + cat.name + '</strong>' + (cat.leftAt ? ' <span class="tag tag-past">过往</span>' : ''),
+      '<strong>' + cat.name + '</strong>' + (cat.life === '去喵星了' ? ' <span class="tag tag-past">去喵星了</span>' : (cat.leftAt ? ' <span class="tag tag-past">过往</span>' : '')),
       cat.nickname ? '🐾 外号：' + cat.nickname : null,
       cat.area ? '📍 ' + cat.area : null,
-      cat.leftAt ? '🚪 离开时间：' + cat.leftAt : null,
+      gentleLeft ? '🚪 ' + gentleLeft : null,
       cat.description ? '💬 ' + cat.description : null,
     ].filter(Boolean);
 

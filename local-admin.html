@@ -91,6 +91,19 @@
     details.help { margin-top: 8px; }
     details.help summary { cursor: pointer; font-size: 12px; color: #2563eb; }
     details.help ol { font-size: 12px; color: var(--muted); line-height: 1.9; padding-left: 18px; }
+  
+    .stories-editor { margin-top: 8px; }
+    .stories-editor .story-edit-item { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-top: 8px; background: #fffdf9; }
+    .stories-editor .story-edit-item .story-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .stories-editor .story-edit-item .story-header .story-num { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .stories-editor .story-edit-item .story-header .btn-del-story { margin-left: auto; }
+    .stories-editor .story-edit-item .story-imgs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .stories-editor .story-edit-item .story-imgs .thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+    .stories-editor .story-edit-item .story-imgs .thumb-wrap { position: relative; }
+    .stories-editor .story-edit-item .story-imgs .thumb-wrap .del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; }
+    .stories-editor .story-move-btns { display: flex; gap: 4px; }
+    .stories-editor .story-move-btns button { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    .stories-editor .story-move-btns button:hover { background: #fff7ed; }
   </style>
 </head>
 <body>
@@ -219,7 +232,13 @@
         <div class="field"><label>年龄（选填）</label><input id="f-age" placeholder="如：3年 / 大约4岁"></div>
       </div>
       <div class="field" style="margin-top:10px;"><label>简介</label><textarea id="f-desc" rows="2" placeholder="性格/特征"></textarea></div>
-      <div class="field" style="margin-top:10px;"><label>档案故事</label><textarea id="f-story" rows="4" placeholder="这只猫的故事、来历、性格细节"></textarea></div>
+      <div class="field" style="margin-top:10px;"><label>档案故事（旧版兼容）</label><textarea id="f-story" rows="3" placeholder="旧字段，展示时优先使用多篇故事"></textarea></div>
+      <div class="field" style="margin-top:10px;">
+        <label style="font-size:13px;color:var(--primary-dark);font-weight:600;">📖 多篇故事</label>
+        <div id="stories-editor" class="stories-editor"></div>
+        <button type="button" class="btn btn-sm" id="btn-story-add" style="margin-top:6px;">＋ 添加故事</button>
+        <input type="file" id="f-story-img" accept="image/*" multiple style="display:none;">
+      </div>
       <div class="field" style="margin-top:10px;"><label>档案标签（选填，回车添加）</label><div id="f-tags-chips" class="tag-chips"></div><input id="f-tags-input" placeholder="输入标签后回车，如：活泼"></div>
 
       <!-- 最近事件 -->

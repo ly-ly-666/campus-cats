@@ -48,6 +48,8 @@ export function initGraph(containerId, cats, relations) {
   const container = document.getElementById(containerId);
   if (!container) throw new Error(`找不到关系图容器 #${containerId}`);
 
+  if (typeof echarts === 'undefined') throw new Error('ECharts 未加载');
+
   if (currentChart) {
     currentChart.dispose();
     currentChart = null;

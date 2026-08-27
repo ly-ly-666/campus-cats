@@ -99,6 +99,37 @@ async function loadData() {
   }
 }
 
+// 温和化展示「离开时间」
+function gentleLeftAt(cat) {
+  if (!cat || cat.life === '去喵星了') return '';
+  return String(cat.leftAt || '').replace(/离世|去世|车祸去世/g, '去喵星了');
+}
+
+// 渲染猫咪的多篇故事（stories优先，旧story兜底）
+function renderProfileStories(cat) {
+  var stories = [];
+  if (Array.isArray(cat.stories) && cat.stories.length) {
+    stories = cat.stories;
+  } else if (cat.story && cat.story.trim()) {
+    stories = [{ id: '', title: '', content: cat.story, images: [] }];
+  }
+  if (!stories.length) return '';
+  var html = '<section class="profile-section"><h3>📖 猫咪故事</h3>';
+  stories.forEach(function(s) {
+    html += '<div class="story-item">';
+    if (s.title) html += '<div class="story-item-title">' + escapeHtml(s.title) + '</div>';
+    if (s.content) html += '<div class="story-item-content">' + escapeHtml(s.content) + '</div>';
+    if (Array.isArray(s.images) && s.images.length) {
+      html += '<div class="story-item-imgs">' + s.images.map(function(src) {
+        return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">';
+      }).join('') + '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</section>';
+  return html;
+}
+
 function render(cats, relations) {
   const id = (location.hash || '').replace(/^#/, '');
   const cat = cats.find(function (c) { return c.id === id; });
@@ -111,7 +142,7 @@ function render(cats, relations) {
   document.title = cat.name + ' · 猫咪档案';
 
   const photo = photoUrl(cat.photo);
-  const past = cat.leftAt ? '<span class="tag tag-past">过往</span>' : '';
+  const past = cat.life === '去喵星了' ? '<span class="tag tag-past">去喵星了</span>' : (cat.leftAt ? '<span class="tag tag-past">过往</span>' : '');
   const tags = (cat.tags || []).map(function (t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
 
   document.getElementById('profile-header').innerHTML = `
@@ -131,7 +162,7 @@ function render(cats, relations) {
     ['毛色', cat.color],
     ['常出现区域', cat.area],
     ['首次发现', cat.firstSeen],
-    ['离开时间', cat.leftAt],
+    ['离开时间', cat.life === '去喵星了' ? '' : gentleLeftAt(cat)],
     ['照料人', cat.caretaker],
     ['经纬度', cat.lat != null && cat.lng != null ? cat.lat + ', ' + cat.lng : '']
   ].filter(function (x) { return x[1]; });
@@ -204,7 +235,7 @@ function render(cats, relations) {
       <div class="info-grid">${infoHtml}</div>
     </section>
     ${eventsHtml}
-    ${cat.story ? '<section class="profile-section"><h3>📖 猫咪故事</h3><div class="story-text">' + escapeHtml(cat.story) + '</div></section>' : ''}
+    ${renderProfileStories(cat)}
     ${cat.description ? '<section class="profile-section"><h3>📝 简介</h3><div class="story-text">' + escapeHtml(cat.description) + '</div></section>' : ''}
     <section class="profile-section">
       <h3>🖼️ 相册</h3>

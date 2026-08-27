@@ -597,6 +597,7 @@
     pendingAvatar = null; pendingAvatarName = '';
     renderAlbum(c ? c.album : []);
     renderEvents(c ? (c.events || []) : []);
+    renderStories(c ? (c.stories || []) : []);
     if (map && c) {
       pendingLatLng = { lat: c.lat, lng: c.lng };
       moveTempMarker(pendingLatLng);
@@ -630,6 +631,8 @@
   // ---------- 最近事件 ----------
   var _pendingEvents = [];   // 当前编辑的事件数组；图片可能是 {dataUrl,ext} 待落盘
   var _evtImgTarget = -1;    // 当前要往哪个事件里加图（索引）
+  var _pendingStories = [];
+  var _storyImgTarget = -1;
 
   function renderEvents(events) {
     _pendingEvents = (events || []).map(function (ev) {
@@ -694,6 +697,52 @@
         refreshEvents();
       });
     });
+  }
+
+
+  // ---------- 多篇故事 ----------
+  function renderStories(stories) {
+    _pendingStories = (stories || []).map(function (s) {
+      return { id: s.id || ('s_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)), title: s.title || '', content: s.content || '', images: (s.images || []).map(function (img) { return { path: img }; }) };
+    });
+    refreshStories();
+  }
+  function refreshStories() {
+    var box = $('stories-editor');
+    if (!box) return;
+    if (!_pendingStories.length) { box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有多篇故事，点下方「添加故事」来创建。</p>'; return; }
+    box.innerHTML = _pendingStories.map(function (s, i) {
+      var imgs = (s.images || []).map(function (im, j) {
+        var src = im.path || im.dataUrl || '';
+        return '<div class="thumb-wrap"><img class="thumb" src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'"><button class="del" data-si="' + i + '" data-img="' + j + '">×</button></div>';
+      }).join('');
+      return '<div class="story-edit-item" data-story-idx="' + i + '"><div class="story-header"><span class="story-num">#' + (i + 1) + '</span><div class="story-move-btns">' + (i > 0 ? '<button type="button" class="btn-story-up" data-si="' + i + '" title="上移">▲</button>' : '') + (i < _pendingStories.length - 1 ? '<button type="button" class="btn-story-down" data-si="' + i + '" title="下移">▼</button>' : '') + '</div><button type="button" class="btn btn-sm btn-danger btn-del-story" data-si="' + i + '">删除</button></div><div class="field" style="margin-top:4px;"><label>标题（选填）</label><input type="text" class="story-title" data-si="' + i + '" placeholder="故事标题" value="' + esc(s.title) + '"></div><div class="field" style="margin-top:4px;"><label>内容</label><textarea class="story-content" data-si="' + i + '" rows="3" placeholder="故事内容（纯文本）">' + esc(s.content) + '</textarea></div><div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" data-story-img="' + i + '">🖼️ 加截图</button><button type="button" class="btn btn-sm" data-story-paste="' + i + '" style="margin-left:4px">📋 粘贴截图</button></div><div class="story-imgs">' + imgs + '</div></div>';
+    }).join('');
+    box.querySelectorAll('.story-title').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].title = ip.value; }); });
+    box.querySelectorAll('.story-content').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].content = ip.value; }); });
+    box.querySelectorAll('.btn-del-story').forEach(function (b) { b.addEventListener('click', function () { _pendingStories.splice(Number(b.dataset.si), 1); refreshStories(); }); });
+    box.querySelectorAll('.btn-story-up').forEach(function (b) { b.addEventListener('click', function () { var idx = Number(b.dataset.si); if (idx <= 0) return; var tmp = _pendingStories[idx]; _pendingStories[idx] = _pendingStories[idx - 1]; _pendingStories[idx - 1] = tmp; refreshStories(); }); });
+    box.querySelectorAll('.btn-story-down').forEach(function (b) { b.addEventListener('click', function () { var idx = Number(b.dataset.si); if (idx >= _pendingStories.length - 1) return; var tmp = _pendingStories[idx]; _pendingStories[idx] = _pendingStories[idx + 1]; _pendingStories[idx + 1] = tmp; refreshStories(); }); });
+    box.querySelectorAll('[data-story-img]').forEach(function (b) { b.addEventListener('click', function () { _storyImgTarget = Number(b.dataset.storyImg); $('f-story-img').click(); }); });
+    box.querySelectorAll('[data-story-paste]').forEach(function (b) { b.addEventListener('click', function () { _storyImgTarget = Number(b.dataset.storyPaste); setPasteMode(4); }); });
+    box.querySelectorAll('.del[data-img]').forEach(function (b) { b.addEventListener('click', function () { _pendingStories[Number(b.dataset.si)].images.splice(Number(b.dataset.img), 1); refreshStories(); }); });
+  }
+  function getStories() {
+    return _pendingStories.map(function (s) { return { id: s.id || '', title: s.title || '', content: s.content || '', images: (s.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean) }; }).filter(function (s) { return s.title || s.content || s.images.length; });
+  }
+  async function onStoryImgChange() {
+    var files = $('f-story-img').files;
+    if (!files || !files.length) return;
+    if (_storyImgTarget < 0) return;
+    if (!_pendingStories[_storyImgTarget]) { $('f-story-img').value = ''; return; }
+    var s = _pendingStories[_storyImgTarget];
+    if (!s.images) s.images = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i]; var dataUrl = await readFileAsDataURL(f); var compressed = await compressImage(dataUrl, 1600, 0.85);
+      if (editIdx >= 0 && cats[editIdx]) { var name = cats[editIdx].id + '_story_' + Date.now() + '_' + i + '.jpg'; var path = IMAGES_DIR + '/' + name; await writeImageFileWithThumb(path, compressed); s.images.push({ path: path }); log('✅ 已保存故事截图：' + path, 'ok'); }
+      else { s.images.push({ dataUrl: compressed, ext: 'jpg' }); }
+    }
+    refreshStories(); $('f-story-img').value = '';
   }
 
   function getEvents() {
@@ -788,6 +837,9 @@
     } else if (mode === 3) {
       if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘到<b>事件</b>（直接保存）'; hint.style.display = ''; }
       if (btn) { btn.textContent = '📋 准备粘事件'; btn.style.background = '#fef3c7'; }
+    } else if (mode === 4) {
+      if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘到<b>故事</b>（直接保存）'; hint.style.display = ''; }
+      if (btn) { btn.textContent = '📖 准备粘故事'; btn.style.background = '#fef3c7'; }
     } else {
       if (hint) hint.style.display = 'none';
       if (btn) { btn.textContent = '📋 粘贴截图'; btn.style.background = ''; }
@@ -830,6 +882,14 @@
         ev.images.push({ path: path });
         refreshEvents();
         log('📋 已粘贴截图到事件：' + path, 'ok');
+      } else if (pasteTarget === 4) {
+        if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
+        var sv = _pendingStories[_storyImgTarget]; if (!sv) { log('❌ 请先添加一个故事', 'err'); setPasteMode(0); return; }
+        if (!sv.images) sv.images = [];
+        var compressed = await compressImage(dataUrl, 1600, 0.85);
+        var name = cats[editIdx].id + '_story_' + Date.now() + '.jpg'; var path = IMAGES_DIR + '/' + name;
+        await writeImageFileWithThumb(path, compressed); sv.images.push({ path: path }); refreshStories();
+        log('📋 已粘贴截图到故事：' + path, 'ok');
       }
       setPasteMode(0);
     };
@@ -919,9 +979,24 @@
       leftAt: $('f-leftAt').value.trim(),
       caretaker: $('f-caretaker').value.trim(),
       age: $('f-age').value.trim(),
-      events: getEvents()
+      events: getEvents(),
+      stories: getStories()
     };
 
+    // 故事截图落盘
+    if (cat.stories && cat.stories.length) {
+      for (var si = 0; si < cat.stories.length; si++) {
+        var sv = cat.stories[si]; if (!sv.images || !sv.images.length) continue;
+        var finalImgs = [];
+        for (var sj = 0; sj < sv.images.length; sj++) {
+          var sim = sv.images[sj];
+          if (sim.indexOf('data:') === 0) { var ext = (sim.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png'; var p = IMAGES_DIR + '/' + id + '_story_' + Date.now() + '_' + sj + '.' + ext; await writeImageFileWithThumb(p, sim); finalImgs.push(p); log('✅ 已保存故事截图：' + p, 'ok'); }
+          else { finalImgs.push(sim); }
+        }
+        sv.images = finalImgs;
+      }
+    }
+    if (!cat.stories || !cat.stories.length) delete cat.stories;
     // 事件截图落盘（dataUrl 形式的图片保存为文件，路径形式的保持不变）
     if (cat.events && cat.events.length) {
       for (var ei = 0; ei < cat.events.length; ei++) {
@@ -1294,6 +1369,12 @@
     $('btn-avatar').addEventListener('click', function () { $('f-avatar').click(); });
     $('f-avatar').addEventListener('change', onAvatarChange);
     $('btn-album-add').addEventListener('click', function () { $('f-album').click(); });
+    $('btn-story-add').addEventListener('click', function () {
+      if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+      _pendingStories.push({ id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), title: '', content: '', images: [] });
+      refreshStories();
+    });
+    $('f-story-img').addEventListener('change', onStoryImgChange);
     $('btn-event-add').addEventListener('click', function () {
       if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
       _pendingEvents.push({ date: '', text: '', images: [] });

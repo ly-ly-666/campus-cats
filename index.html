@@ -37,12 +37,21 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+  <!-- 加载页 -->
+  <div id="splash" class="splash-overlay">
+    <div class="splash-content">
+      <div class="splash-paw">🐾</div>
+      <p class="splash-text">记住它们，也记住我们。</p>
+    </div>
+  </div>
+
   <header class="app-header">
     <h1 class="app-title">🐱 校园猫咪地图与族谱</h1>
     <nav class="tab-bar" aria-label="视图切换">
       <button class="tab-btn active" data-tab="map" type="button">🗺️ 地图分布</button>
       <button class="tab-btn" data-tab="graph" type="button">🌳 亲戚关系</button>
       <button class="tab-btn" data-tab="events" type="button">📅 最近事件</button>
+      <button class="tab-btn" data-tab="stories" type="button">📖 故事集</button>
       <a class="tab-btn" href="./admin.html" title="在线编辑数据并自动部署" style="display:none">⚙️ 编辑</a>
     </nav>
   </header>
@@ -113,6 +122,11 @@
     <section id="events-view" class="view">
       <div id="events-timeline" class="events-timeline"></div>
     </section>
+
+    <!-- 故事集视图 -->
+    <section id="stories-view" class="view">
+      <div id="stories-timeline" class="stories-timeline"></div>
+    </section>
   </main>
 
   <!-- 详情弹窗 -->
@@ -173,9 +187,30 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
           onerror="window.__leafletIdx=(window.__leafletIdx||0)+1;if(window.__leafletIdx===1){document.write('<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'><\/script>')}else if(window.__leafletIdx===2){document.write('<script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'><\/script>')}"></script>
 
-  <!-- ECharts（同样三级回退） -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"
-          onerror="window.__echartsIdx=(window.__echartsIdx||0)+1;if(window.__echartsIdx===1){document.write('<script src='https://unpkg.com/echarts@5.5.1/dist/echarts.min.js'><\/script>')}else if(window.__echartsIdx===2){document.write('<script src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js'><\/script>')}"></script>
+  <!-- ECharts：延迟加载（requestIdleCallback预取，tab点击时秒开） -->
+  <script>
+    window.__echartsReady = null;
+    window.__loadEcharts = function() {
+      if (window.__echartsReady) return window.__echartsReady;
+      window.__echartsReady = new Promise(function(resolve, reject) {
+        var urls = [
+          'https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js',
+          'https://unpkg.com/echarts@5.5.1/dist/echarts.min.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js'
+        ];
+        function tryLoad(idx) {
+          if (idx >= urls.length) { reject(new Error('所有 ECharts CDN 均不可用')); return; }
+          var s = document.createElement('script');
+          s.src = urls[idx];
+          s.onload = function() { resolve(window.echarts); };
+          s.onerror = function() { tryLoad(idx + 1); };
+          document.head.appendChild(s);
+        }
+        tryLoad(0);
+      });
+      return window.__echartsReady;
+    };
+  </script>
 
   <!-- 入口模块 -->
   <script type="module" src="./js/main.js"></script>

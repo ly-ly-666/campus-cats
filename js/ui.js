@@ -166,7 +166,7 @@ export function renderCatList(cats, onSelect) {
           <div class="cat-item-name">
             ${escapeHtml(cat.name)}
             ${cat.nickname && !cat.nickname.startsWith('img-') ? '<span class="cat-item-nick">（' + escapeHtml(cat.nickname) + '）</span>' : ''}
-            ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
+            ${cat.life === '去喵星了' ? '<span class="tag tag-past">去喵星了</span>' : (cat.leftAt ? '<span class="tag tag-past">过往</span>' : '')}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '未知')}</span>
             ${cat.life === '失踪' ? '<span class="tag" style="background:#dc2626;color:#fff;">⚠️ 失踪</span>' : ''}
@@ -231,7 +231,7 @@ export function showModal(cat, cats, relations) {
     ['区域', cat.area],
     ['绝育状态', cat.status || '未知'],
     ['首次发现', cat.firstSeen],
-    ['离开时间', cat.leftAt],
+    ['离开时间', cat.life === '去喵星了' ? '' : gentleLeftAt(cat)],
     ['照料人', cat.caretaker],
   ];
 
@@ -618,5 +618,39 @@ export function initLightbox() {
     if (e.key === 'Escape') closeLightbox();
   });
 }
+
+/**
+ * 渲染「故事集」视图：按猫聚合展示所有故事
+ */
+export function renderStoriesTimeline(cats) {
+  const box = document.getElementById('stories-timeline');
+  if (!box) return;
+  const list = Array.isArray(cats) ? cats : [];
+  const catStories = [];
+  list.forEach((cat) => {
+    const stories = [];
+    if (Array.isArray(cat.stories) && cat.stories.length) {
+      cat.stories.forEach((s) => { stories.push({ id: s.id || '', title: s.title || '', content: s.content || '', images: Array.isArray(s.images) ? s.images : [] }); });
+    } else if (cat.story && cat.story.trim()) {
+      stories.push({ id: '', title: '', content: cat.story, images: [] });
+    }
+    if (stories.length) catStories.push({ cat, stories });
+  });
+  if (!catStories.length) {
+    box.innerHTML = '<div class="events-empty">📖 还没有故事，等猫咪们的日常被记录下来～</div>';
+    return;
+  }
+  box.innerHTML = catStories.map(({ cat, stories }) => {
+    const photo = thumbUrl(cat.photo);
+    const storyItems = stories.map((s) => {
+      const titleHtml = s.title ? '<div class="story-item-title">' + escapeHtml(s.title) + '</div>' : '<div class="story-item-title story-item-no-title">无标题</div>';
+      const contentHtml = s.content ? '<div class="story-item-content">' + escapeHtml(s.content) + '</div>' : '';
+      const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">').join('') + '</div>' : '';
+      return '<div class="story-item">' + titleHtml + contentHtml + imgsHtml + '</div>';
+    }).join('');
+    return '<div class="story-group"><div class="story-group-header"><a href="./profile.html#' + cat.id + '"><img class="story-group-avatar" src="' + photo + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span class="story-group-name">' + escapeHtml(cat.name) + '</span></a></div><div class="story-group-items">' + storyItems + '</div></div>';
+  }).join('');
+}
+
 // 挂到 window，供地图标记等内联 onclick 使用
 window.openLightbox = openLightbox;
