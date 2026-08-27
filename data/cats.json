@@ -103,8 +103,8 @@
     "gender": "female",
     "color": "三花",
     "area": "中专楼/图书馆",
-    "lat": 21.678435,
-    "lng": 110.922089,
+    "lat": 21.678595,
+    "lng": 110.922106,
     "photo": "images/cat005.jpg",
     "album": [],
     "description": "酷似小白",
@@ -117,7 +117,16 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "events": [
+      {
+        "date": "2026-08-27",
+        "text": "卷卷似乎定居图书馆,貌似跟白猪争霸图书馆馆长之位,不过两者之相像,安能辨我是白猪?",
+        "images": [
+          "images/cat005_event_1787836943274_0.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat006",
