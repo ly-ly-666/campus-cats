@@ -1,6 +1,6 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO } from './config.js';
-const IMG_CACHE_BUST = Date.now();
+const IMG_CACHE_BUST = 'v1'; // 改版本号时更新这里，浏览器即可重新缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
