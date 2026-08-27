@@ -383,7 +383,7 @@
         return '<div class="catcard">' +
           '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.opacity=0">' + fallback + '</div>' +
           '<div class="bd">' +
-          '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
+          '<div class="nm">' + esc(c.name) + ' <span style="color:#94a3b8;font-size:12px;font-weight:400">#' + esc(c.id) + '</span>' + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
           '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未知') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
           '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
           '<div class="ops"><button class="btn btn-sm" data-edit-id="' + c.id + '">编辑</button>' +
@@ -447,6 +447,41 @@
     to.value = '';
   }
 
+  // 自动推断兄弟姐妹（同父或同母），供关系列表展示
+  function deriveSiblingRelations() {
+    var explicit = new Set();
+    relations.forEach(function (r) {
+      if (r.relation !== '兄弟姐妹') return;
+      var a = String(r.from), b = String(r.to);
+      explicit.add(a < b ? a + '_' + b : b + '_' + a);
+    });
+    var parents = new Map();
+    function addP(child, parent) {
+      if (!parents.has(child)) parents.set(child, new Set());
+      parents.get(child).add(parent);
+    }
+    relations.forEach(function (r) {
+      if (r.relation === '母子' || r.relation === '父子') addP(r.to, r.from);
+    });
+    var children = Array.from(parents.keys());
+    var result = [];
+    var done = new Set(explicit);
+    for (var i = 0; i < children.length; i++) {
+      for (var j = i + 1; j < children.length; j++) {
+        var a = children[i], b = children[j];
+        var shared = Array.from(parents.get(a)).some(function (pp) {
+          return parents.get(b) && parents.get(b).has(pp);
+        });
+        if (!shared) continue;
+        var key = a < b ? a + '_' + b : b + '_' + a;
+        if (done.has(key)) continue;
+        done.add(key);
+        result.push({ from: a, to: b, relation: '兄弟姐妹', auto: true });
+      }
+    }
+    return result;
+  }
+
   function renderRelList() {
     var box = $('rel-list');
     if (!box) return;
@@ -467,6 +502,20 @@
         '<button class="btn btn-sm btn-danger rel-del" data-rel-idx="' + i + '">删除</button>' +
         '</div>';
     }).join('');
+    // 自动推断的兄弟姐妹（只读展示，标注"自动推断"）
+    var sibs = deriveSiblingRelations();
+    if (sibs.length) {
+      box.innerHTML += sibs.map(function (r) {
+        return '<div class="rel-item" style="opacity:.75">' +
+          '<span class="rel-a">' + esc(nameOf(r.from)) + '</span>' +
+          '<span class="rel-type">兄弟姐妹</span>' +
+          '<span class="rel-a">' + esc(nameOf(r.to)) + '</span>' +
+          '<span class="rel-note">（自动推断）</span>' +
+          '<button class="btn btn-sm" disabled style="opacity:.4">自动</button>' +
+          '</div>';
+      }).join('');
+    }
+
     box.querySelectorAll('[data-rel-idx]').forEach(function (b) {
       b.addEventListener('click', function () {
         relations.splice(Number(b.dataset.relIdx), 1);

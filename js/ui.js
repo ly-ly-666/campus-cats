@@ -1,5 +1,6 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO } from './config.js';
+import { deriveSiblingRelations } from './relations-util.js';
 const IMG_CACHE_BUST = 'v2'; // 改版本号时更新这里，浏览器即可重新缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
@@ -247,6 +248,17 @@ export function showModal(cat, cats, relations) {
       if (other) {
         relationItems.push({ type: rel.relation, other, note: rel.note, reverse: true });
       }
+    }
+  });
+
+  // 自动推断的兄弟姐妹（同父或同母），标注"自动推断"
+  deriveSiblingRelations(cats, relations).forEach((d) => {
+    if (d.from === cat.id) {
+      const other = catById.get(d.to);
+      if (other) relationItems.push({ type: '兄弟姐妹', other, note: '自动推断', reverse: false });
+    } else if (d.to === cat.id) {
+      const other = catById.get(d.from);
+      if (other) relationItems.push({ type: '兄弟姐妹', other, note: '自动推断', reverse: true });
     }
   });
 

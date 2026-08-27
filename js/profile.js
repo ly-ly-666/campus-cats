@@ -39,6 +39,44 @@ function relationDescText(type, aName, bName) {
   }
 }
 
+// 根据父母关系自动推断兄弟姐妹（同父或同母），带 auto:true
+function deriveSiblingRelations(cats, relations) {
+  var catIds = new Set(cats.map(function (c) { return c.id; }));
+  var rels = relations || [];
+  var explicit = new Set();
+  rels.forEach(function (r) {
+    if (r.relation !== '兄弟姐妹') return;
+    var a = String(r.from), b = String(r.to);
+    explicit.add(a < b ? a + '_' + b : b + '_' + a);
+  });
+  var parents = new Map();
+  function addP(child, parent) {
+    if (!catIds.has(child) || !catIds.has(parent)) return;
+    if (!parents.has(child)) parents.set(child, new Set());
+    parents.get(child).add(parent);
+  }
+  rels.forEach(function (r) {
+    if (r.relation === '母子' || r.relation === '父子') addP(r.to, r.from);
+  });
+  var children = Array.from(parents.keys());
+  var result = [];
+  var done = new Set(explicit);
+  for (var i = 0; i < children.length; i++) {
+    for (var j = i + 1; j < children.length; j++) {
+      var a = children[i], b = children[j];
+      var shared = Array.from(parents.get(a)).some(function (pp) {
+        return parents.get(b) && parents.get(b).has(pp);
+      });
+      if (!shared) continue;
+      var key = a < b ? a + '_' + b : b + '_' + a;
+      if (done.has(key)) continue;
+      done.add(key);
+      result.push({ from: a, to: b, relation: '兄弟姐妹', auto: true });
+    }
+  }
+  return result;
+}
+
 function showToast(message) {
   var el = document.getElementById('toast');
   if (!el) return;
@@ -136,6 +174,16 @@ function render(cats, relations) {
     } else if (rel.to === cat.id) {
       const other = catById.get(rel.from);
       if (other) relItems.push({ type: rel.relation, other: other, note: rel.note, reverse: true });
+    }
+  });
+  // 自动推断的兄弟姐妹（同父或同母）
+  deriveSiblingRelations(cats, relations).forEach(function (d) {
+    if (d.from === cat.id) {
+      const other = catById.get(d.to);
+      if (other) relItems.push({ type: '兄弟姐妹', other: other, note: '自动推断', reverse: false });
+    } else if (d.to === cat.id) {
+      const other = catById.get(d.from);
+      if (other) relItems.push({ type: '兄弟姐妹', other: other, note: '自动推断', reverse: true });
     }
   });
   const relHtml = relItems.length

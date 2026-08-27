@@ -284,6 +284,47 @@ body { display: flex; flex-direction: column; }
 /* ---------- 关系图视图 ---------- */
 #graph-view { flex-direction: column; }
 .graph-container { flex: 1; min-height: 0; background: #fff; }
+/* 手机端：关系图控制按钮（平移/缩放/复位），绝对定位在右下角 */
+.graph-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  grid-template-columns: 44px 44px 44px;
+  grid-template-rows: 44px 44px 44px;
+  gap: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+.graph-controls .gc-btn {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 10px;
+  font-size: 18px;
+  line-height: 1;
+  color: #374151;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: background 0.15s;
+}
+.graph-controls .gc-btn:active { background: rgba(200,200,200,0.92); }
+.graph-controls .gc-up    { grid-column: 2; grid-row: 1; }
+.graph-controls .gc-left  { grid-column: 1; grid-row: 2; }
+.graph-controls .gc-right { grid-column: 3; grid-row: 2; }
+.graph-controls .gc-down  { grid-column: 2; grid-row: 3; }
+.graph-controls .gc-in    { grid-column: 1; grid-row: 3; }
+.graph-controls .gc-out   { grid-column: 3; grid-row: 3; }
+.graph-controls .gc-reset { grid-column: 2; grid-row: 2; }
 
 /* ---------- 详情弹窗 ---------- */
 .modal {

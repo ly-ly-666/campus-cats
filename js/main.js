@@ -1,6 +1,6 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap } from './map.js';
-import { initGraph, resizeGraph } from './graph.js';
+import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js';
 import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, prefetchCatOriginals } from './ui.js';
 import { loadData } from './data.js';
 
@@ -78,6 +78,23 @@ async function boot() {
     { map: '#map-view', graph: '#graph-view', events: '#events-view' },
     { onGraphShow: () => resizeGraph() }
   );
+
+  // 手机端：关系图平移/缩放按钮
+  const gc = document.getElementById('graph-controls');
+  if (gc && graph) {
+    gc.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-gc]');
+      if (!btn) return;
+      const act = btn.dataset.gc;
+      if (act === 'up') panGraph(0, -5);
+      else if (act === 'down') panGraph(0, 5);
+      else if (act === 'left') panGraph(-5, 0);
+      else if (act === 'right') panGraph(5, 0);
+      else if (act === 'zoomin') zoomGraph(1.25);
+      else if (act === 'zoomout') zoomGraph(0.8);
+      else if (act === 'reset') resetGraphView();
+    });
+  }
 
   // 窗口尺寸变化时调整关系图
   window.addEventListener('resize', () => resizeGraph());

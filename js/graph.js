@@ -1,6 +1,7 @@
 // graph.js — 关系图模块（ECharts graph / force 力导向）
 import { RELATION_STYLE } from './config.js';
 import { escapeHtml, thumbUrl } from './ui.js';
+import { deriveSiblingRelations } from './relations-util.js';
 
 // 记录全局唯一的 chart 实例，供绑定 resize 使用
 let currentChart = null;
@@ -100,6 +101,31 @@ export function initGraph(containerId, cats, relations) {
   };
 
   // 边：按 RELATION_STYLE 取样式，带方向箭头与方向化描述
+  // 自动推断的兄弟姐妹（同父或同母），用虚线区分
+  const autoSiblings = deriveSiblingRelations(cats, relations).map((rel, i) => {
+    const style = RELATION_STYLE[rel.relation] || { color: '#999', width: 1, type: 'solid' };
+    return {
+      id: 'auto_sib_' + i,
+      source: rel.from,
+      target: rel.to,
+      relation: rel.relation,
+      note: rel.note || '',
+      auto: true,
+      symbol: ['none', 'arrow'],
+      symbolSize: 8,
+      label: {
+        show: true,
+        formatter: relationDesc(rel, nameOf),
+        fontSize: 10,
+        color: '#8a8a8a',
+        backgroundColor: 'rgba(255,255,255,0.85)',
+        borderRadius: 4,
+        padding: [2, 5],
+        lineHeight: 14,
+      },
+      lineStyle: { color: style.color, width: 1, type: 'dashed', curveness: 0.06 },
+    };
+  });
   const links = relations.map((rel, idx) => {
     const style = RELATION_STYLE[rel.relation] || { color: '#999', width: 1, type: 'solid' };
     return {
@@ -128,7 +154,7 @@ export function initGraph(containerId, cats, relations) {
         curveness: rel.relation === '配偶' ? 0.1 : 0.05,
       },
     };
-  });
+  }).concat(autoSiblings);
 
   const option = {
     legend: {
@@ -196,11 +222,35 @@ export function initGraph(containerId, cats, relations) {
   return currentChart;
 }
 
+
 /** 窗口尺寸变化时重新调整关系图尺寸。 */
 export function resizeGraph() {
   if (currentChart) {
     currentChart.resize();
   }
+}
+
+// ---------- 手机端：平移 / 缩放 / 复位 关系图 ----------
+// 通过 graph series 的 center(百分比) / zoom 控制整个视图，适合手机端按钮操作
+let _cx = 50, _cy = 50, _zoom = 1;
+
+export function panGraph(dxPct, dyPct) {
+  if (!currentChart) return;
+  _cx = Math.max(0, Math.min(100, _cx + (dxPct || 0)));
+  _cy = Math.max(0, Math.min(100, _cy + (dyPct || 0)));
+  currentChart.setOption({ series: [{ center: [_cx + '%', _cy + '%'] }] });
+}
+
+export function zoomGraph(factor) {
+  if (!currentChart) return;
+  _zoom = Math.max(0.2, Math.min(5, _zoom * (factor || 1)));
+  currentChart.setOption({ series: [{ zoom: _zoom }] });
+}
+
+export function resetGraphView() {
+  if (!currentChart) return;
+  _cx = 50; _cy = 50; _zoom = 1;
+  currentChart.setOption({ series: [{ center: ['50%', '50%'], zoom: 1 }] });
 }
 
 

@@ -97,6 +97,16 @@
     <!-- 关系图视图 -->
     <section id="graph-view" class="view">
       <div id="graph" class="graph-container"></div>
+      <!-- 手机端：平移/缩放整个关系图 -->
+      <div class="graph-controls" id="graph-controls" aria-label="关系图操作">
+        <button type="button" class="gc-btn gc-up" data-gc="up" aria-label="上移">▲</button>
+        <button type="button" class="gc-btn gc-left" data-gc="left" aria-label="左移">◀</button>
+        <button type="button" class="gc-btn gc-right" data-gc="right" aria-label="右移">▶</button>
+        <button type="button" class="gc-btn gc-down" data-gc="down" aria-label="下移">▼</button>
+        <button type="button" class="gc-btn gc-in" data-gc="zoomin" aria-label="放大">＋</button>
+        <button type="button" class="gc-btn gc-out" data-gc="zoomout" aria-label="缩小">－</button>
+        <button type="button" class="gc-btn gc-reset" data-gc="reset" aria-label="复位">⟲</button>
+      </div>
     </section>
 
     <!-- 最近事件视图（所有猫的事件汇总时间线） -->
