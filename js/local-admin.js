@@ -320,7 +320,7 @@
         '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' + fallback + '</div>' +
         '<div class="bd">' +
         '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
-        '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未绝育') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
+        '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未知') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
         '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
         '<div class="ops"><button class="btn btn-sm" data-edit="' + i + '">编辑</button>' +
         '<button class="btn btn-sm btn-danger" data-del="' + i + '">删除</button></div>' +
@@ -357,7 +357,7 @@
     $('f-gender').value = c ? (c.gender || '') : '';
     $('f-color').value = c ? (c.color || '') : '';
     $('f-area').value = c ? (c.area || '') : '';
-    $('f-status').value = c ? (c.status || '未绝育') : '未绝育';
+    $('f-status').value = c ? (c.status || '') : '';
     $('f-life').value = c ? (c.life || '在校') : '在校';
     $('f-lat').value = c ? c.lat : '';
     $('f-lng').value = c ? c.lng : '';
@@ -567,7 +567,7 @@
       description: $('f-desc').value.trim(),
       story: $('f-story').value.trim(),
       tags: getCurrentTags(),
-      status: $('f-status').value,
+      status: $('f-status').value || '未知',
       life: $('f-life').value,
       firstSeen: buildDate($('f-firstY').value, $('f-firstM').value, $('f-firstD').value),
       leftAt: $('f-leftAt').value.trim(),

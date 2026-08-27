@@ -2,7 +2,7 @@
 import { DEFAULT_PHOTO } from './config.js';
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
-const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered' };
+const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
 
 function escapeHtml(str) {
   if (str == null) return '';
@@ -61,7 +61,7 @@ function render(cats, relations) {
     <div class="profile-tags">
       ${past}
       <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
-      <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
+      <span class="tag tag-${STATUS_TAG[cat.status] || 'unknown'}">${escapeHtml(cat.status || '未知')}</span>
       ${tags}
     </div>
   `;

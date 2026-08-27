@@ -24,7 +24,7 @@ export function escapeHtml(str) {
 
 /** 性别 / 绝育状态中文标签 */
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
-const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered' };
+const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
 
 /**
  * 渲染猫咪列表。
@@ -54,7 +54,7 @@ export function renderCatList(cats, onSelect) {
             ${cat.nickname && !cat.nickname.startsWith('img-') ? '<span class="cat-item-nick">（' + escapeHtml(cat.nickname) + '）</span>' : ''}
             ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
-            <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
+            <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '未知')}</span>
             ${cat.life === '失踪' ? '<span class="tag" style="background:#dc2626;color:#fff;">⚠️ 失踪</span>' : ''}
             ${cat.life === '失踪已久' ? '<span class="tag" style="background:#9f1239;color:#fff;">⚠️ 失踪已久</span>' : ''}
             ${cat.life === '已领养' ? '<span class="tag" style="background:#10b981;color:#fff;">🏠 已领养</span>' : ''}
@@ -106,7 +106,7 @@ export function showModal(cat, cats, relations) {
     ['外号', cat.nickname],
     ['毛色', cat.color],
     ['区域', cat.area],
-    ['状态', cat.status],
+    ['绝育状态', cat.status || '未知'],
     ['首次发现', cat.firstSeen],
     ['离开时间', cat.leftAt],
     ['照料人', cat.caretaker],
