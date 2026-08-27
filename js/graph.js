@@ -70,12 +70,17 @@ export function initGraph(containerId, cats, relations) {
       label: {
         show: true,
         position: 'inside',
-        formatter: () => ({ avatar: photo ? '' : '🐱', name: cat.name }),
+        formatter: () => `{avatar|${photo ? '' : '🐱'}}\n{name|${cat.name}}`,
         rich: {
-          avatar: {
+          avatar: photo ? {
             width: 48, height: 48,
             borderRadius: 24,
-            backgroundColor: photo ? { image: photo } : 'rgba(255,255,255,0.92)',
+            backgroundColor: { image: new URL(photo, location.href).href },
+            align: 'center', lineHeight: 48,
+          } : {
+            width: 48, height: 48,
+            borderRadius: 24,
+            backgroundColor: 'rgba(255,255,255,0.92)',
             align: 'center', lineHeight: 48,
             fontSize: 20, color: '#c2410c',
           },
