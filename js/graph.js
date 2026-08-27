@@ -5,7 +5,33 @@ import { escapeHtml } from './ui.js';
 // 记录全局唯一的 chart 实例，供绑定 resize 使用
 let currentChart = null;
 
-const GENDER_COLOR = { male: '#3b82f6', female: '#ec4899' };
+const GENDER_COLOR = { male: '#3b82f6', female: '#ec4899', unknown: '#9ca3af' };
+
+function graphPhoto(cat) {
+  const p = cat.photo || '';
+  if (!p || p.indexOf('placeholder') >= 0) return '';
+  return p;
+}
+
+function genderLabel(cat) {
+  if (cat.gender === 'male') return '公';
+  if (cat.gender === 'female') return '母';
+  return '未知';
+}
+
+// 边/关系的方向化描述：明确谁是谁的妈妈 / 爸爸 / 孩子
+function relationDesc(rel, nameOf) {
+  const a = nameOf(rel.from);
+  const b = nameOf(rel.to);
+  switch (rel.relation) {
+    case '母子': return `${a} 是 ${b} 的妈妈`;
+    case '父子': return `${a} 是 ${b} 的爸爸`;
+    case '兄弟姐妹': return `${a} 与 ${b} 是兄弟姐妹`;
+    case '配偶': return `${a} 与 ${b} 是配偶`;
+    case '朋友': return `${a} 与 ${b} 是朋友`;
+    default: return `${a} ${rel.relation} ${b}`;
+  }
+}
 
 /**
  * 在指定容器内初始化 ECharts 关系图（graph/force 力导向）。
@@ -25,22 +51,47 @@ export function initGraph(containerId, cats, relations) {
 
   currentChart = echarts.init(container);
 
-  // 节点：按性别着色（male 蓝 / female 粉）
-  const nodes = cats.map((cat) => ({
-    id: cat.id,
-    name: cat.name,
-    cat,
-    symbolSize: 44,
-    itemStyle: { color: GENDER_COLOR[cat.gender] || '#9ca3af' },
-    label: {
-      show: true,
-      formatter: cat.name,
-      fontSize: 11,
-      color: '#333',
-    },
-  }));
+  // 节点：性别色圆底 + 圆形头像覆盖（边缘露出 4px 性别色圈）+ 名字
+  const nodes = cats.map((cat) => {
+    const photo = graphPhoto(cat);
+    const genderColor = GENDER_COLOR[cat.gender] || '#9ca3af';
+    return {
+      id: cat.id,
+      name: cat.name,
+      cat,
+      category: cat.gender === 'male' ? 0 : (cat.gender === 'female' ? 1 : 2),
+      symbol: 'circle',
+      symbolSize: 56,
+      itemStyle: {
+        color: genderColor,          // 性别色圆底 = 圈
+        borderColor: '#ffffff',
+        borderWidth: 2,
+      },
+      label: {
+        show: true,
+        position: 'inside',
+        formatter: () => ({ avatar: photo ? '' : '🐱', name: cat.name }),
+        rich: {
+          avatar: {
+            width: 48, height: 48,
+            borderRadius: 24,
+            backgroundColor: photo ? { image: photo } : 'rgba(255,255,255,0.92)',
+            align: 'center', lineHeight: 48,
+            fontSize: 20, color: '#c2410c',
+          },
+          name: { fontSize: 11, color: '#333', align: 'center', lineHeight: 15, padding: [2, 0, 0, 0] },
+        },
+      },
+    };
+  });
 
-  // 边：按 RELATION_STYLE 取样式
+  // 猫 id -> 名字
+  const nameOf = (id) => {
+    const c = cats.find((x) => x.id === id);
+    return c ? c.name : id;
+  };
+
+  // 边：按 RELATION_STYLE 取样式，带方向箭头与方向化描述
   const links = relations.map((rel, idx) => {
     const style = RELATION_STYLE[rel.relation] || { color: '#999', width: 1, type: 'solid' };
     return {
@@ -49,6 +100,19 @@ export function initGraph(containerId, cats, relations) {
       target: rel.to,
       relation: rel.relation,
       note: rel.note || '',
+      // 关系方向箭头（指向子 / 指向对方）
+      symbol: ['none', 'arrow'],
+      symbolSize: 9,
+      label: {
+        show: true,
+        formatter: relationDesc(rel, nameOf),
+        fontSize: 11,
+        color: '#666',
+        backgroundColor: 'rgba(255,255,255,0.85)',
+        borderRadius: 4,
+        padding: [2, 5],
+        lineHeight: 15,
+      },
       lineStyle: {
         color: style.color,
         width: style.width,
@@ -59,6 +123,15 @@ export function initGraph(containerId, cats, relations) {
   });
 
   const option = {
+    legend: {
+      show: true,
+      bottom: 0,
+      left: 'center',
+      orient: 'horizontal',
+      data: ['公', '母', '未知'],
+      itemWidth: 12,
+      itemHeight: 12,
+    },
     tooltip: {
       trigger: 'item',
       confine: true,
@@ -67,7 +140,7 @@ export function initGraph(containerId, cats, relations) {
           const c = params.data.cat;
           return [
             `<strong>${escapeHtml(c.name)}</strong>`,
-            `性别：${c.gender === 'male' ? '公' : '母'}`,
+            `性别：${genderLabel(c)}`,
             c.color ? `毛色：${escapeHtml(c.color)}` : null,
             c.area ? `区域：${escapeHtml(c.area)}` : null,
             c.status ? `状态：${escapeHtml(c.status)}` : null,
@@ -75,8 +148,10 @@ export function initGraph(containerId, cats, relations) {
           ].filter(Boolean).join('<br>');
         }
         if (params.dataType === 'edge') {
-          return `<strong>${escapeHtml(params.data.relation)}</strong>` +
-            (params.data.note ? `<br>${escapeHtml(params.data.note)}` : '');
+          const rel = params.data;
+          const desc = relationDesc(rel, nameOf);
+          return `<strong>${escapeHtml(desc)}</strong>` +
+            (rel.note ? `<br>${escapeHtml(rel.note)}` : '');
         }
         return '';
       },
@@ -89,7 +164,11 @@ export function initGraph(containerId, cats, relations) {
         draggable: true,
         data: nodes,
         links,
-        categories: [],
+        categories: [
+          { name: '公', itemStyle: { borderColor: '#3b82f6', color: '#fffaf5', borderWidth: 3 } },
+          { name: '母', itemStyle: { borderColor: '#ec4899', color: '#fffaf5', borderWidth: 3 } },
+          { name: '未知', itemStyle: { borderColor: '#9ca3af', color: '#fffaf5', borderWidth: 3 } },
+        ],
         label: { show: true, position: 'bottom' },
         force: {
           repulsion: 220,
