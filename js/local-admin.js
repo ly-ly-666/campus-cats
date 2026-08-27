@@ -165,13 +165,15 @@
       var isMissing = c.life === '失踪';
       var isMissingOld = c.life === '失踪已久';
       var isAdopted = c.life === '已领养';
-      var isMissingAny = isMissing || isMissingOld;
-      var color = c.leftAt ? '#9ca3af' : (isMissingAny ? '#dc2626' : (isAdopted ? '#10b981' : (c.gender === 'male' ? '#3b82f6' : (c.gender === 'female' ? '#ec4899' : '#9ca3af'))));
-      var size = isMissing ? 32 : (isMissingOld ? 28 : 24);
-      var pulse = isMissing ? 'animation:cat-missing-pulse 1.5s infinite;' : '';
+      var ring = isMissing ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #dc2626,0 0 0 8px rgba(220,38,38,.3);animation:cat-missing-pulse 1.5s infinite;' : (isMissingOld ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #9f1239;' : (isAdopted ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #10b981;' : 'box-shadow:0 0 0 3px #fff,0 0 0 4px #e5e0d8;'));
+      var size = 44;
+      var photo = (c.photo && c.photo.indexOf('placeholder') < 0) ? c.photo : '';
+      var imgHtml = photo
+        ? '<img src="' + photo + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.opacity=0">'
+        : '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;">🐱</span>';
       var icon = L.divIcon({
         className: '',
-        html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);' + pulse + '"></div>',
+        html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;position:relative;background:#ffd9a8;' + ring + '">' + imgHtml + '</div>',
         iconSize: [size, size],
         iconAnchor: [size/2, size/2]
       });
@@ -335,38 +337,69 @@
   }
   function renderCats() {
     var box = $('cats-list');
-    if (!cats.length) { box.innerHTML = '<p class="hint">还没有猫咪，点右上角「添加猫咪」。</p>'; return; }
-    box.innerHTML = cats.map(function (c, i) {
-      var photo = c.photo || 'images/placeholder.svg';
-      var fallback = photo.indexOf('placeholder') >= 0 ? '' : '<span class="fallback">🐱</span>';
-      var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
-    function statusBadge(c) {
-      if (c.life === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
-      if (c.life === '失踪已久') return ' <span style="background:#9f1239;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪已久</span>';
-      if (c.life === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
-      return '';
-    }
-      return '<div class="catcard">' +
-        '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' + fallback + '</div>' +
-        '<div class="bd">' +
-        '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
-        '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未知') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
-        '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
-        '<div class="ops"><button class="btn btn-sm" data-edit="' + i + '">编辑</button>' +
-        '<button class="btn btn-sm btn-danger" data-del="' + i + '">删除</button></div>' +
-        '</div></div>';
-    }).join('');
-    box.querySelectorAll('[data-edit]').forEach(function (b) {
-      b.addEventListener('click', function () { openCatModal(Number(b.dataset.edit)); });
-    });
-    box.querySelectorAll('[data-del]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        if (!confirm('确定删除「' + cats[Number(b.dataset.del)].name + '」？')) return;
-        cats.splice(Number(b.dataset.del), 1);
-        renderCats();
-        log('🗑️ 已删除猫咪', 'info');
+    if (!box) return;
+
+    function renderFiltered(kw) {
+      kw = (kw || '').trim().toLowerCase();
+      var filtered = kw
+        ? cats.filter(function (c) {
+            var hay = [c.name, c.nickname, c.color, c.area, c.caretaker, c.age, (c.tags || []).join(' ')].join(' ').toLowerCase();
+            return hay.indexOf(kw) >= 0;
+          })
+        : cats;
+
+      if (!filtered.length) {
+        box.innerHTML = '<p class="hint">' + (kw ? '没找到匹配「' + esc(kw) + '」的猫咪。' : '还没有猫咪，点右上角「添加猫咪」。') + '</p>';
+        return;
+      }
+
+      box.innerHTML = filtered.map(function (c) {
+        var photo = c.photo || 'images/placeholder.svg';
+        var fallback = photo.indexOf('placeholder') >= 0 ? '' : '<span class="fallback">🐱</span>';
+        var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
+        function statusBadge(c) {
+          if (c.life === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
+          if (c.life === '失踪已久') return ' <span style="background:#9f1239;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪已久</span>';
+          if (c.life === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
+          return '';
+        }
+        return '<div class="catcard">' +
+          '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.opacity=0">' + fallback + '</div>' +
+          '<div class="bd">' +
+          '<div class="nm">' + esc(c.name) + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
+          '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未知') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
+          '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
+          '<div class="ops"><button class="btn btn-sm" data-edit-id="' + c.id + '">编辑</button>' +
+          '<button class="btn btn-sm btn-danger" data-del-id="' + c.id + '">删除</button></div>' +
+          '</div></div>';
+      }).join('');
+
+      box.querySelectorAll('[data-edit-id]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var idx = cats.findIndex(function (x) { return x.id === b.dataset.editId; });
+          if (idx >= 0) openCatModal(idx);
+        });
       });
-    });
+      box.querySelectorAll('[data-del-id]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var idx = cats.findIndex(function (x) { return x.id === b.dataset.delId; });
+          if (idx < 0) return;
+          if (!confirm('确定删除「' + cats[idx].name + '」？')) return;
+          cats.splice(idx, 1);
+          renderCats();
+          renderMarkers();
+          log('🗑️ 已删除猫咪', 'info');
+        });
+      });
+    }
+
+    renderFiltered('');
+
+    var searchEl = $('admin-cat-search');
+    if (searchEl && !searchEl._bound) {
+      searchEl._bound = true;
+      searchEl.addEventListener('input', function () { renderFiltered(searchEl.value); });
+    }
   }
 
   function esc(s) {
@@ -737,6 +770,7 @@
     await saveAll();
     closeModal('cat-modal');
     renderCats();
+    renderMarkers();
     pendingAvatar = null;
   }
 
