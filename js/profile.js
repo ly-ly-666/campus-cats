@@ -80,6 +80,24 @@ function render(cats, relations) {
     return '<div class="info-item"><div class="info-label">' + x[0] + '</div><div class="info-val">' + escapeHtml(x[1]) + '</div></div>';
   }).join('');
 
+  const evts = Array.isArray(cat.events) ? cat.events : [];
+  const eventsHtml = evts.length
+    ? '<section class="profile-section"><h3>📅 最近事件</h3><div class="event-timeline">' +
+      evts.slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); }).map(function (ev) {
+        var imgs = Array.isArray(ev.images) && ev.images.length
+          ? '<div class="event-imgs">' + ev.images.map(function (src) {
+            return '<img src="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.src,\'_blank\')">';
+          }).join('') + '</div>'
+          : '';
+        return '<div class="event-tl-item">' +
+          '<div class="event-tl-date">' + escapeHtml(ev.date || '') + '</div>' +
+          '<div class="event-tl-text">' + escapeHtml(ev.text || '') + '</div>' +
+          imgs +
+          '</div>';
+      }).join('') +
+      '</div></section>'
+    : '';
+
   const album = Array.isArray(cat.album) ? cat.album : [];
   const albumHtml = album.length
     ? '<div class="profile-album">' + album.map(function (src) {
@@ -112,6 +130,7 @@ function render(cats, relations) {
       <h3>📋 基本信息</h3>
       <div class="info-grid">${infoHtml}</div>
     </section>
+    ${eventsHtml}
     ${cat.story ? '<section class="profile-section"><h3>📖 猫咪故事</h3><div class="story-text">' + escapeHtml(cat.story) + '</div></section>' : ''}
     ${cat.description ? '<section class="profile-section"><h3>📝 简介</h3><div class="story-text">' + escapeHtml(cat.description) + '</div></section>' : ''}
     <section class="profile-section">

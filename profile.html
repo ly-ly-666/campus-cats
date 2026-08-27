@@ -19,6 +19,12 @@
     .info-label { font-size: 11px; color: var(--muted); }
     .info-val { font-size: 14px; font-weight: 600; margin-top: 2px; }
     .story-text { line-height: 1.8; color: var(--text); white-space: pre-line; }
+    .event-timeline { display: flex; flex-direction: column; gap: 12px; }
+    .event-tl-item { border-left: 3px solid var(--primary); padding-left: 12px; }
+    .event-tl-date { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .event-tl-text { font-size: 14px; margin-top: 4px; line-height: 1.6; }
+    .event-imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 8px; }
+    .event-imgs img { aspect-ratio: 1; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; width: 100%; }
     .profile-album { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
     .profile-album img { aspect-ratio: 1; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; }
     .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--primary-dark); text-decoration: none; font-weight: 600; margin-bottom: 10px; }

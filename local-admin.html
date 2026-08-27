@@ -71,6 +71,15 @@
     .tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; background: #fff7ed; color: #d97706; border: 1px solid #fde6c4; border-radius: 999px; font-size: 12px; }
     .tag-chip button { width: 18px; height: 18px; border: none; background: transparent; color: #d97706; font-size: 14px; line-height: 1; cursor: pointer; padding: 0; }
     .tag-chip button:hover { color: #dc2626; }
+    .event-item { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-top: 8px; background: #fffdf9; }
+    .event-item .ev-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+    .event-item .ev-date { width: 140px; flex-shrink: 0; }
+    .event-item .ev-text { flex: 1; }
+    .event-item .ev-imgs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .event-item .ev-imgs .thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+    .event-item .ev-imgs .thumb-wrap { position: relative; }
+    .event-item .ev-imgs .thumb-wrap .del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; }
+    .event-item .ev-del { flex-shrink: 0; }
     @keyframes cat-missing-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,.7); } 50% { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(220,38,38,0); } }
     .hidden { display: none !important; }
     details.help { margin-top: 8px; }
@@ -154,6 +163,7 @@
         <p class="hint" id="paste-hint" style="margin:4px 0 0 0;display:none;">已就绪，按 <b>Ctrl + V</b> 把剪贴板里的截图粘进来</p>
         <input type="file" id="f-avatar" accept="image/*" style="display:none;">
         <input type="file" id="f-album" accept="image/*" multiple style="display:none;">
+        <input type="file" id="f-event-img" accept="image/*" multiple style="display:none;">
         <img id="f-preview" class="photo-preview" alt="头像预览">
         <div class="album-grid" id="album-list"></div>
       </div>
@@ -181,6 +191,14 @@
       <div class="field" style="margin-top:10px;"><label>简介</label><textarea id="f-desc" rows="2" placeholder="性格/特征"></textarea></div>
       <div class="field" style="margin-top:10px;"><label>档案故事</label><textarea id="f-story" rows="4" placeholder="这只猫的故事、来历、性格细节"></textarea></div>
       <div class="field" style="margin-top:10px;"><label>档案标签（选填，回车添加）</label><div id="f-tags-chips" class="tag-chips"></div><input id="f-tags-input" placeholder="输入标签后回车，如：活泼"></div>
+
+      <!-- 最近事件 -->
+      <div class="field" style="margin-top:14px;">
+        <label style="font-size:13px;color:var(--primary-dark);font-weight:600;">📅 最近事件（会在档案里按时间线展示）</label>
+        <div id="events-list"></div>
+        <button type="button" class="btn btn-sm" id="btn-event-add" style="margin-top:6px;">＋ 添加事件</button>
+      </div>
+
       <div class="modal-actions">
         <button class="btn btn-primary" id="f-save">保存</button>
         <button class="btn btn-danger" id="f-del">删除</button>

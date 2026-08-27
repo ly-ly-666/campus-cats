@@ -376,6 +376,7 @@
     else { $('f-preview').src = ''; $('f-preview').classList.remove('show'); }
     pendingAvatar = null; pendingAvatarName = '';
     renderAlbum(c ? c.album : []);
+    renderEvents(c ? (c.events || []) : []);
     if (map && c) {
       pendingLatLng = { lat: c.lat, lng: c.lng };
       moveTempMarker(pendingLatLng);
@@ -404,6 +405,107 @@
         renderAlbum(c.album);
       });
     });
+  }
+
+  // ---------- 最近事件 ----------
+  var _pendingEvents = [];   // 当前编辑的事件数组；图片可能是 {dataUrl,ext} 待落盘
+  var _evtImgTarget = -1;    // 当前要往哪个事件里加图（索引）
+
+  function renderEvents(events) {
+    _pendingEvents = (events || []).map(function (ev) {
+      return {
+        date: ev.date || '',
+        text: ev.text || '',
+        images: (ev.images || []).map(function (img) {
+          // 已是落盘路径
+          return { path: img };
+        })
+      };
+    });
+    refreshEvents();
+  }
+
+  function refreshEvents() {
+    var box = $('events-list');
+    if (!box) return;
+    if (!_pendingEvents.length) {
+      box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有事件，点下方「添加事件」记录（如：绝育、救助、新照）。</p>';
+      return;
+    }
+    box.innerHTML = _pendingEvents.map(function (ev, i) {
+      var imgs = (ev.images || []).map(function (im, j) {
+        var src = im.path || im.dataUrl || '';
+        return '<div class="thumb-wrap"><img class="thumb" src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'">' +
+          '<button class="del" data-ev="' + i + '" data-img="' + j + '">×</button></div>';
+      }).join('');
+      return '<div class="event-item">' +
+        '<div class="ev-row"><input class="ev-date" type="date" data-ev="' + i + '" value="' + esc(ev.date) + '">' +
+        '<input class="ev-text" type="text" placeholder="事件描述，如：5月12日在图书馆绝育、打了疫苗" data-ev="' + i + '" value="' + esc(ev.text) + '">' +
+        '<button class="btn btn-sm btn-danger ev-del" data-ev="' + i + '">删除</button></div>' +
+        '<div class="ev-row"><button class="btn btn-sm" data-ev-img="' + i + '">🖼️ 加截图</button></div>' +
+        '<div class="ev-imgs">' + imgs + '</div>' +
+        '</div>';
+    }).join('');
+
+    // 绑定日期/文字 input
+    box.querySelectorAll('.ev-date').forEach(function (ip) {
+      ip.addEventListener('input', function () { _pendingEvents[Number(ip.dataset.ev)].date = ip.value; });
+    });
+    box.querySelectorAll('.ev-text').forEach(function (ip) {
+      ip.addEventListener('input', function () { _pendingEvents[Number(ip.dataset.ev)].text = ip.value; });
+    });
+    // 删除事件
+    box.querySelectorAll('.ev-del').forEach(function (b) {
+      b.addEventListener('click', function () { _pendingEvents.splice(Number(b.dataset.ev), 1); refreshEvents(); });
+    });
+    // 加截图
+    box.querySelectorAll('[data-ev-img]').forEach(function (b) {
+      b.addEventListener('click', function () { _evtImgTarget = Number(b.dataset.evImg); $('f-event-img').click(); });
+    });
+    // 删除某张截图
+    box.querySelectorAll('.del[data-img]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        _pendingEvents[Number(b.dataset.ev)].images.splice(Number(b.dataset.img), 1);
+        refreshEvents();
+      });
+    });
+  }
+
+  function getEvents() {
+    return _pendingEvents.map(function (ev) {
+      return {
+        date: ev.date || '',
+        text: ev.text || '',
+        images: (ev.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean)
+      };
+    }).filter(function (ev) { return ev.date || ev.text || ev.images.length; });
+  }
+
+  async function onEventImgChange() {
+    var files = $('f-event-img').files;
+    if (!files || !files.length) return;
+    if (_evtImgTarget < 0) return;
+    if (!_pendingEvents[_evtImgTarget]) { $('f-event-img').value = ''; return; }
+    var ev = _pendingEvents[_evtImgTarget];
+    if (!ev.images) ev.images = [];
+
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var dataUrl = await readFileAsDataURL(f);
+      var ext = (f.name.split('.').pop() || 'png').replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'png';
+      // 若已有 id，直接落盘；否则暂存 dataUrl，saveCat 时落盘
+      if (editIdx >= 0 && cats[editIdx]) {
+        var name = cats[editIdx].id + '_event_' + Date.now() + '_' + i + '.' + ext;
+        var path = IMAGES_DIR + '/' + name;
+        await writeImageFile(path, dataUrl);
+        ev.images.push({ path: path });
+        log('✅ 已保存事件截图：' + path, 'ok');
+      } else {
+        ev.images.push({ dataUrl: dataUrl, ext: ext });
+      }
+    }
+    refreshEvents();
+    $('f-event-img').value = '';
   }
 
   // ---------- 图片上传 ----------
@@ -572,8 +674,31 @@
       firstSeen: buildDate($('f-firstY').value, $('f-firstM').value, $('f-firstD').value),
       leftAt: $('f-leftAt').value.trim(),
       caretaker: $('f-caretaker').value.trim(),
-      age: $('f-age').value.trim()
+      age: $('f-age').value.trim(),
+      events: getEvents()
     };
+
+    // 事件截图落盘（dataUrl 形式的图片保存为文件，路径形式的保持不变）
+    if (cat.events && cat.events.length) {
+      for (var ei = 0; ei < cat.events.length; ei++) {
+        var ev = cat.events[ei];
+        if (!ev.images || !ev.images.length) continue;
+        var finalImgs = [];
+        for (var ej = 0; ej < ev.images.length; ej++) {
+          var im = ev.images[ej];
+          if (im.indexOf('data:') === 0) {
+            var ext = (im.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png';
+            var p = IMAGES_DIR + '/' + id + '_event_' + Date.now() + '_' + ej + '.' + ext;
+            await writeImageFile(p, im);
+            finalImgs.push(p);
+            log('✅ 已保存事件截图：' + p, 'ok');
+          } else {
+            finalImgs.push(im);
+          }
+        }
+        ev.images = finalImgs;
+      }
+    }
     if (isAdd) cats.push(cat); else cats[editIdx] = cat;
     await saveAll();
     closeModal('cat-modal');
@@ -763,7 +888,11 @@
       // 推送图片（只传有变化的）
       for (var i = 0; i < cats.length; i++) {
         var c = cats[i];
-        var photos = [c.photo].concat(c.album || []).filter(function (p) { return p && p.indexOf('placeholder') < 0; });
+        var evtImgs = [];
+        (c.events || []).forEach(function (ev) {
+          (ev.images || []).forEach(function (im) { if (im && im.indexOf('placeholder') < 0) evtImgs.push(im); });
+        });
+        var photos = [c.photo].concat(c.album || [], evtImgs).filter(function (p) { return p && p.indexOf('placeholder') < 0; });
         for (var j = 0; j < photos.length; j++) {
           var path = photos[j];
           if (await fileExists(path)) {
@@ -908,6 +1037,12 @@
     $('btn-avatar').addEventListener('click', function () { $('f-avatar').click(); });
     $('f-avatar').addEventListener('change', onAvatarChange);
     $('btn-album-add').addEventListener('click', function () { $('f-album').click(); });
+    $('btn-event-add').addEventListener('click', function () {
+      if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+      _pendingEvents.push({ date: '', text: '', images: [] });
+      refreshEvents();
+    });
+    $('f-event-img').addEventListener('change', onEventImgChange);
 
     // 粘贴截图按钮：循环 0→头像→相册→0
     $('btn-paste').addEventListener('click', function () {

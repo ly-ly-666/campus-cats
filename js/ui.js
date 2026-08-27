@@ -146,6 +146,16 @@ export function showModal(cat, cats, relations) {
     .map(([k, v]) => `<div class="modal-info-row"><span class="modal-info-key">${k}</span><span class="modal-info-val">${escapeHtml(v)}</span></div>`)
     .join('');
 
+  const evts = Array.isArray(cat.events) ? cat.events : [];
+  const eventsHtml = evts.length
+    ? '<div class="modal-events">' + evts.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((ev) => `
+        <div class="modal-event-item">
+          <div class="modal-event-date">${escapeHtml(ev.date || '')}</div>
+          <div class="modal-event-text">${escapeHtml(ev.text || '')}</div>
+          ${Array.isArray(ev.images) && ev.images.length ? `<div class="modal-event-imgs">${ev.images.map((src) => `<img src="${photoUrl(src)}" alt="" loading="lazy" onclick="window.open(this.src,'_blank')">`).join('')}</div>` : ''}
+        </div>`).join('') + '</div>'
+    : '';
+
   const album = Array.isArray(cat.album) ? cat.album : [];
   const albumHtml = album.length
     ? `<div class="modal-album">${album.map((src) => `
@@ -176,6 +186,7 @@ export function showModal(cat, cats, relations) {
       <div style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a><button class="btn btn-sm" id="corr-from-modal" data-cat-id="${cat.id}">🐾 信息有误？更正</button></div>
       <h3 class="modal-section-title">关系</h3>
       <div class="modal-relations">${relationHtml}</div>
+      ${eventsHtml ? `<h3 class="modal-section-title">📅 最近事件</h3>${eventsHtml}` : ''}
       <h3 class="modal-section-title">相册</h3>
       ${albumHtml}
     </div>`;
