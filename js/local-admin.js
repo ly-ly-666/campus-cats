@@ -773,15 +773,29 @@
           }
         }
       }
-      log('✅ 已全部推送到 GitHub，公开站点将自动更新', 'ok');
+      log('🎉 全部推送完成！公开站点将自动更新', 'ok');
     } catch (e) {
-      log('❌ 推送失败：' + e.message, 'err');
+      var msg = e.message || '';
+      if (msg.indexOf('AbortError') >= 0 || msg.indexOf('abort') >= 0) {
+        log('❌ 网络超时：连不上 GitHub，请检查网络后重试', 'err');
+      } else if (msg.indexOf('Failed to fetch') >= 0 || msg.indexOf('network') >= 0) {
+        log('❌ 网络错误：连不上 GitHub（可能被墙或断网），请换网络重试', 'err');
+      } else {
+        log('❌ 推送失败：' + msg, 'err');
+      }
     }
+  }
+
+  function fetchWithTimeout(url, opts, ms) {
+    ms = ms || 20000; // 默认 20 秒超时
+    var ctrl = new AbortController();
+    var t = setTimeout(function () { ctrl.abort(); }, ms);
+    return fetch(url, Object.assign({}, opts, { signal: ctrl.signal })).finally(function () { clearTimeout(t); });
   }
 
   async function getFileSha(repo, branch, path, token) {
     try {
-      var res = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path + '?ref=' + encodeURIComponent(branch), {
+      var res = await fetchWithTimeout('https://api.github.com/repos/' + repo + '/contents/' + path + '?ref=' + encodeURIComponent(branch), {
         headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' }
       });
       if (!res.ok) return null;
@@ -791,6 +805,7 @@
   }
 
   async function githubPut(repo, branch, path, content, token, sha) {
+    log('  ⏫ 上传中：' + path + ' …', 'info');
     // content 已经是 GitHub API 要求的 base64 编码的二进制内容（由 dataUrlToBase64 或 utf8ToB64 处理过）
     var body = {
       message: 'data: 本地管理端更新 ' + path,
@@ -798,7 +813,7 @@
       branch: branch
     };
     if (sha) body.sha = sha;
-    var res = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
+    var res = await fetchWithTimeout('https://api.github.com/repos/' + repo + '/contents/' + path, {
       method: 'PUT',
       headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -807,6 +822,7 @@
       var j = await res.json().catch(function () { return {}; });
       throw new Error(path + ' -> ' + (j.message || res.status));
     }
+    log('  ✅ 已上传：' + path, 'ok');
   }
 
   async function readImageAsDataURL(path) {
