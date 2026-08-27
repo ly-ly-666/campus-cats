@@ -15,8 +15,8 @@ function ok(msg) {
 }
 
 // ---------- helpers ----------
-const VALID_GENDERS = new Set(["male", "female"]);
-const VALID_STATUSES = new Set(["已绝育", "未绝育"]);
+const VALID_GENDERS = new Set(["male", "female", "unknown"]);
+const VALID_STATUSES = new Set(["已绝育", "未绝育", "未知"]);
 const VALID_RELATIONS = new Set(["配偶", "父子", "母子", "兄弟姐妹", "朋友"]);
 const REQUIRED_CAT_FIELDS = ["id", "name", "gender", "lat", "lng", "status"];
 const REQUIRED_RELATION_FIELDS = ["from", "to", "relation"];
@@ -76,12 +76,12 @@ for (let i = 0; i < cats.length; i++) {
 
   // gender
   if (c.gender !== undefined && !VALID_GENDERS.has(c.gender)) {
-    error(idx + " gender 无效 (应为 male/female): " + c.gender);
+    error(idx + " gender 无效 (应为 male/female/unknown): " + c.gender);
   }
 
   // status
   if (c.status !== undefined && !VALID_STATUSES.has(c.status)) {
-    error(idx + " status 无效 (应为 已绝育/未绝育): " + c.status);
+    error(idx + " status 无效 (应为 已绝育/未绝育/未知): " + c.status);
   }
 
   // firstSeen YYYY-MM
@@ -94,9 +94,9 @@ for (let i = 0; i < cats.length; i++) {
     error(idx + " nickname 应为字符串: " + JSON.stringify(c.nickname));
   }
 
-  // leftAt 可选（离开时间，YYYY-MM；填了即标记为“过往”猫咪）
-  if (c.leftAt && !/^\d{4}-\d{2}$/.test(c.leftAt)) {
-    error(idx + " leftAt 格式无效 (应为 YYYY-MM): " + c.leftAt);
+  // leftAt 可选（离开时间/说明，自由文本，如"2026年寒假失踪"；填了即标记为“过往”猫咪）
+  if (c.leftAt !== undefined && c.leftAt !== null && typeof c.leftAt !== "string") {
+    error(idx + " leftAt 应为字符串: " + JSON.stringify(c.leftAt));
   }
 
   // photo 为相对路径字符串（可选字段）
