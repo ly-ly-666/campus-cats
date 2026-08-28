@@ -14,7 +14,8 @@
       "images/cat001_album_1787767505259.jpg",
       "images/cat001_album_1787767520084.jpg",
       "images/cat001_album_1787767590093.jpg",
-      "images/cat001_album_1787812115676.jpg"
+      "images/cat001_album_1787812115676.jpg",
+      "images/cat001_album_1787934292123.jpg"
     ],
     "description": "脾气很好。经常睡在图书馆门口或者里面。有时会在图书馆里面巡逻。心情不好时有概率会抓人。被人类骚扰到厌烦时会咬人（假咬，起恐吓威慑作用）",
     "story": "",
@@ -29,9 +30,38 @@
     "stories": [
       {
         "id": "s_1787851379508_cjo8cf",
+        "date": "",
         "title": "白猪的睡眠功力",
         "content": "曾经有一天,我早上八点上课见到他在睡觉,然后晚上九点下课见到他,还在睡,震惊!",
+        "cats": [
+          "cat001"
+        ],
         "images": []
+      },
+      {
+        "id": "s_1787934238301_o0ongj",
+        "date": "2026-08-28",
+        "title": "猜猜我在做什么",
+        "content": "白猪在抓小鸟",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1787934256652.jpg",
+          "images/cat001_story_1787934270102.jpg"
+        ]
+      },
+      {
+        "id": "s_1787934503531_v9m6sj",
+        "date": "2026-08-28",
+        "title": "人,我饿了~",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1787934513652.jpg"
+        ]
       }
     ]
   },
@@ -58,7 +88,21 @@
     "caretaker": "",
     "age": "大约八岁",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1787934329521_m1bha9",
+        "date": "2026-08-28",
+        "title": "?????????",
+        "content": "亚米亚米~",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1787934349693.jpg",
+          "images/cat002_story_1787934384723.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat003",
@@ -239,7 +283,8 @@
     "lng": 110.923642,
     "photo": "images/cat009.jpg",
     "album": [
-      "images/cat009_album_1787805451454.jpg"
+      "images/cat009_album_1787805451454.jpg",
+      "images/cat009_album_1787934197141.jpg"
     ],
     "description": "",
     "story": "",
@@ -251,7 +296,20 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1787934199655_doydl6",
+        "date": "2026-08-28",
+        "title": "为我的美貌着迷吧",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1787934214098.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat010",
@@ -569,7 +627,9 @@
     "lat": 21.680856,
     "lng": 110.924076,
     "photo": "images/cat022.jpg",
-    "album": [],
+    "album": [
+      "images/cat022_album_1787934087753.jpg"
+    ],
     "description": "",
     "story": "",
     "tags": [],
@@ -579,7 +639,21 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787934090217_bvkn7y",
+        "date": "2026-08-28",
+        "title": "我是顺顺",
+        "content": "我在吃饭",
+        "cats": [
+          "cat022"
+        ],
+        "images": [
+          "images/cat022_story_1787934103009.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat023",
@@ -887,7 +961,9 @@
     "lat": 21.678354,
     "lng": 110.921788,
     "photo": "images/cat036.jpg",
-    "album": [],
+    "album": [
+      "images/cat036_album_1787934445502.jpg"
+    ],
     "description": "",
     "story": "",
     "tags": [],
@@ -912,6 +988,18 @@
         ],
         "images": [
           "images/cat019_story_1787929047552.jpg"
+        ]
+      },
+      {
+        "id": "s_1787934447819_hsq6mj",
+        "date": "2026-08-28",
+        "title": "闯上传了一张自拍",
+        "content": "",
+        "cats": [
+          "cat036"
+        ],
+        "images": [
+          "images/cat036_story_1787934464205.jpg"
         ]
       }
     ]
@@ -1536,6 +1624,45 @@
           "images/cat059_story_1787851298313.jpg",
           "images/cat059_story_1787851303239.jpg",
           "images/cat059_story_1787851309247.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cat060",
+    "name": "安安",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "白混灰",
+    "area": "教职工",
+    "lat": 21.680779,
+    "lng": 110.923828,
+    "photo": "images/cat060.jpg",
+    "album": [
+      "images/cat060_album_1787933759983.jpg",
+      "images/cat060_album_1787933769870.jpg"
+    ],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787933772701_5vby0w",
+        "date": "2026-08-28",
+        "title": "咳咳,居然被认出来了",
+        "content": "咳咳,低调低调\n虽然我像黑帮教父,但是不要大声的喊出,特别是喊外国佬\n等一下,怎么还有人喊我小猪",
+        "cats": [
+          "cat060"
+        ],
+        "images": [
+          "images/cat060_story_1787933810490.jpg"
         ]
       }
     ]
