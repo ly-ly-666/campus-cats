@@ -57,7 +57,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "大约八岁",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat003",
@@ -81,7 +82,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat004",
@@ -106,7 +108,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat005",
@@ -171,7 +174,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat007",
@@ -196,7 +200,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat008",
@@ -220,7 +225,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat009",
@@ -244,7 +250,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat010",
@@ -267,7 +274,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat011",
@@ -289,7 +297,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat012",
@@ -311,7 +320,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat013",
@@ -332,7 +342,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat014",
@@ -353,7 +364,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat015",
@@ -374,7 +386,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat016",
@@ -395,7 +408,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat017",
@@ -417,7 +431,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat018",
@@ -484,8 +499,15 @@
     "stories": [
       {
         "id": "s_1787929035230_xhszhq",
+        "date": "2026-08-28",
         "title": "幼儿园集体吃宵夜",
-        "content": "2026年8月28日\n哈哈老父亲带领开吃\n从左往右依次是哈哈,星星,小闯,包包",
+        "content": "哈哈老父亲带领开吃\n从左往右依次是哈哈,星星,小闯,包包",
+        "cats": [
+          "cat019",
+          "cat038",
+          "cat036",
+          "cat037"
+        ],
         "images": [
           "images/cat019_story_1787929047552.jpg"
         ]
@@ -512,7 +534,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat021",
@@ -533,7 +556,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat022",
@@ -554,7 +578,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat023",
@@ -576,7 +601,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat024",
@@ -597,7 +623,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat025",
@@ -618,7 +645,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat026",
@@ -639,7 +667,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "stories": []
   },
   {
     "id": "cat027",
@@ -661,7 +690,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat028",
@@ -683,7 +713,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat029",
@@ -705,7 +736,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat030",
@@ -727,7 +759,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat031",
@@ -749,7 +782,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat032",
@@ -771,7 +805,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat033",
@@ -793,7 +828,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat034",
@@ -815,7 +851,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat035",
@@ -837,7 +874,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat036",
@@ -859,7 +897,24 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787929035230_xhszhq",
+        "date": "2026-08-28",
+        "title": "幼儿园集体吃宵夜",
+        "content": "哈哈老父亲带领开吃\n从左往右依次是哈哈,星星,小闯,包包",
+        "cats": [
+          "cat019",
+          "cat038",
+          "cat036",
+          "cat037"
+        ],
+        "images": [
+          "images/cat019_story_1787929047552.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat037",
@@ -881,7 +936,24 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787929035230_xhszhq",
+        "date": "2026-08-28",
+        "title": "幼儿园集体吃宵夜",
+        "content": "哈哈老父亲带领开吃\n从左往右依次是哈哈,星星,小闯,包包",
+        "cats": [
+          "cat019",
+          "cat038",
+          "cat036",
+          "cat037"
+        ],
+        "images": [
+          "images/cat019_story_1787929047552.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat038",
@@ -903,7 +975,24 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787929035230_xhszhq",
+        "date": "2026-08-28",
+        "title": "幼儿园集体吃宵夜",
+        "content": "哈哈老父亲带领开吃\n从左往右依次是哈哈,星星,小闯,包包",
+        "cats": [
+          "cat019",
+          "cat038",
+          "cat036",
+          "cat037"
+        ],
+        "images": [
+          "images/cat019_story_1787929047552.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat039",
@@ -928,7 +1017,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat040",
@@ -950,7 +1040,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat041",
@@ -972,7 +1063,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat042",
@@ -994,7 +1086,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat043",
@@ -1052,7 +1145,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat045",
@@ -1079,7 +1173,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat046",
@@ -1101,7 +1196,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat047",
@@ -1126,7 +1222,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat048",
@@ -1148,7 +1245,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat049",
@@ -1170,7 +1268,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat050",
@@ -1192,7 +1291,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat051",
@@ -1216,7 +1316,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat052",
@@ -1240,7 +1341,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat053",
@@ -1262,7 +1364,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat054",
@@ -1287,7 +1390,8 @@
     "leftAt": "生病去世了",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat055",
@@ -1311,7 +1415,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat056",
@@ -1333,7 +1438,8 @@
     "leftAt": "绝育后一个月因车祸去世",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat057",
@@ -1358,7 +1464,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat058",
@@ -1382,7 +1489,8 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": []
   },
   {
     "id": "cat059",
