@@ -353,44 +353,75 @@
     }
   }
   // ---------- 故事集展示顺序 ----------
-  function catHasStories(c) {
-    return (Array.isArray(c.stories) && c.stories.length) || (c.story && String(c.story).trim());
-  }
-  function catStoryCount(c) {
-    return Array.isArray(c.stories) && c.stories.length ? c.stories.length : (String(c.story || '').trim() ? 1 : 0);
-  }
   function renderStoryOrder() {
     var box = $('story-order-list');
     if (!box) return;
-    var storyCats = (cats || []).filter(catHasStories);
-    if (!storyCats.length) { box.innerHTML = '<p class="hint" style="margin:0;">还没有任何故事，先给猫咪添加故事后再来调整顺序。</p>'; return; }
-    // 建立 id -> cat 的映射
-    var catById = {};
-    storyCats.forEach(function (c) { catById[c.id] = c; });
-    var existingOrder = Array.isArray(siteConfig.storyOrder) ? siteConfig.storyOrder.slice() : [];
-    var inOrder = {};
-    existingOrder.forEach(function (id) { inOrder[id] = true; });
-    // 组合顺序：已有 storyOrder（仅保留有故事的） + 其余有故事但未列入的猫（按 cats 顺序）
-    var order = existingOrder.filter(function (id) { return catById[id]; });
-    storyCats.forEach(function (c) { if (!inOrder[c.id]) order.push(c.id); });
-    siteConfig.storyOrder = order;
+    // 与公开站一致：同一故事按 id 去重成一篇
+    var catMap = {};
+    (cats || []).forEach(function (c) { catMap[c.id] = c; });
+    var storyMap = {};
+    (cats || []).forEach(function (c) {
+      (Array.isArray(c.stories) ? c.stories : []).forEach(function (s) {
+        if (!s || !s.id || storyMap[s.id]) return;
+        var linked = (Array.isArray(s.cats) ? s.cats : []).filter(function (cid) { return catMap[cid]; });
+        storyMap[s.id] = { id: s.id, date: s.date || '', title: s.title || '', cats: linked.length ? linked : [c.id], images: Array.isArray(s.images) ? s.images : [] };
+      });
+      if ((!Array.isArray(c.stories) || !c.stories.length) && c.story && String(c.story).trim()) {
+        var lid = '__legacy_' + c.id;
+        storyMap[lid] = { id: lid, date: '', title: '', cats: [c.id], images: [] };
+      }
+    });
+    var stories = Object.keys(storyMap).map(function (id) { return storyMap[id]; });
+    if (!stories.length) { box.innerHTML = '<p class="hint" style="margin:0;">还没有任何故事，先给猫咪添加故事后再来置顶。</p>'; return; }
+    // 置顶配置（最多 3 篇）
+    if (!Array.isArray(siteConfig.storyPinOrder)) siteConfig.storyPinOrder = [];
+    var pin = siteConfig.storyPinOrder.filter(function (id) { return storyMap[id]; });
+    siteConfig.storyPinOrder = pin;
+    function pinStory(id) {
+      var k = pin.indexOf(id);
+      if (k >= 0) pin.splice(k, 1);
+      else {
+        if (pin.length >= 3) { log('⚠️ 置顶最多 3 篇，请先取消其他置顶', 'warn'); return; }
+        pin.push(id);
+      }
+      siteConfig.storyPinOrder = pin.slice();
+      renderStoryOrder();
+    }
+    function movePin(i, j) {
+      if (i < 0 || j < 0 || i >= pin.length || j >= pin.length) return;
+      var t = pin[i]; pin[i] = pin[j]; pin[j] = t;
+      siteConfig.storyPinOrder = pin.slice();
+      renderStoryOrder();
+    }
+    // 预览顺序：置顶在前（按置顶顺序），其余按日期（无日期按上传时间）从新到旧
+    var pinSet = {};
+    pin.forEach(function (id) { pinSet[id] = true; });
+    var rest = stories.filter(function (s) { return !pinSet[s.id]; }).sort(function (a, b) { return storyTs(b) - storyTs(a); });
+    var ordered = pin.map(function (id) { return storyMap[id]; }).concat(rest);
+    var numMap = {}; ordered.forEach(function (s, i) { numMap[s.id] = i + 1; });
 
-    function swap(i, j) { var t = order[i]; order[i] = order[j]; order[j] = t; siteConfig.storyOrder = order.slice(); renderStoryOrder(); }
-    box.innerHTML = order.map(function (id, i) {
-      var c = catById[id];
-      var n = catStoryCount(c);
-      var up = i > 0 ? '<button type="button" class="btn btn-sm so-up" data-i="' + i + '" title="上移">▲</button>' : '';
-      var down = i < order.length - 1 ? '<button type="button" class="btn btn-sm so-down" data-i="' + i + '" title="下移">▼</button>' : '';
-      return '<div class="so-item" style="display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">'
-        + '<span style="font-weight:700;color:#b45309;min-width:26px;">#' + (i + 1) + '</span>'
-        + '<img src="' + esc((c.photo || '').indexOf('placeholder') >= 0 ? '' : c.photo) + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;background:#ffd9a8;" alt="" onerror="this.style.visibility=\'hidden\'">'
-        + '<span style="flex:1;font-size:14px;font-weight:600;">' + esc(c.name) + '</span>'
-        + '<span style="font-size:12px;color:var(--muted);">' + n + ' 篇</span>'
-        + '<span style="display:flex;gap:4px;">' + up + down + '</span>'
-        + '</div>';
+    box.innerHTML = '<div class="so-legend">' + (pin.length ? '已置顶 <b style="color:#e11d48;">' + pin.length + '/3</b> 篇，固定显示在最前；其余故事自动按日期（无日期按上传时间）从新到旧排列。' : '点击故事右侧「📌 置顶」把它固定到最前（最多 3 篇）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。') + '</div>' + ordered.map(function (s) {
+      var pIdx = pin.indexOf(s.id);
+      var pinned = pIdx >= 0;
+      var dateTxt = s.date ? '<span class="so-story-date">🗓 ' + esc(String(s.date)) + '</span>' : '';
+      var titleTxt = (s.title && String(s.title).trim()) ? esc(s.title) : '<span class="so-story-null">（无标题）</span>';
+      var linked = (s.cats || []).filter(function (cid) { return catMap[cid]; });
+      var catsTxt = linked.length > 1 ? '<span class="so-story-cats">🐾 ' + linked.map(function (cid) { return esc(catMap[cid].name); }).join('、') + '</span>' : '';
+      var pinBtn = pinned
+        ? '<button type="button" class="btn btn-sm so-pin on" data-id="' + esc(s.id) + '" title="取消置顶">📌 置顶 ' + (pIdx + 1) + '</button>'
+        : '<button type="button" class="btn btn-sm so-pin" data-id="' + esc(s.id) + '" title="置顶到最前">📌 置顶</button>';
+      var pinMove = pinned
+        ? '<span style="display:flex;gap:4px;">' + (pIdx > 0 ? '<button type="button" class="btn btn-sm so-pin-up" data-id="' + esc(s.id) + '" title="置顶顺序上移">▲</button>' : '') + (pIdx < pin.length - 1 ? '<button type="button" class="btn btn-sm so-pin-down" data-id="' + esc(s.id) + '" title="置顶顺序下移">▼</button>' : '') + '</span>'
+        : '';
+      return '<div class="so-item' + (pinned ? ' pinned' : '') + '"><div class="so-head">'
+        + '<span style="font-weight:700;color:#b45309;min-width:26px;">' + (pinned ? '📌' : '#' + numMap[s.id]) + '</span>'
+        + dateTxt + '<span class="so-story-title" style="flex:1;">' + titleTxt + '</span>'
+        + catsTxt + pinMove + pinBtn
+        + '</div></div>';
     }).join('');
-    box.querySelectorAll('.so-up').forEach(function (b) { b.addEventListener('click', function () { var i = Number(b.dataset.i); if (i > 0) swap(i, i - 1); }); });
-    box.querySelectorAll('.so-down').forEach(function (b) { b.addEventListener('click', function () { var i = Number(b.dataset.i); if (i < order.length - 1) swap(i, i + 1); }); });
+    box.querySelectorAll('.so-pin').forEach(function (b) { b.addEventListener('click', function () { pinStory(b.dataset.id); }); });
+    box.querySelectorAll('.so-pin-up').forEach(function (b) { b.addEventListener('click', function () { movePin(pin.indexOf(b.dataset.id), pin.indexOf(b.dataset.id) - 1); }); });
+    box.querySelectorAll('.so-pin-down').forEach(function (b) { b.addEventListener('click', function () { movePin(pin.indexOf(b.dataset.id), pin.indexOf(b.dataset.id) + 1); }); });
   }
 
 
@@ -831,10 +862,16 @@
         if (!cc) return '';
         return '<span class="story-cat-chip on" data-si="' + i + '" data-cat="' + esc(cid) + '" title="点击取消关联「' + esc(cc.name) + '」">' + esc(cc.name) + ' <b class="chip-x">×</b></span>';
       }).join('');
-      return '<div class="story-edit-item" data-story-idx="' + i + '"><div class="story-header"><span class="story-num">#' + (i + 1) + '</span><div class="story-move-btns">' + (i > 0 ? '<button type="button" class="btn-story-up" data-si="' + i + '" title="上移">▲</button>' : '') + (i < _pendingStories.length - 1 ? '<button type="button" class="btn-story-down" data-si="' + i + '" title="下移">▼</button>' : '') + '</div><button type="button" class="btn btn-sm btn-danger btn-del-story" data-si="' + i + '">删除</button></div>' +
+      if (s._collapsed === undefined) s._collapsed = !!((s.content && String(s.content).trim()) || (s.title && String(s.title).trim()) || (s.images && s.images.length));
+      var collapsed = !!s._collapsed;
+      var summaryParts = [];
+      if (s.date) summaryParts.push('<span class="story-summary-date">🗓 ' + esc(s.date) + '</span>');
+      summaryParts.push((s.title && String(s.title).trim()) ? '<span class="story-summary-title">' + esc(s.title) + '</span>' : '<span class="story-summary-null">（无标题）</span>');
+      if (s.images && s.images.length) summaryParts.push('<span class="story-summary-imgs">🖼️ ' + s.images.length + ' 图</span>');
+      var bodyHtml = '<div class="story-body">' +
         '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="story-date" data-si="' + i + '" value="' + esc(s.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="2">前天</button><button type="button" class="btn btn-sm btn-story-quick-clear" data-si="' + i + '">清空</button></div></div>' +
-        '<div class="field" style="margin-top:4px;"><label>标题（选填）</label><input type="text" class="story-title" data-si="' + i + '" placeholder="故事标题" value="' + esc(s.title) + '"></div>' +
-        '<div class="field" style="margin-top:4px;"><label>内容</label><textarea class="story-content" data-si="' + i + '" rows="3" placeholder="故事内容（纯文本）">' + esc(s.content) + '</textarea></div>' +
+        '<input type="text" class="story-title" data-si="' + i + '" placeholder="📝 故事标题" value="' + esc(s.title) + '">' +
+        '<textarea class="story-content" data-si="' + i + '" rows="10" placeholder="在这里写故事内容，像写 Word 文档一样，自然段落换行即可…">' + esc(s.content) + '</textarea>' +
         '<div class="field" style="margin-top:4px;"><label>关联猫咪（一个故事可关联多只，搜索后点击结果添加/取消）</label>' +
           '<div class="story-cat-selected">' + selChips + '</div>' +
           '<div class="story-cat-search-row"><input type="text" class="story-cat-search" data-si="' + i + '" placeholder="🔍 输入猫名 / 外号搜索…" value="' + esc(s._search || '') + '" autocomplete="off"></div>' +
@@ -842,10 +879,20 @@
         '</div>' +
         '<div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" data-story-img="' + i + '">🖼️ 加截图</button><button type="button" class="btn btn-sm" data-story-paste="' + i + '" style="margin-left:4px">📋 粘贴截图</button></div>' +
         '<div class="story-imgs">' + imgs + '</div></div>';
+      return '<div class="story-edit-item' + (collapsed ? ' collapsed' : '') + '" data-story-idx="' + i + '"><div class="story-header"><button type="button" class="btn-story-collapse" data-si="' + i + '" title="' + (collapsed ? '展开' : '收起') + '">' + (collapsed ? '▸' : '▾') + '</button><span class="story-num">#' + (i + 1) + '</span><span class="story-summary' + (collapsed ? '' : ' is-open') + '">' + summaryParts.join('') + '</span><div class="story-move-btns">' + (i > 0 ? '<button type="button" class="btn-story-up" data-si="' + i + '" title="上移">▲</button>' : '') + (i < _pendingStories.length - 1 ? '<button type="button" class="btn-story-down" data-si="' + i + '" title="下移">▼</button>' : '') + '</div><button type="button" class="btn btn-sm btn-danger btn-del-story" data-si="' + i + '">删除</button></div>' +
+        (collapsed ? '' : bodyHtml) + '</div>';
     }).join('');
     box.querySelectorAll('.story-date').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].date = ip.value; }); });
     box.querySelectorAll('.btn-story-quick').forEach(function (b) { b.addEventListener('click', function () { var si = Number(b.dataset.si); _pendingStories[si].date = daysAgoDate(Number(b.dataset.off)); refreshStories(); }); });
     box.querySelectorAll('.btn-story-quick-clear').forEach(function (b) { b.addEventListener('click', function () { var si = Number(b.dataset.si); _pendingStories[si].date = ''; refreshStories(); }); });
+    box.querySelectorAll('.btn-story-collapse').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var si = Number(b.dataset.si);
+        _pendingStories[si]._collapsed = !_pendingStories[si]._collapsed;
+        refreshStories();
+        if (_pendingStories[si] && _pendingStories[si]._search) renderStoryCatResults(si);
+      });
+    });
     box.querySelectorAll('.story-cat-chip').forEach(function (b) {
       b.addEventListener('click', function () { toggleStoryCat(b.dataset.si, b.dataset.cat); });
     });
@@ -1656,7 +1703,32 @@
     $('crop-modal').addEventListener('click', function (e) { if (e.target === $('crop-modal')) cancelCrop(); });
   }
 
+  // ---------- 工作台导航 ----------
+  function initWorkbench() {
+    var navs = document.querySelectorAll('.wb-nav');
+    var pages = document.querySelectorAll('.page');
+    var consoleEl = $('wb-console');
+    var consoleHead = $('console-head');
+    navs.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pg = b.dataset.page;
+        navs.forEach(function (x) { x.classList.toggle('active', x === b); });
+        pages.forEach(function (x) { x.classList.toggle('active', x.dataset.page === pg); });
+        if (pg === 'map' && map) setTimeout(function () { map.invalidateSize(); }, 80);
+        if (pg === 'cats') renderCats();
+        if (pg === 'relations') renderRelList();
+        if (pg === 'stories') renderStoryOrder();
+      });
+    });
+    if (consoleHead) consoleHead.addEventListener('click', function () {
+      if (!consoleEl) return;
+      consoleEl.classList.toggle('collapsed');
+      $('console-toggle').textContent = consoleEl.classList.contains('collapsed') ? '展开 ▾' : '收起 ▴';
+    });
+  }
+
   bind();
+  initWorkbench();
   ensureMap();
   autoConnect();
 })();

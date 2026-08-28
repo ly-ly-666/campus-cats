@@ -9,14 +9,14 @@ export async function loadData() {
   let cats, relations, siteConfig = {};
 
   try {
-    const cfgResp = await fetch('./data/site-config.json');
+    const cfgResp = await fetch('./data/site-config.json?v=' + Date.now());
     if (cfgResp.ok) siteConfig = await cfgResp.json();
   } catch (e) {
     siteConfig = {};
   }
 
   try {
-    const catResp = await fetch('./data/cats.json');
+    const catResp = await fetch('./data/cats.json?v=' + Date.now());
     if (!catResp.ok) {
       throw new Error(`猫咪数据加载失败（HTTP ${catResp.status}）`);
     }
@@ -26,7 +26,7 @@ export async function loadData() {
   }
 
   try {
-    const relResp = await fetch('./data/relations.json');
+    const relResp = await fetch('./data/relations.json?v=' + Date.now());
     if (!relResp.ok) {
       throw new Error(`关系数据加载失败（HTTP ${relResp.status}）`);
     }

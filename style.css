@@ -694,6 +694,7 @@ body { display: flex; flex-direction: column; }
 .story-group-items { display: flex; flex-direction: column; gap: 14px; }
 .story-item { background: #fffdf9; border: 1px solid var(--border, #e8e1d6); border-radius: 10px; padding: 12px; }
 .story-item-date { display: inline-block; font-size: 11px; color: var(--muted, #8a857d); background: #f3efe6; border: 1px solid var(--border, #e8e1d6); border-radius: 999px; padding: 1px 8px; margin-bottom: 6px; }
+.story-item-pin { display: inline-block; font-size: 11px; color: #fff; background: #e11d48; border-radius: 999px; padding: 1px 9px; margin-bottom: 6px; font-weight: 600; }
 .story-sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .story-sort-label { font-size: 12px; color: var(--muted, #8a857d); }
 .story-sort-opts { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -701,7 +702,12 @@ body { display: flex; flex-direction: column; }
 .story-sort-btn:hover { background: #fff7ed; }
 .story-sort-btn.active { background: var(--primary, #f59e0b); border-color: var(--primary, #f59e0b); color: #fff; font-weight: 600; }
 .story-item-title { font-size: 15px; font-weight: 700; color: var(--primary-dark, #d97706); margin-bottom: 6px; }
-.story-item-no-title { color: var(--muted, #8a857d); font-style: italic; font-weight: 400; }
+    .story-item-no-title { color: var(--muted, #8a857d); font-style: italic; font-weight: 400; }
+    .story-item-cats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .story-item-cats-label { font-size: 11px; color: var(--muted, #8a857d); }
+    .story-item-cat { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; background: #fff7ed; border: 1px solid #fde6c4; border-radius: 999px; padding: 2px 8px 2px 4px; font-size: 12px; color: #d97706; }
+    .story-item-cat:hover { background: #ffedd5; }
+    .story-item-cat img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
 .story-item-content { font-size: 14px; line-height: 1.7; color: var(--text, #2d2a26); white-space: pre-line; }
 .story-fold-btn {
   display: block; margin-top: 8px; padding: 5px 12px;

@@ -110,6 +110,17 @@
     .stories-editor .story-move-btns { display: flex; gap: 4px; }
     .stories-editor .story-move-btns button { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
     .stories-editor .story-move-btns button:hover { background: #fff7ed; }
+    .stories-editor .story-edit-item .btn-story-collapse { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; line-height: 1; color: #b45309; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .stories-editor .story-edit-item .btn-story-collapse:hover { background: #fff7ed; }
+    .stories-editor .story-edit-item .story-summary { flex: 1; display: flex; gap: 8px; align-items: center; font-size: 13px; min-width: 0; }
+    .stories-editor .story-edit-item .story-summary.is-open { display: none; }
+    .stories-editor .story-edit-item .story-summary-date { color: var(--muted); font-size: 12px; background: #f3efe6; border-radius: 6px; padding: 1px 6px; flex-shrink: 0; }
+    .stories-editor .story-edit-item .story-summary-title { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+    .stories-editor .story-edit-item .story-summary-null { color: var(--muted); font-style: italic; }
+    .stories-editor .story-edit-item .story-summary-imgs { color: #d97706; font-size: 12px; flex-shrink: 0; }
+    .stories-editor .story-edit-item.collapsed { background: #faf6ee; }
+    .stories-editor .story-edit-item.collapsed .story-header { margin-bottom: 0; }
+    .stories-editor .story-edit-item .story-body { padding-top: 4px; }
     .stories-editor .story-date-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .stories-editor .story-date-row input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
     .stories-editor .story-date-row .btn-story-quick { padding: 4px 9px; font-size: 12px; border-radius: 999px; border: 1px solid #fdba74; background: #fff7ed; color: #d97706; cursor: pointer; }
@@ -127,84 +138,180 @@
     .stories-editor .story-cat-result { padding: 5px 10px; font-size: 12px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--text); cursor: pointer; }
     .stories-editor .story-cat-result:hover { background: #fff7ed; }
     .stories-editor .story-cat-result.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+    .stories-editor .story-title { width: 100%; padding: 10px 12px; font-size: 17px; font-weight: 700; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; margin-top: 8px; background: #fff; }
+    .stories-editor .story-title:focus, .stories-editor .story-content:focus { outline: 2px solid #fde68a; border-color: var(--primary); }
+    .stories-editor .story-content { width: 100%; min-height: 220px; padding: 12px 14px; font-size: 14px; line-height: 1.9; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; resize: vertical; margin-top: 8px; background: #fff; }
+
+    /* ---------- 故事集展示顺序列表 ---------- */
+    .so-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: #fffdf9; }
+    .so-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+    .so-stories { border-top: 1px dashed var(--border); padding: 6px 10px 8px 36px; display: flex; flex-direction: column; gap: 4px; background: #fff; }
+    .so-story { display: flex; align-items: baseline; gap: 8px; font-size: 12px; flex-wrap: wrap; }
+    .so-story-date { color: var(--muted); background: #f3efe6; border-radius: 6px; padding: 1px 6px; font-size: 11px; flex-shrink: 0; }
+    .so-story-title { color: var(--text); font-weight: 600; }
+    .so-story-null { color: var(--muted); font-style: italic; font-weight: 400; }
+    .so-story-cats { color: #d97706; font-size: 11px; }
+    .so-legend { font-size: 12px; color: var(--muted); background: #fbf7f0; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.6; }
+    .so-item.pinned { border-color: #fecaca; background: #fff5f5; }
+    .so-pin { border: 1px solid var(--border); background: #fff; color: #b45309; cursor: pointer; font-size: 12px; border-radius: 999px; padding: 3px 10px; }
+    .so-pin:hover { background: #fff7ed; }
+    .so-pin.on { background: #e11d48; border-color: #e11d48; color: #fff; font-weight: 600; }
+
+    /* ---------- 工作台布局 ---------- */
+    .workbench { display: flex; min-height: 100vh; }
+    .wb-side { width: 208px; flex-shrink: 0; background: #2b261f; color: #f5f0e8; padding: 16px 10px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; overflow: auto; }
+    .wb-brand { font-weight: 700; font-size: 14px; padding: 2px 12px 14px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 10px; color: #fbbf24; line-height: 1.5; }
+    .wb-nav { display: block; width: 100%; text-align: left; padding: 10px 12px; border: none; background: transparent; color: #d9d2c7; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .wb-nav:hover { background: rgba(255,255,255,.08); }
+    .wb-nav.active { background: var(--primary); color: #fff; font-weight: 600; }
+    .wb-main { flex: 1; min-width: 0; padding: 20px 22px 20px; display: flex; flex-direction: column; gap: 14px; max-width: 1500px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 2px; }
+    .page-head h1 { font-size: 18px; color: var(--primary-dark); }
+    .wb-console { margin-top: auto; border: 1px solid var(--border); background: #fff; border-radius: 10px; }
+    .wb-console-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; }
+    .wb-console-head:hover { background: #fbf7f0; }
+    .wb-console .logbox { margin-top: 0; padding: 0 12px 8px; }
+    .wb-console.collapsed .logbox { display: none; }
+    #cat-modal .modal-panel { max-width: 1120px; width: 100%; }
+    #cat-modal .modal-panel .grid3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+    #cat-modal .modal-panel .photo-preview { height: 200px; }
+    #cat-modal .album-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+    #cat-modal .stories-editor .story-edit-item { padding: 14px; }
+    @media (max-width: 820px) {
+      .workbench { flex-direction: column; }
+      .wb-side { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px; }
+      .wb-brand { border-bottom: none; padding: 2px 10px 2px 4px; margin: 0; }
+      .wb-nav { width: auto; padding: 7px 10px; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <section class="card">
-      <h2>🐱 校园猫本地管理端</h2>
-      <p class="hint">直接读写你电脑里的项目文件夹，改完一键推送到 GitHub 部署。</p>
-      <div class="row">
-        <button class="btn btn-primary" id="btn-pick">📁 选择项目文件夹</button>
-        <button class="btn" id="btn-save-all">💾 保存到本地</button>
-        <button class="btn" id="btn-pull">🔄 从 GitHub 拉取到本地</button>
-        <button class="btn" id="btn-preview">👀 预览公开站效果</button>
-        <button class="btn btn-green" id="btn-push">🚀 推送到 GitHub</button>
-      </div>
-      <div class="folder-path" id="folder-path">尚未选择文件夹</div>
-      <div class="row" style="margin-top:14px;">
-        <div class="field"><label>仓库名</label><input id="cfg-repo" placeholder="如 ly-ly-666/campus-cats"></div>
-        <div class="field"><label>分支</label><input id="cfg-branch" value="main"></div>
-        <div class="field"><label>Token</label><input id="cfg-token" type="password" placeholder="github_pat_..."></div>
-      </div>
-      <details class="help"><summary>🔑 Token 怎么获取？</summary>
-        <ol>
-          <li>打开 <b>github.com/settings/tokens/new?type=beta</b></li>
-          <li>Repository access 选 Only select repositories → 勾选 campus-cats</li>
-          <li>Permissions → Contents 设为 Read and write</li>
-          <li>Generate 后复制 github_pat_... 到上面</li>
-        </ol>
-      </details>
-    </section>
+  <div class="workbench">
+    <aside class="wb-side">
+      <div class="wb-brand">🐱 校园猫<br>本地管理端</div>
+      <button type="button" class="wb-nav active" data-page="workbench">📊 工作台</button>
+      <button type="button" class="wb-nav" data-page="map">🗺️ 地图编辑</button>
+      <button type="button" class="wb-nav" data-page="cats">🐱 猫咪管理</button>
+      <button type="button" class="wb-nav" data-page="relations">🪢 关系管理</button>
+      <button type="button" class="wb-nav" data-page="stories">📖 故事集</button>
+      <button type="button" class="wb-nav" data-page="deploy">🚀 部署到 GitHub</button>
+    </aside>
+    <main class="wb-main">
+      <!-- 📊 工作台 -->
+      <section class="page active" data-page="workbench">
+        <div class="page-head">
+          <h1>📊 工作台</h1>
+          <div class="row" style="margin-top:0;">
+            <button class="btn btn-primary" id="btn-pick">📁 选择项目文件夹</button>
+            <button class="btn" id="btn-save-all">💾 保存到本地</button>
+            <button class="btn" id="btn-preview">👀 预览公开站效果</button>
+          </div>
+        </div>
+        <div class="folder-path" id="folder-path">尚未选择文件夹</div>
+        <div class="card" style="margin-top:14px;">
+          <h2>💡 使用流程</h2>
+          <p class="hint">
+            1️⃣ 先点「📁 选择项目文件夹」，选到本项目所在文件夹（一般会自动关联）<br>
+            2️⃣ 从左侧切换到「🗺️ 地图编辑 / 🐱 猫咪管理 / 🪢 关系管理 / 📖 故事集」，每个功能独立一页，编辑区更宽敞<br>
+            3️⃣ 改完点「💾 保存到本地」；全部完成后到「🚀 部署到 GitHub」页填写仓库信息并推送<br>
+            4️⃣ 编辑猫咪时，点「＋ 添加猫咪」或某只猫的「编辑」会打开加宽编辑窗，字段一目了然
+          </p>
+        </div>
+      </section>
 
-    <section class="card">
-      <h2>🗺️ 在地图上添加 / 修改位置（点空白处 = 在那加猫，拖动圆点 = 改位置）</h2>
-      <div class="map-wrap" style="position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);"><div id="admin-map" style="height:400px;width:100%;background:#e5e0d8;"></div></div>
-    </section>
+      <!-- 🗺️ 地图 -->
+      <section class="page" data-page="map">
+        <div class="page-head"><h1>🗺️ 地图编辑</h1></div>
+        <div class="card">
+          <p class="hint">点空白处 = 在该位置添加猫咪；拖动圆点 = 修改位置。</p>
+          <div class="map-wrap" style="position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);"><div id="admin-map" style="height:70vh;width:100%;background:#e5e0d8;"></div></div>
+        </div>
+      </section>
 
-    <section class="card">
-      <div class="row" style="justify-content:space-between;">
-        <h2>猫咪列表</h2>
-        <button class="btn btn-primary" id="btn-add">＋ 添加猫咪</button>
+      <!-- 🐱 猫咪管理 -->
+      <section class="page" data-page="cats">
+        <div class="page-head">
+          <h1>🐱 猫咪管理</h1>
+          <button class="btn btn-primary" id="btn-add">＋ 添加猫咪</button>
+        </div>
+        <div class="card">
+          <div class="field" style="margin-top:0;"><input id="admin-cat-search" type="search" placeholder="🔍 搜索猫咪（名字 / 外号 / 毛色 / 区域）" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;"></div>
+          <div id="cats-list" class="catcards"><p class="hint">请先选择项目文件夹。</p></div>
+        </div>
+      </section>
+
+      <!-- 🪢 关系管理 -->
+      <section class="page" data-page="relations">
+        <div class="page-head"><h1>🪢 关系管理</h1></div>
+        <div class="card">
+          <p class="hint">给猫咪建立关系网（血缘 / 配偶 / 朋友）。<b style="color:#d97706;">带方向的：左边是父母，右边是孩子。</b></p>
+          <div class="grid3" id="rel-form-row" style="margin-top:4px;">
+            <div class="field"><label id="rel-label-a">猫咪 A</label><input id="rel-from" list="rel-from-list" placeholder="🔍 输入搜索或选择"></div>
+            <div class="field"><label>关系</label><select id="rel-type">
+              <option value="配偶">配偶</option>
+              <option value="父子">父子（左＝父，右＝子）</option>
+              <option value="母子">母子（左＝母，右＝子）</option>
+              <option value="兄弟姐妹">兄弟姐妹</option>
+              <option value="朋友">朋友</option>
+            </select></div>
+            <div class="field"><label id="rel-label-b">猫咪 B</label><input id="rel-to" list="rel-to-list" placeholder="🔍 输入搜索或选择"></div>
+          </div>
+          <datalist id="rel-from-list"></datalist>
+          <datalist id="rel-to-list"></datalist>
+          <div class="row">
+            <div class="field" style="flex:1;"><label>备注（选填）</label><input id="rel-note" placeholder="如：猫妈妈是小白"></div>
+            <button class="btn btn-primary" id="btn-rel-add" style="align-self:flex-end;">＋ 添加关系</button>
+          </div>
+          <div class="row" style="justify-content:space-between;margin-top:16px;">
+            <h2 style="margin:0;">已建立的关系</h2>
+          </div>
+          <div id="rel-list" class="rel-list" style="margin-top:10px;"></div>
+        </div>
+      </section>
+
+      <!-- 📖 故事集 -->
+      <section class="page" data-page="stories">
+        <div class="page-head"><h1>📖 故事集</h1></div>
+        <div class="card">
+          <h2>故事置顶</h2>
+          <p class="hint">点击故事右侧「📌 置顶」把它固定到公开站故事集最前面（<b style="color:#e11d48;">最多 3 篇</b>）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。改完点工作台的「💾 保存到本地」，公开站刷新即可预览。</p>
+          <div id="story-order-list" class="story-order-list"></div>
+          <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用右侧 ▲▼ 调整先后；想换掉某篇，点「📌 置顶 N」取消后再置顶新的即可。</p>
+        </div>
+      </section>
+
+      <!-- 🚀 部署 -->
+      <section class="page" data-page="deploy">
+        <div class="page-head"><h1>🚀 部署到 GitHub</h1></div>
+        <div class="card">
+          <div class="row" style="margin-top:0;">
+            <button class="btn" id="btn-pull">🔄 从 GitHub 拉取到本地</button>
+            <button class="btn btn-green" id="btn-push">🚀 推送到 GitHub</button>
+          </div>
+          <div class="row" style="margin-top:14px;">
+            <div class="field"><label>仓库名</label><input id="cfg-repo" placeholder="如 ly-ly-666/campus-cats"></div>
+            <div class="field"><label>分支</label><input id="cfg-branch" value="main"></div>
+            <div class="field"><label>Token</label><input id="cfg-token" type="password" placeholder="github_pat_..."></div>
+          </div>
+          <details class="help"><summary>🔑 Token 怎么获取？</summary>
+            <ol>
+              <li>打开 <b>github.com/settings/tokens/new?type=beta</b></li>
+              <li>Repository access 选 Only select repositories → 勾选 campus-cats</li>
+              <li>Permissions → Contents 设为 Read and write</li>
+              <li>Generate 后复制 github_pat_... 到上面</li>
+            </ol>
+          </details>
+        </div>
+      </section>
+
+      <!-- 操作日志控制台 -->
+      <div class="wb-console" id="wb-console">
+        <div class="wb-console-head" id="console-head"><span>🖥️ 操作日志</span><span id="console-toggle">收起 ▴</span></div>
+        <div id="log" class="logbox"></div>
       </div>
-      <div class="field" style="margin-top:8px;"><input id="admin-cat-search" type="search" placeholder="🔍 搜索猫咪（名字 / 外号 / 毛色 / 区域）" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"></div>
-      <div id="cats-list" class="catcards"><p class="hint">请先选择项目文件夹。</p></div>
-    </section>
-
-    <section class="card">
-      <h2>🪢 关系管理</h2>
-      <p class="hint">给猫咪建立关系网（血缘 / 配偶 / 朋友）。<b style="color:#d97706;">带方向的：左边是父母，右边是孩子。</b></p>
-      <div class="grid3" id="rel-form-row" style="margin-top:4px;">
-        <div class="field"><label id="rel-label-a">猫咪 A</label><input id="rel-from" list="rel-from-list" placeholder="🔍 输入搜索或选择"></div>
-        <div class="field"><label>关系</label><select id="rel-type">
-          <option value="配偶">配偶</option>
-          <option value="父子">父子（左＝父，右＝子）</option>
-          <option value="母子">母子（左＝母，右＝子）</option>
-          <option value="兄弟姐妹">兄弟姐妹</option>
-          <option value="朋友">朋友</option>
-        </select></div>
-        <div class="field"><label id="rel-label-b">猫咪 B</label><input id="rel-to" list="rel-to-list" placeholder="🔍 输入搜索或选择"></div>
-      </div>
-      <datalist id="rel-from-list"></datalist>
-      <datalist id="rel-to-list"></datalist>
-      <div class="row">
-        <div class="field" style="flex:1;"><label>备注（选填）</label><input id="rel-note" placeholder="如：猫妈妈是小白"></div>
-        <button class="btn btn-primary" id="btn-rel-add" style="align-self:flex-end;">＋ 添加关系</button>
-      </div>
-      <div id="rel-list" class="rel-list" style="margin-top:10px;"></div>
-    </section>
-
-    <section class="card">
-      <h2>📖 故事集展示顺序</h2>
-      <p class="hint">调整「故事集」页面里各只猫故事的先后顺序（从上到下依次展示）。▲▼ 上移/下移后点「保存」即可生效；未列出的猫排在最末尾。</p>
-      <div id="story-order-list" class="story-order-list"></div>
-      <p class="hint" style="margin-top:8px;">💡 单只猫内多篇故事的顺序，在猫咪「编辑」弹窗的「📖 多篇故事」里调整。</p>
-    </section>
-
-    <section class="card">
-      <h2>操作日志</h2>
-      <div id="log" class="logbox"></div>
-    </section>
+    </main>
   </div>
 
   <!-- 裁剪弹窗 -->

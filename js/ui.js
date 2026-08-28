@@ -633,27 +633,12 @@ export function initLightbox() {
 // 故事内容超过该长度时折叠展示，点击「展开全文」查看全部
 const STORY_TRUNCATE = 280;
 
-// 故事集排序状态（存 localStorage 记住用户选择）
-const STORY_SORT_MODES = [
-  { id: 'date_desc', label: '📅 最新在前' },
-  { id: 'date_asc', label: '📅 最旧在前' },
-  { id: 'long', label: '📏 长故事优先' }
-];
-let _storySortMode = 'date_desc';
-let _storyLastCats = null;
-let _storyLastConfig = null;
-try { _storySortMode = localStorage.getItem('storySortMode') || 'date_desc'; } catch (err) {}
-
 // 故事排序时间：优先用 date 字段（YYYY-MM[-DD]），否则回退到 id 里的时间戳
 function storyTs(s) {
   const d = String((s && s.date) || '').replace(/-/g, '');
   if (/^\d{6,8}$/.test(d)) return Number(d + '000000'.slice(0, 8 - d.length));
   const m = String((s && s.id) || '').match(/_?(\d{10,13})/);
   return m ? Number(m[1]) : 0;
-}
-// 故事"长度"：内容+标题的字符数，用于「长故事优先」
-function storyLen(s) {
-  return String(((s && s.content) || '') + ((s && s.title) || '')).length;
 }
 
 function storyContentHtml(s, catId, idx) {
@@ -699,70 +684,58 @@ export function renderStoriesTimeline(cats, siteConfig) {
     });
     box.__storyFoldBound = true;
   }
-  // 排序控件（只绑一次）
-  if (!box.__storySortBound) {
-    box.addEventListener('click', (e) => {
-      const btn = e.target.closest ? e.target.closest('[data-sort]') : null;
-      if (!btn) return;
-      _storySortMode = btn.dataset.sort;
-      try { localStorage.setItem('storySortMode', _storySortMode); } catch (err) {}
-      renderStoriesTimeline(_storyLastCats, _storyLastConfig);
-    });
-    box.__storySortBound = true;
-  }
-  _storyLastCats = cats;
-  _storyLastConfig = siteConfig;
 
   const list = Array.isArray(cats) ? cats : [];
-  const catStories = [];
+  const catMap = new Map(list.map((c) => [c.id, c]));
+  // 去重：同一篇故事（按 id）只保留一份，卡片上展示所有关联猫头像
+  const storyMap = new Map();
   list.forEach((cat) => {
-    const stories = [];
+    let arr;
     if (Array.isArray(cat.stories) && cat.stories.length) {
-      cat.stories.forEach((s) => { stories.push({ id: s.id || '', date: s.date || '', title: s.title || '', content: s.content || '', images: Array.isArray(s.images) ? s.images : [] }); });
-    } else if (cat.story && cat.story.trim()) {
-      stories.push({ id: '', date: '', title: '', content: cat.story, images: [] });
+      arr = cat.stories;
+    } else if (cat.story && String(cat.story).trim()) {
+      arr = [{ id: '__legacy_' + cat.id, title: '', content: cat.story, images: [] }];
+    } else {
+      arr = [];
     }
-    if (stories.length) catStories.push({ cat, stories });
-  });
-  // 组内始终按所选排序；组间优先用管理端配置的 storyOrder，未配置时按该组代表值自动排序
-  catStories.forEach((g) => {
-    if (_storySortMode === 'date_asc') g.stories.sort((a, b) => storyTs(a) - storyTs(b));
-    else if (_storySortMode === 'long') g.stories.sort((a, b) => storyLen(b) - storyLen(a));
-    else g.stories.sort((a, b) => storyTs(b) - storyTs(a));
-  });
-  const storyOrder = (siteConfig && Array.isArray(siteConfig.storyOrder)) ? siteConfig.storyOrder : [];
-  if (storyOrder.length) {
-    const orderIdx = new Map(storyOrder.map((id, i) => [id, i]));
-    catStories.sort((a, b) => {
-      const ia = orderIdx.has(a.cat.id) ? orderIdx.get(a.cat.id) : Number.MAX_SAFE_INTEGER;
-      const ib = orderIdx.has(b.cat.id) ? orderIdx.get(b.cat.id) : Number.MAX_SAFE_INTEGER;
-      return ia - ib;
+    arr.forEach((s) => {
+      const sid = s.id || '__legacy_' + cat.id;
+      if (storyMap.has(sid)) return;
+      const linked = (Array.isArray(s.cats) ? s.cats : []).filter((cid) => catMap.has(cid));
+      storyMap.set(sid, {
+        id: sid,
+        date: s.date || '',
+        title: s.title || '',
+        content: s.content || '',
+        images: Array.isArray(s.images) ? s.images : [],
+        cats: linked.length ? linked : [cat.id]
+      });
     });
-  } else {
-    catStories.sort((a, b) => {
-      let ka, kb;
-      if (_storySortMode === 'date_asc') { ka = Math.min(...a.stories.map(storyTs)); kb = Math.min(...b.stories.map(storyTs)); return ka - kb; }
-      if (_storySortMode === 'long') { ka = Math.max(...a.stories.map(storyLen)); kb = Math.max(...b.stories.map(storyLen)); return kb - ka; }
-      ka = Math.max(...a.stories.map(storyTs)); kb = Math.max(...b.stories.map(storyTs));
-      return kb - ka;
-    });
-  }
-  const toolbar = '<div class="story-sort-bar"><span class="story-sort-label">排序</span><div class="story-sort-opts">' + STORY_SORT_MODES.map((m) => '<button type="button" class="story-sort-btn' + (m.id === _storySortMode ? ' active' : '') + '" data-sort="' + m.id + '">' + m.label + '</button>').join('') + '</div></div>';
-  if (!catStories.length) {
-    box.innerHTML = toolbar + '<div class="events-empty">📖 还没有故事，等猫咪们的日常被记录下来～</div>';
+  });
+  const stories = Array.from(storyMap.values());
+  if (!stories.length) {
+    box.innerHTML = '<div class="events-empty">📖 还没有故事，等猫咪们的日常被记录下来～</div>';
     return;
   }
-  box.innerHTML = toolbar + catStories.map(({ cat, stories }) => {
-    const photo = thumbUrl(cat.photo);
-    const storyItems = stories.map((s, si) => {
-      const dateLabel = storyDisplayDate(s);
-      const dateHtml = dateLabel ? '<span class="story-item-date">🗓 ' + escapeHtml(dateLabel) + '</span>' : '';
-      const titleHtml = s.title ? '<div class="story-item-title">' + escapeHtml(s.title) + '</div>' : '<div class="story-item-title story-item-no-title">无标题</div>';
-      const contentHtml = s.content ? storyContentHtml(s, cat.id, si) : '';
-      const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">').join('') + '</div>' : '';
-      return '<div class="story-item">' + dateHtml + titleHtml + contentHtml + imgsHtml + '</div>';
-    }).join('');
-    return '<div class="story-group"><div class="story-group-header"><a href="./profile.html#' + cat.id + '"><img class="story-group-avatar" src="' + photo + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span class="story-group-name">' + escapeHtml(cat.name) + '</span></a></div><div class="story-group-items">' + storyItems + '</div></div>';
+  // 置顶（管理端设置，最多 3 篇）按置顶顺序固定在最前；其余自动按日期（无日期按上传时间）从新到旧
+  const pinOrder = (siteConfig && Array.isArray(siteConfig.storyPinOrder)) ? siteConfig.storyPinOrder.filter((sid) => storyMap.has(sid)) : [];
+  const pinSet = new Set(pinOrder);
+  const pinned = pinOrder.map((sid) => storyMap.get(sid));
+  const rest = stories.filter((s) => !pinSet.has(s.id)).sort((a, b) => storyTs(b) - storyTs(a) || String(a.title).localeCompare(String(b.title), 'zh'));
+  const ordered = pinned.concat(rest);
+  box.innerHTML = ordered.map((s, si) => {
+    const dateLabel = storyDisplayDate(s);
+    const pinHtml = pinSet.has(s.id) ? '<span class="story-item-pin">📌 置顶</span>' : '';
+    const dateHtml = dateLabel ? '<span class="story-item-date">🗓 ' + escapeHtml(dateLabel) + '</span>' : '';
+    const titleHtml = s.title ? '<div class="story-item-title">' + escapeHtml(s.title) + '</div>' : '<div class="story-item-title story-item-no-title">无标题</div>';
+    const catsHtml = (s.cats && s.cats.length > 1) ? '<div class="story-item-cats"><span class="story-item-cats-label">🐾 关联猫咪</span>' + s.cats.map((cid) => {
+      const cc = catMap.get(cid);
+      if (!cc) return '';
+      return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="' + escapeHtml(cc.name) + '"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
+    }).join('') + '</div>' : '';
+    const contentHtml = s.content ? storyContentHtml(s, si, 0) : '';
+    const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">').join('') + '</div>' : '';
+    return '<div class="story-item">' + pinHtml + dateHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '</div>';
   }).join('');
 }
 
