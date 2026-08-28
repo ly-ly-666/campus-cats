@@ -175,6 +175,8 @@
     .wb-console .logbox { margin-top: 0; padding: 0 12px 8px; }
     .wb-console.collapsed .logbox { display: none; }
     #cat-modal .modal-panel { max-width: 1120px; width: 100%; }
+    #story-edit-modal .modal-panel { max-width: 1120px; width: 100%; }
+    #story-edit-modal .stories-editor .story-edit-item { padding: 14px; }
     #cat-modal .modal-panel .grid3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
     #cat-modal .modal-panel .photo-preview { height: 200px; }
     #cat-modal .album-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
@@ -391,6 +393,20 @@
         <button class="btn btn-primary" id="f-save">保存</button>
         <button class="btn btn-danger" id="f-del">删除</button>
         <button class="btn" id="f-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 故事快速编辑弹窗 -->
+  <div class="modal-bg" id="story-edit-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="story-edit-close">×</button>
+      <h3>✏️ 编辑故事</h3>
+      <div id="quick-story-editor" class="stories-editor"></div>
+      <input type="file" id="f-quick-story-img" accept="image/*" multiple style="display:none;">
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="quick-story-save">保存</button>
+        <button class="btn" id="quick-story-cancel">取消</button>
       </div>
     </div>
   </div>

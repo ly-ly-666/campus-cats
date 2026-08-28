@@ -27,7 +27,10 @@ const server = http.createServer((req, res) => {
   fs.stat(filePath, (err, stat) => {
     if (err || !stat.isFile()) { res.writeHead(404); res.end('Not Found'); return; }
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    });
     fs.createReadStream(filePath).pipe(res);
   });
 });

@@ -695,6 +695,19 @@ body { display: flex; flex-direction: column; }
 .story-item { background: #fffdf9; border: 1px solid var(--border, #e8e1d6); border-radius: 10px; padding: 12px; }
 .story-item-date { display: inline-block; font-size: 11px; color: var(--muted, #8a857d); background: #f3efe6; border: 1px solid var(--border, #e8e1d6); border-radius: 999px; padding: 1px 8px; margin-bottom: 6px; }
 .story-item-pin { display: inline-block; font-size: 11px; color: #fff; background: #e11d48; border-radius: 999px; padding: 1px 9px; margin-bottom: 6px; font-weight: 600; }
+.story-filter-bar { margin-bottom: 12px; }
+.story-filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.story-filter-q { flex: 1; min-width: 180px; padding: 7px 12px; border: 1px solid var(--border, #e8e1d6); border-radius: 999px; font-size: 13px; background: #fff; }
+.story-filter-dates { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.story-filter-dates-more { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.story-filter-more { padding: 4px 12px; font-size: 12px; border-radius: 999px; border: 1px dashed var(--border, #e8e1d6); background: #fff; color: #b45309; cursor: pointer; }
+.story-filter-more:hover { background: #fdf3e3; }
+.story-filter-date-chip { padding: 4px 12px; font-size: 12px; border-radius: 999px; border: 1px solid var(--border, #e8e1d6); background: #fff; color: #6b645a; cursor: pointer; transition: all .15s; }
+.story-filter-date-chip:hover { background: #f3efe6; }
+.story-filter-date-chip.active { background: #b45309; border-color: #b45309; color: #fff; font-weight: 600; }
+.story-filter-long { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text, #3a3226); padding: 6px 12px; border: 1px solid var(--border, #e8e1d6); border-radius: 999px; background: #fff; cursor: pointer; user-select: none; }
+.story-filter-long input { accent-color: #b45309; }
+.story-filter-count { font-size: 12px; color: var(--muted, #8a857d); margin-top: 6px; }
 .story-sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .story-sort-label { font-size: 12px; color: var(--muted, #8a857d); }
 .story-sort-opts { display: flex; gap: 6px; flex-wrap: wrap; }

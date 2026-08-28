@@ -632,6 +632,10 @@ export function initLightbox() {
  */
 // 故事内容超过该长度时折叠展示，点击「展开全文」查看全部
 const STORY_TRUNCATE = 280;
+// 「长文」判定：正文达到该字数即算长文（供「只看长文」筛选）
+const LONG_STORY_CHARS = 300;
+// 故事集筛选状态（跨标签页切换保留）
+let _storyFilter = { q: '', date: '', long: false };
 
 // 故事排序时间：优先用 date 字段（YYYY-MM[-DD]），否则回退到 id 里的时间戳
 function storyTs(s) {
@@ -717,21 +721,107 @@ export function renderStoriesTimeline(cats, siteConfig) {
     box.innerHTML = '<div class="events-empty">📖 还没有故事，等猫咪们的日常被记录下来～</div>';
     return;
   }
-  // 置顶（管理端设置，最多 3 篇）按置顶顺序固定在最前；其余自动按日期（无日期按上传时间）从新到旧
-  const pinOrder = (siteConfig && Array.isArray(siteConfig.storyPinOrder)) ? siteConfig.storyPinOrder.filter((sid) => storyMap.has(sid)) : [];
+  // 日期快捷筛选：统计实际出现的日期（含"无日期"），生成点击即选的 chip
+  const dateCounts = new Map();
+  stories.forEach((s) => { const k = s.date || '__none'; dateCounts.set(k, (dateCounts.get(k) || 0) + 1); });
+  const dateKeys = Array.from(dateCounts.keys()).sort((a, b) => { if (a === '__none') return 1; if (b === '__none') return -1; return String(b).localeCompare(String(a)); });
+  // 筛选栏（只搭一次；筛选状态在重渲染/切标签时保留）
+  const MAX_VISIBLE_DATES = 3;
+  const dateOnlyKeys = dateKeys.filter((k) => k !== '__none');
+  const visibleDateKeys = dateOnlyKeys.slice(0, MAX_VISIBLE_DATES);
+  const moreDateKeys = dateOnlyKeys.slice(MAX_VISIBLE_DATES);
+  const hasNone = dateCounts.has('__none');
+  const chipHtml = (k) => '<button type="button" class="story-filter-date-chip' + (_storyFilter.date === k ? ' active' : '') + '" data-date="' + k + '">' + (k === '__none' ? '无日期' : k) + ' · ' + dateCounts.get(k) + '</button>';
+  if (!box.__storyFilterBound) {
+    const chips = ['<button type="button" class="story-filter-date-chip' + (_storyFilter.date === '' ? ' active' : '') + '" data-date="">全部</button>'];
+    visibleDateKeys.forEach((k) => chips.push(chipHtml(k)));
+    if (hasNone) chips.push(chipHtml('__none'));
+    const moreChips = moreDateKeys.length ? moreDateKeys.map(chipHtml).join('') : '';
+    box.innerHTML =
+      '<div class="story-filter-bar">' +
+        '<div class="story-filter-row">' +
+          '<input type="search" class="story-filter-q" placeholder="🔍 搜索标题 / 正文…" autocomplete="off">' +
+          '<label class="story-filter-long"><input type="checkbox" class="story-filter-long-cb"> 📏 只看长文</label>' +
+        '</div>' +
+        '<div class="story-filter-dates">' + chips.join('') +
+          (moreDateKeys.length ? '<button type="button" class="story-filter-more">更多日期 ▾</button>' : '') +
+        '</div>' +
+        (moreDateKeys.length ? '<div class="story-filter-dates-more" hidden>' + moreChips + '</div>' : '') +
+        '<div class="story-filter-count"></div>' +
+      '</div>' +
+      '<div class="story-filter-results"></div>';
+    const qEl = box.querySelector('.story-filter-q');
+    const longCb = box.querySelector('.story-filter-long-cb');
+    const rerender = () => {
+      _storyFilter.q = qEl.value.trim();
+      _storyFilter.long = longCb.checked;
+      renderStoriesTimeline(list, siteConfig);
+    };
+    qEl.addEventListener('input', rerender);
+    longCb.addEventListener('change', rerender);
+    box.querySelectorAll('.story-filter-date-chip').forEach((btn) => {
+      btn.addEventListener('click', () => { _storyFilter.date = btn.dataset.date; renderStoriesTimeline(list, siteConfig); });
+    });
+    const moreBtn = box.querySelector('.story-filter-more');
+    const moreEl = box.querySelector('.story-filter-dates-more');
+    if (moreBtn && moreEl) {
+      box.__storyMoreBtn = moreBtn;
+      box.__storyMoreEl = moreEl;
+      box.__storyMoreKeys = moreDateKeys;
+      const setMore = (open) => {
+        _storyFilter.datesOpen = open;
+        moreEl.hidden = !open;
+        moreBtn.textContent = open ? '收起日期 ▴' : '更多日期 ▾ (' + moreDateKeys.length + ')';
+      };
+      moreBtn.addEventListener('click', () => setMore(moreEl.hidden));
+      setMore(_storyFilter.datesOpen || moreDateKeys.includes(_storyFilter.date));
+    }
+    box.__storyFilterBound = true;
+  } else {
+    const qEl = box.querySelector('.story-filter-q'); if (qEl) qEl.value = _storyFilter.q;
+    const longCb = box.querySelector('.story-filter-long-cb'); if (longCb) longCb.checked = _storyFilter.long;
+    box.querySelectorAll('.story-filter-date-chip').forEach((btn) => { btn.classList.toggle('active', btn.dataset.date === _storyFilter.date); });
+    const moreBtn = box.__storyMoreBtn;
+    const moreEl = box.__storyMoreEl;
+    if (moreBtn && moreEl) {
+      const open = _storyFilter.datesOpen || (box.__storyMoreKeys && box.__storyMoreKeys.includes(_storyFilter.date));
+      moreEl.hidden = !open;
+      moreBtn.textContent = open ? '收起日期 ▴' : '更多日期 ▾ (' + box.__storyMoreKeys.length + ')';
+    }
+  }
+  // 应用筛选：关键词 / 日期 / 只看长文
+  const q = _storyFilter.q.toLowerCase();
+  const dateF = _storyFilter.date;
+  const longOnly = _storyFilter.long;
+  const visible = stories.filter((s) => {
+    if (dateF === '__none' && s.date) return false;
+    if (dateF && dateF !== '__none' && s.date !== dateF) return false;
+    if (longOnly && String(s.content).length < LONG_STORY_CHARS) return false;
+    if (q && !((s.title + ' ' + s.content).toLowerCase().includes(q))) return false;
+    return true;
+  });
+  // 置顶（最多 3 篇，仅在筛选结果内）按置顶顺序固定最前；其余按日期（无日期按上传时间）从新到旧
+  const pinOrder = (siteConfig && Array.isArray(siteConfig.storyPinOrder)) ? siteConfig.storyPinOrder.filter((sid) => storyMap.has(sid) && visible.some((x) => x.id === sid)) : [];
   const pinSet = new Set(pinOrder);
   const pinned = pinOrder.map((sid) => storyMap.get(sid));
-  const rest = stories.filter((s) => !pinSet.has(s.id)).sort((a, b) => storyTs(b) - storyTs(a) || String(a.title).localeCompare(String(b.title), 'zh'));
+  const rest = visible.filter((s) => !pinSet.has(s.id)).sort((a, b) => storyTs(b) - storyTs(a) || String(a.title).localeCompare(String(b.title), 'zh'));
   const ordered = pinned.concat(rest);
-  box.innerHTML = ordered.map((s, si) => {
+  const resultsBox = box.querySelector('.story-filter-results');
+  const countBox = box.querySelector('.story-filter-count');
+  if (countBox) countBox.textContent = '共 ' + visible.length + ' 篇' + (visible.length !== stories.length ? '（全部 ' + stories.length + ' 篇）' : '');
+  if (!ordered.length) {
+    resultsBox.innerHTML = '<div class="events-empty">😿 没有符合条件的猫咪故事，试试清空筛选条件～</div>';
+    return;
+  }
+  resultsBox.innerHTML = ordered.map((s, si) => {
     const dateLabel = storyDisplayDate(s);
     const pinHtml = pinSet.has(s.id) ? '<span class="story-item-pin">📌 置顶</span>' : '';
     const dateHtml = dateLabel ? '<span class="story-item-date">🗓 ' + escapeHtml(dateLabel) + '</span>' : '';
     const titleHtml = s.title ? '<div class="story-item-title">' + escapeHtml(s.title) + '</div>' : '<div class="story-item-title story-item-no-title">无标题</div>';
-    const catsHtml = (s.cats && s.cats.length > 1) ? '<div class="story-item-cats"><span class="story-item-cats-label">🐾 关联猫咪</span>' + s.cats.map((cid) => {
+    const catsHtml = (s.cats && s.cats.length) ? '<div class="story-item-cats"><span class="story-item-cats-label">' + (s.cats.length > 1 ? '🐾 关联猫咪' : '🐱 猫咪') + '</span>' + s.cats.map((cid) => {
       const cc = catMap.get(cid);
       if (!cc) return '';
-      return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="' + escapeHtml(cc.name) + '"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
+      return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="点击查看「' + escapeHtml(cc.name) + '」档案"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
     }).join('') + '</div>' : '';
     const contentHtml = s.content ? storyContentHtml(s, si, 0) : '';
     const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">').join('') + '</div>' : '';

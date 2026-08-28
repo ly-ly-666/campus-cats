@@ -403,6 +403,7 @@
     box.innerHTML = '<div class="so-legend">' + (pin.length ? '已置顶 <b style="color:#e11d48;">' + pin.length + '/3</b> 篇，固定显示在最前；其余故事自动按日期（无日期按上传时间）从新到旧排列。' : '点击故事右侧「📌 置顶」把它固定到最前（最多 3 篇）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。') + '</div>' + ordered.map(function (s) {
       var pIdx = pin.indexOf(s.id);
       var pinned = pIdx >= 0;
+      var isLegacy = String(s.id).indexOf('__legacy_') === 0;
       var dateTxt = s.date ? '<span class="so-story-date">🗓 ' + esc(String(s.date)) + '</span>' : '';
       var titleTxt = (s.title && String(s.title).trim()) ? esc(s.title) : '<span class="so-story-null">（无标题）</span>';
       var linked = (s.cats || []).filter(function (cid) { return catMap[cid]; });
@@ -413,15 +414,18 @@
       var pinMove = pinned
         ? '<span style="display:flex;gap:4px;">' + (pIdx > 0 ? '<button type="button" class="btn btn-sm so-pin-up" data-id="' + esc(s.id) + '" title="置顶顺序上移">▲</button>' : '') + (pIdx < pin.length - 1 ? '<button type="button" class="btn btn-sm so-pin-down" data-id="' + esc(s.id) + '" title="置顶顺序下移">▼</button>' : '') + '</span>'
         : '';
+      var editBtn = isLegacy ? '' : '<button type="button" class="btn btn-sm so-edit" data-id="' + esc(s.id) + '" title="快速编辑这篇故事">✏️</button>';
       return '<div class="so-item' + (pinned ? ' pinned' : '') + '"><div class="so-head">'
         + '<span style="font-weight:700;color:#b45309;min-width:26px;">' + (pinned ? '📌' : '#' + numMap[s.id]) + '</span>'
-        + dateTxt + '<span class="so-story-title" style="flex:1;">' + titleTxt + '</span>'
-        + catsTxt + pinMove + pinBtn
+        + dateTxt + '<span class="so-story-title' + (isLegacy ? '' : ' editable') + '" style="flex:1;"' + (isLegacy ? '' : ' data-id="' + esc(s.id) + '" title="点击快速编辑"') + '>' + titleTxt + '</span>'
+        + catsTxt + pinMove + editBtn + pinBtn
         + '</div></div>';
     }).join('');
     box.querySelectorAll('.so-pin').forEach(function (b) { b.addEventListener('click', function () { pinStory(b.dataset.id); }); });
     box.querySelectorAll('.so-pin-up').forEach(function (b) { b.addEventListener('click', function () { movePin(pin.indexOf(b.dataset.id), pin.indexOf(b.dataset.id) - 1); }); });
     box.querySelectorAll('.so-pin-down').forEach(function (b) { b.addEventListener('click', function () { movePin(pin.indexOf(b.dataset.id), pin.indexOf(b.dataset.id) + 1); }); });
+    box.querySelectorAll('.so-edit').forEach(function (b) { b.addEventListener('click', function () { openQuickStoryEdit(b.dataset.id); }); });
+    box.querySelectorAll('.so-story-title.editable').forEach(function (b) { b.addEventListener('click', function () { openQuickStoryEdit(b.dataset.id); }); });
   }
 
 
@@ -972,6 +976,164 @@
     refreshStories(); $('f-story-img').value = '';
   }
 
+  // ---------- 故事快速编辑（故事集页点开） ----------
+  var _quickStory = null;      // {id,date,title,content,cats,images,[_search]}
+  var _quickStoryHost = -1;    // 宿主猫下标（其版本作为权威）
+  function openQuickStoryEdit(storyId) {
+    if (!Array.isArray(cats)) return;
+    var host = -1, hostStory = null;
+    for (var i = 0; i < cats.length && host < 0; i++) {
+      var arr = Array.isArray(cats[i].stories) ? cats[i].stories : [];
+      for (var j = 0; j < arr.length; j++) {
+        if (arr[j] && arr[j].id === storyId) { host = i; hostStory = arr[j]; break; }
+      }
+    }
+    if (host < 0 || !hostStory) { log('❌ 找不到该故事的数据', 'err'); return; }
+    _quickStoryHost = host;
+    _quickStory = {
+      id: storyId,
+      date: hostStory.date || '',
+      title: hostStory.title || '',
+      content: hostStory.content || '',
+      cats: (Array.isArray(hostStory.cats) && hostStory.cats.length) ? hostStory.cats.slice() : [cats[host].id],
+      images: (hostStory.images || []).map(function (p) { return { path: p }; }),
+      _search: ''
+    };
+    renderQuickStoryEditor();
+    openModal('story-edit-modal');
+  }
+  function quickStoryResultsBox() {
+    var box = $('quick-story-editor');
+    return box ? box.querySelector('.story-cat-results') : null;
+  }
+  function toggleQuickStoryCat(cid) {
+    var arr = _quickStory.cats || [];
+    var k = arr.indexOf(cid);
+    if (k >= 0) arr.splice(k, 1); else arr.push(cid);
+    if (!arr.length && _quickStoryHost >= 0 && cats[_quickStoryHost]) arr.push(cats[_quickStoryHost].id);
+    renderQuickStoryEditor();
+    if (_quickStory && _quickStory._search) renderQuickStoryCatResults();
+  }
+  function renderQuickStoryCatResults() {
+    var box = quickStoryResultsBox();
+    if (!box) return;
+    var q = String(_quickStory._search || '').trim().toLowerCase();
+    if (!q) { box.innerHTML = ''; return; }
+    var arr = _quickStory.cats || [];
+    var matches = (cats || []).filter(function (cc) {
+      return (cc.name || '').toLowerCase().indexOf(q) >= 0 || (cc.nickname || '').toLowerCase().indexOf(q) >= 0 || (cc.id || '').toLowerCase().indexOf(q) >= 0;
+    });
+    if (!matches.length) { box.innerHTML = '<div class="hint" style="margin:4px 0;">没有找到匹配的猫</div>'; return; }
+    box.innerHTML = matches.slice(0, 8).map(function (cc) {
+      var on = arr.indexOf(cc.id) >= 0;
+      return '<button type="button" class="story-cat-result' + (on ? ' on' : '') + '" data-cat="' + esc(cc.id) + '" title="' + (on ? '取消关联' : '关联') + '「' + esc(cc.name) + '」">' + (on ? '✓ ' : '＋ ') + esc(cc.name) + (cc.nickname ? '（' + esc(cc.nickname) + '）' : '') + '</button>';
+    }).join('');
+    box.querySelectorAll('.story-cat-result').forEach(function (b) {
+      b.addEventListener('click', function () { toggleQuickStoryCat(b.dataset.cat); });
+    });
+  }
+  function renderQuickStoryEditor() {
+    var box = $('quick-story-editor');
+    if (!box || !_quickStory) return;
+    var s = _quickStory;
+    var imgs = (s.images || []).map(function (im, j) {
+      var src = im.path || im.dataUrl || '';
+      return '<div class="thumb-wrap"><img class="thumb" src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'"><button class="del" data-qimg="' + j + '">×</button></div>';
+    }).join('');
+    var selChips = (s.cats || []).map(function (cid) {
+      var cc = catById(cid);
+      if (!cc) return '';
+      return '<span class="story-cat-chip on" data-cat="' + esc(cid) + '" title="点击取消关联「' + esc(cc.name) + '」">' + esc(cc.name) + ' <b class="chip-x">×</b></span>';
+    }).join('');
+    box.innerHTML = '<div class="story-edit-item"><div class="story-body">' +
+      '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="story-date qs" value="' + esc(s.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="2">前天</button><button type="button" class="btn btn-sm btn-story-quick-clear">清空</button></div></div>' +
+      '<input type="text" class="story-title" placeholder="📝 故事标题" value="' + esc(s.title) + '">' +
+      '<textarea class="story-content" rows="10" placeholder="在这里写故事内容，像写 Word 文档一样，自然段落换行即可…">' + esc(s.content) + '</textarea>' +
+      '<div class="field" style="margin-top:4px;"><label>关联猫咪（一个故事可关联多只，搜索后点击结果添加/取消）</label>' +
+        '<div class="story-cat-selected">' + selChips + '</div>' +
+        '<div class="story-cat-search-row"><input type="text" class="story-cat-search" placeholder="🔍 输入猫名 / 外号搜索…" value="' + esc(s._search || '') + '" autocomplete="off"></div>' +
+        '<div class="story-cat-results"></div>' +
+      '</div>' +
+      '<div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" id="qs-add-img">🖼️ 加截图</button><button type="button" class="btn btn-sm" id="qs-paste-img" style="margin-left:4px">📋 粘贴截图</button></div>' +
+      '<div class="story-imgs">' + imgs + '</div>' +
+    '</div></div>';
+    var dateIp = box.querySelector('.story-date.qs');
+    if (dateIp) dateIp.addEventListener('input', function () { _quickStory.date = dateIp.value; });
+    box.querySelectorAll('.btn-story-quick').forEach(function (b) { b.addEventListener('click', function () { _quickStory.date = daysAgoDate(Number(b.dataset.off)); renderQuickStoryEditor(); }); });
+    var clearBtn = box.querySelector('.btn-story-quick-clear');
+    if (clearBtn) clearBtn.addEventListener('click', function () { _quickStory.date = ''; renderQuickStoryEditor(); });
+    var titleIp = box.querySelector('.story-title');
+    if (titleIp) titleIp.addEventListener('input', function () { _quickStory.title = titleIp.value; });
+    var contentTa = box.querySelector('.story-content');
+    if (contentTa) contentTa.addEventListener('input', function () { _quickStory.content = contentTa.value; });
+    box.querySelectorAll('.story-cat-chip').forEach(function (b) { b.addEventListener('click', function () { toggleQuickStoryCat(b.dataset.cat); }); });
+    var searchIp = box.querySelector('.story-cat-search');
+    if (searchIp) searchIp.addEventListener('input', function () { _quickStory._search = searchIp.value; renderQuickStoryCatResults(); });
+    var addBtn = box.querySelector('#qs-add-img');
+    if (addBtn) addBtn.addEventListener('click', function () { $('f-quick-story-img').click(); });
+    var pasteBtn = box.querySelector('#qs-paste-img');
+    if (pasteBtn) pasteBtn.addEventListener('click', function () { setPasteMode(4); });
+    box.querySelectorAll('.del[data-qimg]').forEach(function (b) { b.addEventListener('click', function () { _quickStory.images.splice(Number(b.dataset.qimg), 1); renderQuickStoryEditor(); }); });
+    if (s._search) renderQuickStoryCatResults();
+  }
+  async function onQuickStoryImgChange() {
+    var files = $('f-quick-story-img').files;
+    if (!files || !files.length || !_quickStory) return;
+    if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); $('f-quick-story-img').value = ''; return; }
+    var hostId = (_quickStoryHost >= 0 && cats[_quickStoryHost]) ? cats[_quickStoryHost].id : 'cat';
+    for (var i = 0; i < files.length; i++) {
+      var dataUrl = await readFileAsDataURL(files[i]);
+      var compressed = await compressImage(dataUrl, 1600, 0.85);
+      var name = hostId + '_story_' + Date.now() + '_' + i + '.jpg';
+      var path = IMAGES_DIR + '/' + name;
+      await writeImageFileWithThumb(path, compressed);
+      _quickStory.images.push({ path: path });
+      log('✅ 已保存故事截图：' + path, 'ok');
+    }
+    renderQuickStoryEditor();
+    $('f-quick-story-img').value = '';
+  }
+  async function saveQuickStory() {
+    if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+    if (!_quickStory || _quickStoryHost < 0) return;
+    var host = cats[_quickStoryHost];
+    var finalImgs = [];
+    for (var i = 0; i < (_quickStory.images || []).length; i++) {
+      var im = _quickStory.images[i];
+      if (im.dataUrl && im.dataUrl.indexOf('data:') === 0) {
+        var ext = (im.dataUrl.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png';
+        var p = IMAGES_DIR + '/' + host.id + '_story_' + Date.now() + '_' + i + '.' + ext;
+        await writeImageFileWithThumb(p, im.dataUrl);
+        finalImgs.push(p);
+        log('✅ 已保存故事截图：' + p, 'ok');
+      } else {
+        finalImgs.push(im.path || im.dataUrl || '');
+      }
+    }
+    finalImgs = finalImgs.filter(Boolean);
+    var draft = {
+      id: _quickStory.id,
+      date: _quickStory.date || '',
+      title: _quickStory.title || '',
+      content: _quickStory.content || '',
+      cats: (_quickStory.cats || []).filter(Boolean),
+      images: finalImgs
+    };
+    if (!Array.isArray(host.stories)) host.stories = [];
+    var found = false;
+    for (var j = 0; j < host.stories.length; j++) {
+      if (host.stories[j] && host.stories[j].id === draft.id) { host.stories[j] = draft; found = true; break; }
+    }
+    if (!found) host.stories.push(draft);
+    syncStoryLinks(_quickStoryHost);
+    await saveAll();
+    closeModal('story-edit-modal');
+    _quickStory = null; _quickStoryHost = -1;
+    setPasteMode(0);
+    renderStoryOrder();
+    log('✏️ 故事已保存', 'ok');
+  }
+
   function getEvents() {
     return _pendingEvents.map(function (ev) {
       return {
@@ -1111,12 +1273,21 @@
         log('📋 已粘贴截图到事件：' + path, 'ok');
       } else if (pasteTarget === 4) {
         if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
-        var sv = _pendingStories[_storyImgTarget]; if (!sv) { log('❌ 请先添加一个故事', 'err'); setPasteMode(0); return; }
-        if (!sv.images) sv.images = [];
         var compressed = await compressImage(dataUrl, 1600, 0.85);
-        var name = cats[editIdx].id + '_story_' + Date.now() + '.jpg'; var path = IMAGES_DIR + '/' + name;
-        await writeImageFileWithThumb(path, compressed); sv.images.push({ path: path }); refreshStories();
-        log('📋 已粘贴截图到故事：' + path, 'ok');
+        if (_quickStory) {
+          // 快速编辑弹窗打开时，粘贴进当前快速编辑的故事
+          if (!_quickStory.images) _quickStory.images = [];
+          var qhost = (_quickStoryHost >= 0 && cats[_quickStoryHost]) ? cats[_quickStoryHost].id : 'cat';
+          var qname = qhost + '_story_' + Date.now() + '.jpg'; var qpath = IMAGES_DIR + '/' + qname;
+          await writeImageFileWithThumb(qpath, compressed); _quickStory.images.push({ path: qpath }); renderQuickStoryEditor();
+          log('📋 已粘贴截图到故事：' + qpath, 'ok');
+        } else {
+          var sv = _pendingStories[_storyImgTarget]; if (!sv) { log('❌ 请先添加一个故事', 'err'); setPasteMode(0); return; }
+          if (!sv.images) sv.images = [];
+          var name = cats[editIdx].id + '_story_' + Date.now() + '.jpg'; var path = IMAGES_DIR + '/' + name;
+          await writeImageFileWithThumb(path, compressed); sv.images.push({ path: path }); refreshStories();
+          log('📋 已粘贴截图到故事：' + path, 'ok');
+        }
       }
       setPasteMode(0);
     };
@@ -1670,6 +1841,14 @@
     });
     $('f-event-img').addEventListener('change', onEventImgChange);
 
+    // 故事快速编辑弹窗
+    $('f-quick-story-img').addEventListener('change', onQuickStoryImgChange);
+    $('quick-story-save').addEventListener('click', saveQuickStory);
+    function closeQuickStory() { closeModal('story-edit-modal'); _quickStory = null; _quickStoryHost = -1; setPasteMode(0); }
+    $('quick-story-cancel').addEventListener('click', closeQuickStory);
+    $('story-edit-close').addEventListener('click', closeQuickStory);
+    $('story-edit-modal').addEventListener('click', function (e) { if (e.target === $('story-edit-modal')) closeQuickStory(); });
+
     // 粘贴截图按钮：循环 0→头像→相册→0
     $('btn-paste').addEventListener('click', function () {
       if (!$('cat-modal').classList.contains('open')) {
@@ -1684,7 +1863,8 @@
     // 全局监听 Ctrl+V
     document.addEventListener('paste', function (e) {
       if (pasteTarget === 0) return;
-      if (!$('cat-modal').classList.contains('open')) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); return; }
+      var qsOpen = $('story-edit-modal') && $('story-edit-modal').classList.contains('open');
+      if (!$('cat-modal').classList.contains('open') && !qsOpen) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); return; }
       var items = (e.clipboardData || window.clipboardData).items || [];
       for (var i = 0; i < items.length; i++) {
         if (items[i].kind === 'file' && items[i].type.indexOf('image') === 0) {
