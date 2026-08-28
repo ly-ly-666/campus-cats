@@ -93,7 +93,10 @@
     "lat": 21.678848,
     "lng": 110.923274,
     "photo": "images/cat004.jpg",
-    "album": [],
+    "album": [
+      "images/cat004_album_1787929412233.jpg",
+      "images/cat004_album_1787929445526.jpg"
+    ],
     "description": "封面为年年大战蜜蜂三天三夜的情况展示",
     "story": "",
     "tags": [],
@@ -108,7 +111,7 @@
   {
     "id": "cat005",
     "name": "卷卷",
-    "nickname": "",
+    "nickname": "娟娟",
     "gender": "female",
     "color": "三花",
     "area": "中专楼/图书馆",
@@ -151,7 +154,7 @@
   {
     "id": "cat006",
     "name": "十一",
-    "nickname": "",
+    "nickname": "小老鼠",
     "gender": "female",
     "color": "",
     "area": "图书馆正门",
@@ -269,7 +272,7 @@
   {
     "id": "cat011",
     "name": "红尾",
-    "nickname": "",
+    "nickname": "红尾老太",
     "gender": "female",
     "color": "",
     "area": "五区水电站附近",
@@ -285,7 +288,8 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": ""
+    "age": "",
+    "events": []
   },
   {
     "id": "cat012",
@@ -400,8 +404,8 @@
     "gender": "female",
     "color": "橘色混白色",
     "area": "西门",
-    "lat": 21.677067,
-    "lng": 110.921149,
+    "lat": 21.677138,
+    "lng": 110.921627,
     "photo": "images/cat017.jpg",
     "album": [],
     "description": "投喂时喊她名字，会大声回应你。眼睛很好看，但她是一朵带刺的玫瑰，怕人，不要轻易靠近和触摸，极大概率会被打。",
@@ -425,7 +429,9 @@
     "lat": 21.679021,
     "lng": 110.921772,
     "photo": "images/cat018.jpg",
-    "album": [],
+    "album": [
+      "images/cat018_album_1787928999050.jpg"
+    ],
     "description": "怕人,口炎一直不好,一般晚上出现",
     "story": "",
     "tags": [],
@@ -435,7 +441,18 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787929245788_387lj5",
+        "title": "瘦嘟嘟罕见蹭人",
+        "content": "2026年8月28日\n瘦嘟嘟罕见蹭人,应该是很饿,加上暑假喂粮喂熟悉了",
+        "images": [
+          "images/cat018_story_1787929262362.jpg",
+          "images/cat018_story_1787929368095.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat019",
@@ -462,6 +479,16 @@
         "date": "2026-08-26",
         "text": "哈哈确诊杯状病毒阳性",
         "images": []
+      }
+    ],
+    "stories": [
+      {
+        "id": "s_1787929035230_xhszhq",
+        "title": "幼儿园集体吃宵夜",
+        "content": "2026年8月28日\n哈哈老父亲带领开吃\n从左往右依次是哈哈,星星,小闯,包包",
+        "images": [
+          "images/cat019_story_1787929047552.jpg"
+        ]
       }
     ]
   },
@@ -1087,7 +1114,8 @@
     "lng": 110.92179,
     "photo": "images/cat047.jpg",
     "album": [
-      "images/cat047_album_1787828494085.jpg"
+      "images/cat047_album_1787828494085.jpg",
+      "images/cat047_album_1787929470885.jpg"
     ],
     "description": "之前在一区宿舍常驻,喜欢板鸭趴,曾经由于蹲在楼道,被学生上课一直摸而不耐烦,曾几度跑进宿舍,在蚊帐上享皇帝般的待遇.然后抓了只老师带回宿舍报答,同学们为其尖叫呐喊",
     "story": "",
@@ -1170,7 +1198,7 @@
     "id": "cat051",
     "name": "兜兜",
     "nickname": "",
-    "gender": "unknown",
+    "gender": "female",
     "color": "",
     "area": "图书馆正门",
     "lat": 21.678425,
@@ -1194,7 +1222,7 @@
     "id": "cat052",
     "name": "大脚",
     "nickname": "",
-    "gender": "unknown",
+    "gender": "male",
     "color": "",
     "area": "图书馆正门",
     "lat": 21.678415,
@@ -1218,7 +1246,7 @@
     "id": "cat053",
     "name": "小美",
     "nickname": "",
-    "gender": "unknown",
+    "gender": "female",
     "color": "",
     "area": "五区",
     "lat": 21.678791,
@@ -1228,7 +1256,7 @@
     "description": "",
     "story": "",
     "tags": [],
-    "status": "未知",
+    "status": "已绝育",
     "life": "失踪",
     "firstSeen": "",
     "leftAt": "",
@@ -1265,7 +1293,7 @@
     "id": "cat055",
     "name": "小七",
     "nickname": "",
-    "gender": "unknown",
+    "gender": "",
     "color": "",
     "area": "",
     "lat": 21.679013,
@@ -1278,7 +1306,7 @@
     "story": "",
     "tags": [],
     "status": "未知",
-    "life": "失踪已久",
+    "life": "已领养",
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
