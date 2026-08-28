@@ -626,10 +626,10 @@
     $('modal-title').textContent = c ? '编辑猫咪' : '添加猫咪';
     $('f-name').value = c ? (c.name || '') : '';
     $('f-nickname').value = c ? (c.nickname || '') : '';
-    $('f-gender').value = c ? (c.gender || '') : '';
+    $('f-gender').value = c ? (c.gender || '') : 'unknown';
     $('f-color').value = c ? (c.color || '') : '';
     $('f-area').value = c ? (c.area || '') : '';
-    $('f-status').value = c ? (c.status || '') : '';
+    $('f-status').value = c ? (c.status || '') : '未知';
     $('f-life').value = c ? (c.life || '在校') : '在校';
     $('f-lat').value = c ? c.lat : '';
     $('f-lng').value = c ? c.lng : '';
@@ -664,6 +664,7 @@
     var banner = $('cat-status-banner');
     if (banner) { banner.innerHTML = statusBanner; banner.style.display = statusBanner ? '' : 'none'; }
     openModal('cat-modal');
+    validateCatForm();
   }
 
   function renderAlbum(album) {
@@ -755,27 +756,106 @@
 
   // ---------- 多篇故事 ----------
   function renderStories(stories) {
+    var hostId = (editIdx >= 0 && cats[editIdx]) ? cats[editIdx].id : '';
     _pendingStories = (stories || []).map(function (s) {
-      return { id: s.id || ('s_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)), title: s.title || '', content: s.content || '', images: (s.images || []).map(function (img) { return { path: img }; }) };
+      return {
+        id: s.id || ('s_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
+        date: s.date || '',
+        title: s.title || '',
+        content: s.content || '',
+        images: (s.images || []).map(function (img) { return { path: img }; }),
+        cats: (Array.isArray(s.cats) && s.cats.length) ? s.cats.slice() : (hostId ? [hostId] : [])
+      };
     });
     refreshStories();
   }
-  // 从故事 id 提取时间戳（s_<ts>_xxx），用于按时间排序
+  // 故事排序时间：优先用 date 字段（YYYY-MM[-DD]），否则回退到 id 里的时间戳
   function storyTs(s) {
+    var d = String((s && s.date) || '').replace(/-/g, '');
+    if (/^\d{6,8}$/.test(d)) return Number(d + '000000'.slice(0, 8 - d.length));
     var m = String((s && s.id) || '').match(/_?(\d{10,13})/);
     return m ? Number(m[1]) : 0;
+  }
+  function daysAgoDate(n) {
+    var d = new Date(); d.setDate(d.getDate() - n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  // ---------- 关联猫咪：搜索栏 ----------
+  function catById(id) {
+    for (var i = 0; i < cats.length; i++) if (cats[i].id === id) return cats[i];
+    return null;
+  }
+  function storiesResultsBox(si) {
+    var box = $('stories-editor');
+    return box ? box.querySelector('.story-cat-results[data-si="' + si + '"]') : null;
+  }
+  function toggleStoryCat(siRaw, cid) {
+    var si = Number(siRaw);
+    var arr = _pendingStories[si].cats || [];
+    var k = arr.indexOf(cid);
+    if (k >= 0) arr.splice(k, 1); else arr.push(cid);
+    if (!arr.length && editIdx >= 0 && cats[editIdx]) arr.push(cats[editIdx].id);
+    refreshStories();
+    if (_pendingStories[si] && _pendingStories[si]._search) renderStoryCatResults(si);
+  }
+  function renderStoryCatResults(si) {
+    var box = storiesResultsBox(si);
+    if (!box) return;
+    var s = _pendingStories[si];
+    var q = String((s && s._search) || '').trim().toLowerCase();
+    if (!q) { box.innerHTML = ''; return; }
+    var arr = (s && s.cats) || [];
+    var matches = (cats || []).filter(function (cc) {
+      return (cc.name || '').toLowerCase().indexOf(q) >= 0 || (cc.nickname || '').toLowerCase().indexOf(q) >= 0 || (cc.id || '').toLowerCase().indexOf(q) >= 0;
+    });
+    if (!matches.length) { box.innerHTML = '<div class="hint" style="margin:4px 0;">没有找到匹配的猫</div>'; return; }
+    box.innerHTML = matches.slice(0, 8).map(function (cc) {
+      var on = arr.indexOf(cc.id) >= 0;
+      return '<button type="button" class="story-cat-result' + (on ? ' on' : '') + '" data-si="' + si + '" data-cat="' + esc(cc.id) + '" title="' + (on ? '取消关联' : '关联') + '「' + esc(cc.name) + '」">' + (on ? '✓ ' : '＋ ') + esc(cc.name) + (cc.nickname ? '（' + esc(cc.nickname) + '）' : '') + '</button>';
+    }).join('');
+    box.querySelectorAll('.story-cat-result').forEach(function (b) {
+      b.addEventListener('click', function () { toggleStoryCat(b.dataset.si, b.dataset.cat); });
+    });
   }
   function refreshStories() {
     var box = $('stories-editor');
     if (!box) return;
     if (!_pendingStories.length) { box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有多篇故事，点下方「添加故事」来创建。</p>'; return; }
-    box.innerHTML = '<div class="story-sort-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" class="btn btn-sm" id="btn-story-sort" title="按故事时间先后自动排序（早的在前）">⏰ 按时间排序</button><span class="hint" style="margin:0;">▲▼ 也可手动拖动顺序</span></div>' + _pendingStories.map(function (s, i) {
+    box.innerHTML = '<div class="story-sort-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" class="btn btn-sm" id="btn-story-sort" title="按故事日期先后自动排序（早的在前）">⏰ 按时间排序</button><span class="hint" style="margin:0;">▲▼ 也可手动拖动顺序</span></div>' + _pendingStories.map(function (s, i) {
       var imgs = (s.images || []).map(function (im, j) {
         var src = im.path || im.dataUrl || '';
         return '<div class="thumb-wrap"><img class="thumb" src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'"><button class="del" data-si="' + i + '" data-img="' + j + '">×</button></div>';
       }).join('');
-      return '<div class="story-edit-item" data-story-idx="' + i + '"><div class="story-header"><span class="story-num">#' + (i + 1) + '</span><div class="story-move-btns">' + (i > 0 ? '<button type="button" class="btn-story-up" data-si="' + i + '" title="上移">▲</button>' : '') + (i < _pendingStories.length - 1 ? '<button type="button" class="btn-story-down" data-si="' + i + '" title="下移">▼</button>' : '') + '</div><button type="button" class="btn btn-sm btn-danger btn-del-story" data-si="' + i + '">删除</button></div><div class="field" style="margin-top:4px;"><label>标题（选填）</label><input type="text" class="story-title" data-si="' + i + '" placeholder="故事标题" value="' + esc(s.title) + '"></div><div class="field" style="margin-top:4px;"><label>内容</label><textarea class="story-content" data-si="' + i + '" rows="3" placeholder="故事内容（纯文本）">' + esc(s.content) + '</textarea></div><div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" data-story-img="' + i + '">🖼️ 加截图</button><button type="button" class="btn btn-sm" data-story-paste="' + i + '" style="margin-left:4px">📋 粘贴截图</button></div><div class="story-imgs">' + imgs + '</div></div>';
+      var selChips = (s.cats || []).map(function (cid) {
+        var cc = catById(cid);
+        if (!cc) return '';
+        return '<span class="story-cat-chip on" data-si="' + i + '" data-cat="' + esc(cid) + '" title="点击取消关联「' + esc(cc.name) + '」">' + esc(cc.name) + ' <b class="chip-x">×</b></span>';
+      }).join('');
+      return '<div class="story-edit-item" data-story-idx="' + i + '"><div class="story-header"><span class="story-num">#' + (i + 1) + '</span><div class="story-move-btns">' + (i > 0 ? '<button type="button" class="btn-story-up" data-si="' + i + '" title="上移">▲</button>' : '') + (i < _pendingStories.length - 1 ? '<button type="button" class="btn-story-down" data-si="' + i + '" title="下移">▼</button>' : '') + '</div><button type="button" class="btn btn-sm btn-danger btn-del-story" data-si="' + i + '">删除</button></div>' +
+        '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="story-date" data-si="' + i + '" value="' + esc(s.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="2">前天</button><button type="button" class="btn btn-sm btn-story-quick-clear" data-si="' + i + '">清空</button></div></div>' +
+        '<div class="field" style="margin-top:4px;"><label>标题（选填）</label><input type="text" class="story-title" data-si="' + i + '" placeholder="故事标题" value="' + esc(s.title) + '"></div>' +
+        '<div class="field" style="margin-top:4px;"><label>内容</label><textarea class="story-content" data-si="' + i + '" rows="3" placeholder="故事内容（纯文本）">' + esc(s.content) + '</textarea></div>' +
+        '<div class="field" style="margin-top:4px;"><label>关联猫咪（一个故事可关联多只，搜索后点击结果添加/取消）</label>' +
+          '<div class="story-cat-selected">' + selChips + '</div>' +
+          '<div class="story-cat-search-row"><input type="text" class="story-cat-search" data-si="' + i + '" placeholder="🔍 输入猫名 / 外号搜索…" value="' + esc(s._search || '') + '" autocomplete="off"></div>' +
+          '<div class="story-cat-results" data-si="' + i + '"></div>' +
+        '</div>' +
+        '<div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" data-story-img="' + i + '">🖼️ 加截图</button><button type="button" class="btn btn-sm" data-story-paste="' + i + '" style="margin-left:4px">📋 粘贴截图</button></div>' +
+        '<div class="story-imgs">' + imgs + '</div></div>';
     }).join('');
+    box.querySelectorAll('.story-date').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].date = ip.value; }); });
+    box.querySelectorAll('.btn-story-quick').forEach(function (b) { b.addEventListener('click', function () { var si = Number(b.dataset.si); _pendingStories[si].date = daysAgoDate(Number(b.dataset.off)); refreshStories(); }); });
+    box.querySelectorAll('.btn-story-quick-clear').forEach(function (b) { b.addEventListener('click', function () { var si = Number(b.dataset.si); _pendingStories[si].date = ''; refreshStories(); }); });
+    box.querySelectorAll('.story-cat-chip').forEach(function (b) {
+      b.addEventListener('click', function () { toggleStoryCat(b.dataset.si, b.dataset.cat); });
+    });
+    box.querySelectorAll('.story-cat-search').forEach(function (ip) {
+      ip.addEventListener('input', function () {
+        var si = Number(ip.dataset.si);
+        _pendingStories[si]._search = ip.value;
+        renderStoryCatResults(si);
+      });
+    });
     box.querySelectorAll('.story-title').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].title = ip.value; }); });
     box.querySelectorAll('.story-content').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].content = ip.value; }); });
     box.querySelectorAll('.btn-del-story').forEach(function (b) { b.addEventListener('click', function () { _pendingStories.splice(Number(b.dataset.si), 1); refreshStories(); }); });
@@ -790,9 +870,45 @@
       refreshStories();
       log('⏰ 已按时间先后排序（早的在前）', 'info');
     });
+    // 重新渲染后恢复各故事的搜索词与结果列表
+    for (var ri = 0; ri < _pendingStories.length; ri++) {
+      if (_pendingStories[ri]._search) renderStoryCatResults(ri);
+    }
   }
   function getStories() {
-    return _pendingStories.map(function (s) { return { id: s.id || '', title: s.title || '', content: s.content || '', images: (s.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean) }; }).filter(function (s) { return s.title || s.content || s.images.length; });
+    return _pendingStories.map(function (s) {
+      return { id: s.id || '', date: s.date || '', title: s.title || '', content: s.content || '', cats: (Array.isArray(s.cats) ? s.cats : []).filter(Boolean), images: (s.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean) };
+    }).filter(function (s) { return s.title || s.content || s.images.length; });
+  }
+  // 跨猫同步故事：每个故事在它关联的每只猫的 stories 里各保留一份（同 id 同内容），
+  // 不再关联的猫自动移除该故事；prefIdx 指定当前编辑的猫，其数据作为权威版本。
+  function syncStoryLinks(prefIdx) {
+    if (!Array.isArray(cats)) return;
+    var hostIds = {}, linkMap = {};
+    var order = cats.map(function (_, i) { return i; });
+    if (prefIdx >= 0) { order = order.filter(function (i) { return i !== prefIdx; }); order.push(prefIdx); }
+    order.forEach(function (i) {
+      var c = cats[i];
+      (c.stories || []).forEach(function (s) {
+        if (!s || !s.id) return;
+        hostIds[s.id] = s;
+        if (!linkMap[s.id]) linkMap[s.id] = [];
+        if (linkMap[s.id].indexOf(c.id) < 0) linkMap[s.id].push(c.id);
+        (Array.isArray(s.cats) ? s.cats : []).forEach(function (cid) {
+          if (cid && linkMap[s.id].indexOf(cid) < 0) linkMap[s.id].push(cid);
+        });
+      });
+    });
+    (cats || []).forEach(function (c) {
+      var kept = {}, arr = [];
+      (c.stories || []).forEach(function (s) {
+        if (s && s.id && linkMap[s.id] && linkMap[s.id].indexOf(c.id) >= 0) { kept[s.id] = true; arr.push(hostIds[s.id]); }
+      });
+      Object.keys(hostIds).forEach(function (sid) {
+        if (!kept[sid] && linkMap[sid] && linkMap[sid].indexOf(c.id) >= 0) arr.push(hostIds[sid]);
+      });
+      c.stories = arr;
+    });
   }
   async function onStoryImgChange() {
     var files = $('f-story-img').files;
@@ -1004,8 +1120,50 @@
   }
 
   // ---------- 保存猫咪 ----------
+  // 必填项与 scripts/validate.mjs 保持一致
+  var REQUIRED_CAT_FORM = [
+    { id: 'f-name', label: '名字' },
+    { id: 'f-gender', label: '性别' },
+    { id: 'f-lat', label: '纬度' },
+    { id: 'f-lng', label: '经度' },
+    { id: 'f-status', label: '绝育状态' }
+  ];
+  // 实时校验：高亮缺失项并在保存按钮上方提示；返回 true=全部通过
+  function validateCatForm() {
+    var missing = [];
+    REQUIRED_CAT_FORM.forEach(function (r) {
+      var el = $(r.id);
+      var val = el ? String(el.value || '').trim() : '';
+      var ok = false;
+      if (r.id === 'f-lat' || r.id === 'f-lng') {
+        ok = val !== '' && !isNaN(parseFloat(val));
+      } else {
+        ok = val !== '';
+      }
+      if (el) el.classList.toggle('invalid', !ok);
+      if (!ok) missing.push(r.label);
+    });
+    var hint = $('form-valid-hint');
+    if (hint) {
+      hint.classList.remove('ok');
+      if (missing.length) {
+        hint.className = 'form-valid-hint show';
+        hint.innerHTML = '⚠️ 还有 <b>' + missing.join('、') + '</b> 没填（必填），保存会被校验拦下。';
+      } else {
+        hint.className = 'form-valid-hint show ok';
+        hint.textContent = '✅ 必填项都填好啦，可以保存。';
+      }
+    }
+    return missing.length === 0;
+  }
   async function saveCat() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+    if (!validateCatForm()) {
+      var hint = $('form-valid-hint');
+      if (hint) { hint.className = 'form-valid-hint show'; hint.innerHTML = '❌ 没填的必填项已高亮：<b>' + REQUIRED_CAT_FORM.filter(function (r) { return $(r.id) && $(r.id).classList.contains('invalid'); }).map(function (r) { return r.label; }).join('、') + '</b>'; }
+      log('❌ 有必填项没填，请补全后再保存（已高亮标出）', 'err');
+      return;
+    }
     var name = $('f-name').value.trim();
     var lat = parseFloat($('f-lat').value);
     var lng = parseFloat($('f-lng').value);
@@ -1083,6 +1241,7 @@
       }
     }
     if (isAdd) cats.push(cat); else cats[editIdx] = cat;
+    syncStoryLinks(isAdd ? -1 : editIdx);
     await saveAll();
     closeModal('cat-modal');
     renderCats();
@@ -1249,6 +1408,7 @@
   }
 
   // ---------- GitHub 推送 ----------
+  // 用 Git Data API 一次提交所有有变化的文件（比逐个 PUT 快得多），并并行创建 blob。
   async function pushToGitHub() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
     var repo = $('cfg-repo').value.trim();
@@ -1258,49 +1418,98 @@
     if (!repo) { log('❌ 请先填写仓库名（如 ly-ly-666/campus-cats）', 'err'); return; }
     if (!token) { log('❌ 请填写 Token', 'err'); return; }
 
-    log('⏳ 开始推送到 GitHub…', 'info');
+    log('⏳ 开始推送到 GitHub（批量单次提交）…', 'info');
     try {
-      var q = '?ref=' + encodeURIComponent(branch);
-      var putCount = 0, skipCount = 0;
+      var headers = { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' };
+      var api = 'https://api.github.com/repos/' + repo + '/git/';
+      var useSha = typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest;
 
-      // 推送 JSON（GitHub 要求 content 是二进制的 base64 编码）
-      var catsText = await readTextFile(CATS_PATH);
-      var relsText = await readTextFile(RELS_PATH);
-      var r1 = await putIfChanged(repo, branch, CATS_PATH, utf8ToB64(catsText), token);
-      var r2 = await putIfChanged(repo, branch, RELS_PATH, utf8ToB64(relsText), token);
-      if (r1) putCount++; else skipCount++;
-      if (r2) putCount++; else skipCount++;
+      // 1. 取当前分支指向的 commit 与树
+      var refRes = await fetchWithTimeout(api + 'ref/heads/' + encodeURIComponent(branch), { headers: headers });
+      if (!refRes.ok) throw new Error('无法读取分支 ' + branch + '（' + refRes.status + '），请检查仓库名/分支/Token');
+      var baseCommitSha = (await refRes.json()).object.sha;
+      var commitRes = await fetchWithTimeout(api + 'commits/' + baseCommitSha, { headers: headers });
+      var baseTreeSha = (await commitRes.json()).tree.sha;
 
-      // 推送图片（只传有变化的）
+      // 2. 拉取当前整棵树的 path→sha 映射（一次请求替代逐个文件的 GET）
+      var remoteSha = {};
+      var treeRes = await fetchWithTimeout(api + 'trees/' + baseTreeSha + '?recursive=1', { headers: headers });
+      if (treeRes.ok) {
+        (await treeRes.json()).tree.forEach(function (t) { if (t.type === 'blob') remoteSha[t.path] = t.sha; });
+      }
+
+      // 3. 收集要推送的本地文件（JSON + 头像/相册/事件/故事图片 + 对应缩略图）
+      var files = [], seen = {};
+      function pushFile(path, b64) { if (!seen[path]) { seen[path] = 1; files.push({ path: path, localB64: b64 }); } }
+      pushFile(CATS_PATH, utf8ToB64(await readTextFile(CATS_PATH)));
+      pushFile(RELS_PATH, utf8ToB64(await readTextFile(RELS_PATH)));
       for (var i = 0; i < cats.length; i++) {
         var c = cats[i];
-        var evtImgs = [];
-        (c.events || []).forEach(function (ev) {
-          (ev.images || []).forEach(function (im) { if (im && im.indexOf('placeholder') < 0) evtImgs.push(im); });
-        });
-        var photos = [c.photo].concat(c.album || [], evtImgs).filter(function (p) { return p && p.indexOf('placeholder') < 0; });
-        for (var j = 0; j < photos.length; j++) {
-          var path = photos[j];
-          if (await fileExists(path)) {
-            var dataUrl = await readImageAsDataURL(path);
-            var changed = await putIfChanged(repo, branch, path, dataUrlToBase64(dataUrl), token);
-            if (changed) putCount++; else skipCount++;
-            // 顺带推送对应缩略图（images/thumb/同名.jpg），保证前端预览有头像
-            var thumbName = path.replace(/^.*\//, '').replace(/\.[^.]+$/, '') + '.jpg';
-            var thumbPath = 'images/thumb/' + thumbName;
-            if (await fileExists(thumbPath)) {
-              var tDataUrl = await readImageAsDataURL(thumbPath);
-              var tChanged = await putIfChanged(repo, branch, thumbPath, dataUrlToBase64(tDataUrl), token);
-              if (tChanged) putCount++; else skipCount++;
-            }
-          }
+        var imgs = [c.photo].concat(c.album || []);
+        (c.events || []).forEach(function (ev) { (ev.images || []).forEach(function (im) { imgs.push(im); }); });
+        (c.stories || []).forEach(function (st) { (st.images || []).forEach(function (im) { imgs.push(im); }); });
+        imgs = imgs.filter(function (p) { return p && p.indexOf('placeholder') < 0; });
+        for (var j = 0; j < imgs.length; j++) {
+          var path = imgs[j];
+          if (!(await fileExists(path))) continue;
+          pushFile(path, dataUrlToBase64(await readImageAsDataURL(path)));
+          // 顺带推送对应缩略图（images/thumb/同名.jpg），保证前端预览有图
+          var thumbName = path.replace(/^.*\//, '').replace(/\.[^.]+$/, '') + '.jpg';
+          var thumbPath = 'images/thumb/' + thumbName;
+          if (await fileExists(thumbPath)) pushFile(thumbPath, dataUrlToBase64(await readImageAsDataURL(thumbPath)));
         }
       }
-      if (putCount === 0) {
-        log('✅ 没有需要更新的文件（' + skipCount + ' 个文件均未变化）', 'ok');
-      } else {
-        log('🎉 推送完成！本次更新 ' + putCount + ' 个文件，跳过 ' + skipCount + ' 个未变化文件', 'ok');
+
+      // 4. 比对本地 blob sha 与远端，未变化的跳过；变化/新增的并行创建 blob
+      var newTree = [], putCount = 0, skipCount = 0, cursor = 0;
+      async function pushWorker() {
+        while (cursor < files.length) {
+          var f = files[cursor++];
+          if (useSha) {
+            var localSha = await gitBlobSha(atob(f.localB64));
+            if (remoteSha[f.path] === localSha) { skipCount++; log('  ⏭ 跳过（未变化）：' + f.path, 'info'); continue; }
+          }
+          var blobRes = await fetchWithTimeout(api + 'blobs', {
+            method: 'POST',
+            headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ content: f.localB64, encoding: 'base64' })
+          });
+          if (!blobRes.ok) { var bj = await blobRes.json().catch(function () { return {}; }); throw new Error(f.path + ' -> ' + (bj.message || blobRes.status)); }
+          newTree.push({ path: f.path, mode: '100644', type: 'blob', sha: (await blobRes.json()).sha });
+          putCount++;
+          log('  ⏫ 上传中：' + f.path + ' …', 'info');
+        }
       }
+      var workers = [];
+      for (var w = 0; w < 6; w++) workers.push(pushWorker());
+      await Promise.all(workers);
+
+      if (!newTree.length) { log('✅ 没有需要更新的文件（' + skipCount + ' 个文件均未变化）', 'ok'); return; }
+
+      // 5. 创建新树（未变文件沿用 base_tree）
+      var newTreeRes = await fetchWithTimeout(api + 'trees', {
+        method: 'POST', headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ base_tree: baseTreeSha, tree: newTree })
+      });
+      if (!newTreeRes.ok) throw new Error('创建树失败（' + newTreeRes.status + '）');
+      var newTreeSha = (await newTreeRes.json()).sha;
+
+      // 6. 创建一次提交（所有文件在一个 commit 里）
+      var commitRes2 = await fetchWithTimeout(api + 'commits', {
+        method: 'POST', headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ message: 'data: 本地管理端批量更新 ' + putCount + ' 个文件', tree: newTreeSha, parents: [baseCommitSha] })
+      });
+      if (!commitRes2.ok) throw new Error('创建提交失败（' + commitRes2.status + '）');
+      var newCommitSha = (await commitRes2.json()).sha;
+
+      // 7. 把分支引用指向新提交（force:false，避免覆盖别人的提交）
+      var refRes2 = await fetchWithTimeout(api + 'refs/heads/' + encodeURIComponent(branch), {
+        method: 'PATCH', headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ sha: newCommitSha, force: false })
+      });
+      if (!refRes2.ok) throw new Error('更新分支失败（' + refRes2.status + '），可能是远端有新提交，请先拉取再推');
+
+      log('🎉 推送完成！本次单次提交更新 ' + putCount + ' 个文件，跳过 ' + skipCount + ' 个未变化文件', 'ok');
     } catch (e) {
       var msg = e.message || '';
       if (msg.indexOf('AbortError') >= 0 || msg.indexOf('abort') >= 0) {
@@ -1313,20 +1522,17 @@
     }
   }
 
-  // 只有当 GitHub 上的内容与本地不一样时才上传；返回 true=上传了, false=未变跳过
-  async function putIfChanged(repo, branch, path, localB64, token) {
-    var info = await getFileInfo(repo, branch, path, token);
-    if (info && info.sha) {
-      var remoteB64 = (info.content || '').replace(/\n/g, '');
-      var localB64_ = (localB64 || '').replace(/\n/g, '');
-      // 比对内容：一样则跳过
-      if (remoteB64 === localB64_) {
-        log('  ⏭ 跳过（未变化）：' + path, 'info');
-        return false;
-      }
-    }
-    await githubPut(repo, branch, path, localB64, token, info ? info.sha : null);
-    return true;
+  // 计算 Git blob 的 SHA-1（"blob <长度>\0<内容>"），用于跳过未变化文件
+  async function gitBlobSha(binStr) {
+    var bytes = new Uint8Array(binStr.length);
+    for (var i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i) & 0xff;
+    var prefix = new TextEncoder().encode('blob ' + bytes.length + '\0');
+    var all = new Uint8Array(prefix.length + bytes.length);
+    all.set(prefix, 0); all.set(bytes, prefix.length);
+    var buf = await crypto.subtle.digest('SHA-1', all);
+    var arr = new Uint8Array(buf), hex = '';
+    for (var k = 0; k < arr.length; k++) hex += arr[k].toString(16).padStart(2, '0');
+    return hex;
   }
 
   function fetchWithTimeout(url, opts, ms) {
@@ -1334,42 +1540,6 @@
     var ctrl = new AbortController();
     var t = setTimeout(function () { ctrl.abort(); }, ms);
     return fetch(url, Object.assign({}, opts, { signal: ctrl.signal })).finally(function () { clearTimeout(t); });
-  }
-
-  async function getFileInfo(repo, branch, path, token) {
-    try {
-      var res = await fetchWithTimeout('https://api.github.com/repos/' + repo + '/contents/' + path + '?ref=' + encodeURIComponent(branch), {
-        headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28' }
-      });
-      if (!res.ok) return null;
-      var j = await res.json();
-      return { sha: j.sha || null, content: j.content || '' }; // content 是 GitHub 上的 base64 文本
-    } catch (e) { return null; }
-  }
-  async function getFileSha(repo, branch, path, token) {
-    var info = await getFileInfo(repo, branch, path, token);
-    return info ? info.sha : null;
-  }
-
-  async function githubPut(repo, branch, path, content, token, sha) {
-    log('  ⏫ 上传中：' + path + ' …', 'info');
-    // content 已经是 GitHub API 要求的 base64 编码的二进制内容（由 dataUrlToBase64 或 utf8ToB64 处理过）
-    var body = {
-      message: 'data: 本地管理端更新 ' + path,
-      content: content,
-      branch: branch
-    };
-    if (sha) body.sha = sha;
-    var res = await fetchWithTimeout('https://api.github.com/repos/' + repo + '/contents/' + path, {
-      method: 'PUT',
-      headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      var j = await res.json().catch(function () { return {}; });
-      throw new Error(path + ' -> ' + (j.message || res.status));
-    }
-    log('  ✅ 已上传：' + path, 'ok');
   }
 
   async function readImageAsDataURL(path) {
@@ -1420,6 +1590,13 @@
     if ($('btn-rel-add')) $('btn-rel-add').addEventListener('click', function () { addRelation(); });
     if ($('rel-type')) $('rel-type').addEventListener('change', updateRelLabels);
     $('f-save').addEventListener('click', saveCat);
+    // 实时校验：必填项一变就重新提示
+    REQUIRED_CAT_FORM.forEach(function (r) {
+      var el = $(r.id);
+      if (!el) return;
+      el.addEventListener('input', validateCatForm);
+      el.addEventListener('change', validateCatForm);
+    });
     $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); setPasteMode(0); });
     $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
     $('f-del').addEventListener('click', function () {
@@ -1435,7 +1612,7 @@
     $('btn-album-add').addEventListener('click', function () { $('f-album').click(); });
     $('btn-story-add').addEventListener('click', function () {
       if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
-      _pendingStories.push({ id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), title: '', content: '', images: [] });
+      _pendingStories.push({ id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), title: '', content: '', images: [], cats: (editIdx >= 0 && cats[editIdx]) ? [cats[editIdx].id] : [] });
       refreshStories();
     });
     $('f-story-img').addEventListener('change', onStoryImgChange);

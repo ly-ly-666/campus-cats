@@ -61,6 +61,12 @@
     .modal-close { position: absolute; top: 10px; right: 14px; border: none; background: none; font-size: 22px; cursor: pointer; color: var(--muted); }
     .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
     .modal-actions .btn { flex: 1; }
+    .form-valid-hint { margin-top: 12px; font-size: 12px; line-height: 1.7; display: none; }
+    .form-valid-hint.show { display: block; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 8px; padding: 8px 10px; }
+    .form-valid-hint.ok { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .form-valid-hint b { font-weight: 700; }
+    .field input.invalid, .field select.invalid { border-color: #ef4444; background: #fef2f2; }
+    .field input.invalid:focus, .field select.invalid:focus { outline: 2px solid #fecaca; }
     .photo-preview { width: 100%; height: 150px; border-radius: 10px; object-fit: cover; background: #f0ebe2; margin: 8px 0; display: none; }
     .photo-preview.show { display: block; }
     .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 8px; }
@@ -104,6 +110,23 @@
     .stories-editor .story-move-btns { display: flex; gap: 4px; }
     .stories-editor .story-move-btns button { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
     .stories-editor .story-move-btns button:hover { background: #fff7ed; }
+    .stories-editor .story-date-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .stories-editor .story-date-row input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+    .stories-editor .story-date-row .btn-story-quick { padding: 4px 9px; font-size: 12px; border-radius: 999px; border: 1px solid #fdba74; background: #fff7ed; color: #d97706; cursor: pointer; }
+    .stories-editor .story-date-row .btn-story-quick:hover { background: #ffedd5; }
+    .stories-editor .story-date-row .btn-story-quick-clear { padding: 4px 9px; font-size: 12px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; }
+    .stories-editor .story-date-row .btn-story-quick-clear:hover { background: #f5f2ed; }
+    .stories-editor .story-cat-selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; margin-bottom: 6px; }
+    .stories-editor .story-cat-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: 12px; border-radius: 999px; border: 1px solid #fdba74; background: #fff7ed; color: #d97706; cursor: pointer; }
+    .stories-editor .story-cat-chip:hover { background: #ffedd5; }
+    .stories-editor .story-cat-chip .chip-x { font-weight: 700; color: #ea580c; }
+    .stories-editor .story-cat-search-row { display: flex; }
+    .stories-editor .story-cat-search { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+    .stories-editor .story-cat-search:focus { outline: 2px solid #fde68a; border-color: var(--primary); }
+    .stories-editor .story-cat-results { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .stories-editor .story-cat-result { padding: 5px 10px; font-size: 12px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--text); cursor: pointer; }
+    .stories-editor .story-cat-result:hover { background: #fff7ed; }
+    .stories-editor .story-cat-result.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -220,12 +243,12 @@
       <div class="grid3">
         <div class="field"><label>名字 *</label><input id="f-name" placeholder="如：小白"></div>
         <div class="field"><label>外号</label><input id="f-nickname" placeholder="白猪"></div>
-        <div class="field"><label>性别（选填）</label><select id="f-gender"><option value="">未知</option><option value="male">公</option><option value="female">母</option></select></div>
+        <div class="field"><label>性别 *</label><select id="f-gender"><option value="unknown">未知</option><option value="male">公</option><option value="female">母</option></select></div>
       </div>
       <div class="grid3" style="margin-top:10px;">
         <div class="field"><label>毛色</label><input id="f-color" placeholder="白色混合橙色"></div>
         <div class="field"><label>区域</label><input id="f-area" placeholder="图书馆东门"></div>
-        <div class="field"><label>绝育状态（选填）</label><select id="f-status"><option value="">未知</option><option>已绝育</option><option>未绝育</option></select></div>
+        <div class="field"><label>绝育状态 *</label><select id="f-status"><option value="未知">未知</option><option>已绝育</option><option>未绝育</option></select></div>
         <div class="field"><label>猫咪状态</label><select id="f-life"><option value="在校">在校</option><option value="已领养">已领养</option><option value="失踪">失踪</option><option value="失踪已久">失踪已久</option><option value="去喵星了">去喵星了（离世）</option></select></div>
       </div>
       <div class="grid3" style="margin-top:10px;">
@@ -254,6 +277,8 @@
         <div id="events-list"></div>
         <button type="button" class="btn btn-sm" id="btn-event-add" style="margin-top:6px;">＋ 添加事件</button>
       </div>
+
+      <div id="form-valid-hint" class="form-valid-hint"></div>
 
       <div class="modal-actions">
         <button class="btn btn-primary" id="f-save">保存</button>

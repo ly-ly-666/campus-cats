@@ -106,10 +106,38 @@ function gentleLeftAt(cat) {
 }
 
 // 渲染猫咪的多篇故事（stories优先，旧story兜底）
+// 故事日期显示：2026-08-28 → "2026 年 8 月 28 日"
+function storyDateLabel(date) {
+  const s = String(date || '').trim();
+  if (!s) return '';
+  const m = s.match(/^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/);
+  if (!m) return s;
+  let out = m[1] + ' 年';
+  if (m[2]) out += ' ' + parseInt(m[2], 10) + ' 月';
+  if (m[3]) out += ' ' + parseInt(m[3], 10) + ' 日';
+  return out;
+}
+
+// 故事排序时间：优先用 date 字段（YYYY-MM[-DD]），否则回退到 id 里的时间戳
+function storyTs(s) {
+  const d = String((s && s.date) || '').replace(/-/g, '');
+  if (/^\d{6,8}$/.test(d)) return Number(d + '000000'.slice(0, 8 - d.length));
+  const m = String((s && s.id) || '').match(/_?(\d{10,13})/);
+  return m ? Number(m[1]) : 0;
+}
+// 展示用日期：优先显式 date；没有则用 id 里的创建时间戳兜底
+function storyDisplayDate(s) {
+  if (s && s.date) return storyDateLabel(s.date);
+  const ts = storyTs(s);
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
+}
+
 function renderProfileStories(cat) {
   var stories = [];
   if (Array.isArray(cat.stories) && cat.stories.length) {
-    stories = cat.stories;
+    stories = cat.stories.slice().sort(function (a, b) { return storyTs(b) - storyTs(a); });
   } else if (cat.story && cat.story.trim()) {
     stories = [{ id: '', title: '', content: cat.story, images: [] }];
   }
@@ -117,6 +145,8 @@ function renderProfileStories(cat) {
   var html = '<section class="profile-section"><h3>📖 猫咪故事</h3>';
   stories.forEach(function(s) {
     html += '<div class="story-item">';
+    var dateLabel = storyDisplayDate(s);
+    if (dateLabel) html += '<span class="story-item-date">🗓 ' + escapeHtml(dateLabel) + '</span>';
     if (s.title) html += '<div class="story-item-title">' + escapeHtml(s.title) + '</div>';
     if (s.content) html += '<div class="story-item-content">' + escapeHtml(s.content) + '</div>';
     if (Array.isArray(s.images) && s.images.length) {
