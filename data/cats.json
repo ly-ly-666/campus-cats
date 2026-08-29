@@ -62,6 +62,44 @@
         "images": [
           "images/cat001_story_1787934513652.jpg"
         ]
+      },
+      {
+        "id": "s_1788018109907_kvu1lu",
+        "date": "2026-08-29",
+        "title": "馆长的温馨提示",
+        "content": "火场穿行身要躬\n逃生选择跑楼梯",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788018121684.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019271441_fm572o",
+        "date": "2026-08-30",
+        "title": "世纪同框",
+        "content": "一山不能容二虎,但是小白是猪",
+        "cats": [
+          "cat001",
+          "cat005"
+        ],
+        "images": [
+          "images/cat001_story_1788019281198.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019322639_8i8z6s",
+        "date": "2026-08-30",
+        "title": "大明星小白在线弹吉他",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788019345478.jpg",
+          "images/cat001_story_1788019353415.jpg"
+        ]
       }
     ]
   },
@@ -113,6 +151,19 @@
         ],
         "images": [
           "images/cat002_story_1787986582089.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019375033_apsdqp",
+        "date": "2026-08-30",
+        "title": "我们是好闺蜜~",
+        "content": "",
+        "cats": [
+          "cat002",
+          "cat018"
+        ],
+        "images": [
+          "images/cat002_story_1788019383759.jpg"
         ]
       }
     ]
@@ -172,7 +223,21 @@
         "images": []
       }
     ],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788018735771_3r7o8m",
+        "date": "2026-08-29",
+        "title": "大嗓门牛牛",
+        "content": "经过一辆车，听到不知道谁叫得特别大声，以为是车里面有小猫还是小孩，还往前探头看车里边，然后突然看到年年从车底下钻出来了",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1788018743924.jpg",
+          "images/cat004_story_1788018762104.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat005",
@@ -218,6 +283,33 @@
           "cat005"
         ],
         "images": []
+      },
+      {
+        "id": "s_1788018713559_mkj8sg",
+        "date": "2026-08-29",
+        "title": "卷卷疑似李荣浩",
+        "content": "震惊,卷卷从未跟李荣浩同时出现过,细思鼻孔",
+        "cats": [
+          "cat005"
+        ],
+        "images": [
+          "images/cat005_story_1788018721816.jpg",
+          "images/cat005_story_1788019067436.jpg",
+          "images/cat005_story_1788019218259.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019271441_fm572o",
+        "date": "2026-08-30",
+        "title": "世纪同框",
+        "content": "一山不能容二虎,但是小白是猪",
+        "cats": [
+          "cat001",
+          "cat005"
+        ],
+        "images": [
+          "images/cat001_story_1788019281198.jpg"
+        ]
       }
     ]
   },
@@ -293,7 +385,20 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788018638950_9ee7nb",
+        "date": "2026-08-29",
+        "title": "草哥在睡觉",
+        "content": "",
+        "cats": [
+          "cat008"
+        ],
+        "images": [
+          "images/cat008_story_1788018643408.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat009",
@@ -331,13 +436,28 @@
         "images": [
           "images/cat009_story_1787934214098.jpg"
         ]
+      },
+      {
+        "id": "s_1788018871149_2xom7u",
+        "date": "2026-08-29",
+        "title": "嘘~奶哥睡着了",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1788018885571.jpg",
+          "images/cat009_story_1788018892480.jpg",
+          "images/cat009_story_1788019176401.jpg",
+          "images/cat009_story_1788019183611.jpg"
+        ]
       }
     ]
   },
   {
     "id": "cat010",
     "name": "橘又白",
-    "nickname": "",
+    "nickname": "焗油宝",
     "gender": "female",
     "color": "橘色混白色",
     "area": "五区",
@@ -356,7 +476,25 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788018205083_wdgu5y",
+        "date": "2026-08-29",
+        "title": "广油校花焗油宝",
+        "content": "",
+        "cats": [
+          "cat010"
+        ],
+        "images": [
+          "images/cat010_story_1788018224579.jpg",
+          "images/cat010_story_1788018840442.jpg",
+          "images/cat010_story_1788018846635.jpg",
+          "images/cat010_story_1788018853155.jpg",
+          "images/cat010_story_1788018913771.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat011",
@@ -504,7 +642,23 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788019429988_l7y52c",
+        "date": "2026-08-30",
+        "title": "三英战吕布",
+        "content": "哈哈和瘦嘟嘟一直在互相小吵,剩下两个看热闹的就在旁边走来走去,哈哈甚至躲到人类屁股后面呼瘦嘟嘟\n",
+        "cats": [
+          "cat018",
+          "cat016",
+          "cat036",
+          "cat019"
+        ],
+        "images": [
+          "images/cat018_story_1788019438909.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat017",
@@ -527,7 +681,21 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788019080275_zq9qb4",
+        "date": "2026-08-29",
+        "title": "当当打翻饭碗,用出无影掌",
+        "content": "当当今天把吃粮把盘子吃翻了，人类去扶，还打人类",
+        "cats": [
+          "cat017"
+        ],
+        "images": [
+          "images/cat017_story_1788019089092.jpg",
+          "images/cat017_story_1788019095620.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat018",
@@ -578,6 +746,34 @@
         "images": [
           "images/cat002_story_1787986582089.jpg"
         ]
+      },
+      {
+        "id": "s_1788019375033_apsdqp",
+        "date": "2026-08-30",
+        "title": "我们是好闺蜜~",
+        "content": "",
+        "cats": [
+          "cat002",
+          "cat018"
+        ],
+        "images": [
+          "images/cat002_story_1788019383759.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019429988_l7y52c",
+        "date": "2026-08-30",
+        "title": "三英战吕布",
+        "content": "哈哈和瘦嘟嘟一直在互相小吵,剩下两个看热闹的就在旁边走来走去,哈哈甚至躲到人类屁股后面呼瘦嘟嘟\n",
+        "cats": [
+          "cat018",
+          "cat016",
+          "cat036",
+          "cat019"
+        ],
+        "images": [
+          "images/cat018_story_1788019438909.jpg"
+        ]
       }
     ]
   },
@@ -622,6 +818,50 @@
         ],
         "images": [
           "images/cat019_story_1787929047552.jpg"
+        ]
+      },
+      {
+        "id": "s_1788018045959_n3tn28",
+        "date": "2026-08-29",
+        "title": "老人家哈哈",
+        "content": "",
+        "cats": [
+          "cat019"
+        ],
+        "images": [
+          "images/cat019_story_1788018053758.jpg",
+          "images/cat019_story_1788018062268.jpg",
+          "images/cat019_story_1788018072126.jpg"
+        ]
+      },
+      {
+        "id": "s_1788018951242_aty490",
+        "date": "2026-08-29",
+        "title": "拉屎不能一条腿",
+        "content": "人类说:拉屎要用两条腿,因为dangerous(单腿拉屎)",
+        "cats": [
+          "cat019"
+        ],
+        "images": [
+          "images/cat019_story_1788019029110.jpg",
+          "images/cat019_story_1788019035172.jpg",
+          "images/cat019_story_1788019041910.jpg",
+          "images/cat019_story_1788019047737.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019429988_l7y52c",
+        "date": "2026-08-30",
+        "title": "三英战吕布",
+        "content": "哈哈和瘦嘟嘟一直在互相小吵,剩下两个看热闹的就在旁边走来走去,哈哈甚至躲到人类屁股后面呼瘦嘟嘟\n",
+        "cats": [
+          "cat018",
+          "cat016",
+          "cat036",
+          "cat019"
+        ],
+        "images": [
+          "images/cat018_story_1788019438909.jpg"
         ]
       }
     ]
@@ -1055,6 +1295,46 @@
         "images": [
           "images/cat036_story_1787934464205.jpg"
         ]
+      },
+      {
+        "id": "s_1788018264855_1sffvj",
+        "date": "2026-08-29",
+        "title": "谁没有年轻的时候",
+        "content": "闯闯的小时候",
+        "cats": [
+          "cat036"
+        ],
+        "images": [
+          "images/cat036_story_1788018277913.jpg",
+          "images/cat036_story_1788018389672.jpg",
+          "images/cat036_story_1788018404341.jpg",
+          "images/cat036_story_1788018436791.jpg",
+          "images/cat036_story_1788018497811.jpg",
+          "images/cat036_story_1788018523350.jpg",
+          "images/cat036_story_1788018530287.jpg",
+          "images/cat036_story_1788018542991.jpg",
+          "images/cat036_story_1788018557622.jpg",
+          "images/cat036_story_1788018566462.jpg",
+          "images/cat036_story_1788018573100.jpg",
+          "images/cat036_story_1788018579789.jpg",
+          "images/cat036_story_1788018597430.jpg",
+          "images/cat036_story_1788018622280.jpg"
+        ]
+      },
+      {
+        "id": "s_1788019429988_l7y52c",
+        "date": "2026-08-30",
+        "title": "三英战吕布",
+        "content": "哈哈和瘦嘟嘟一直在互相小吵,剩下两个看热闹的就在旁边走来走去,哈哈甚至躲到人类屁股后面呼瘦嘟嘟\n",
+        "cats": [
+          "cat018",
+          "cat016",
+          "cat036",
+          "cat019"
+        ],
+        "images": [
+          "images/cat018_story_1788019438909.jpg"
+        ]
       }
     ]
   },
@@ -1133,6 +1413,22 @@
         "images": [
           "images/cat019_story_1787929047552.jpg"
         ]
+      },
+      {
+        "id": "s_1788018303598_rtvyq3",
+        "date": "2026-08-29",
+        "title": "星星我们喜欢你",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat038_story_1788018307209.jpg",
+          "images/cat038_story_1788018364216.jpg",
+          "images/cat038_story_1788018459402.jpg",
+          "images/cat038_story_1788018466630.jpg",
+          "images/cat038_story_1788018478318.jpg"
+        ]
       }
     ]
   },
@@ -1160,7 +1456,24 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788019793374_pda091",
+        "date": "2026-08-30",
+        "title": "站长与黄咪咪的握手照",
+        "content": "拍摄于2026年1月17日",
+        "cats": [
+          "cat039"
+        ],
+        "images": [
+          "images/cat039_story_1788019841785.jpg",
+          "images/cat039_story_1788019850226.jpg",
+          "images/cat039_story_1788019859418.jpg",
+          "images/cat039_story_1788019870102.jpg",
+          "images/cat039_story_1788019883732.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat040",
@@ -1369,7 +1682,23 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788019923763_3bixcs",
+        "date": "2026-08-30",
+        "title": "两弯月牙,一个八",
+        "content": "板鸭趴的小八",
+        "cats": [
+          "cat047"
+        ],
+        "images": [
+          "images/cat047_story_1788019936354.jpg",
+          "images/cat047_story_1788019946161.jpg",
+          "images/cat047_story_1788019955824.jpg",
+          "images/cat047_story_1788019966316.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat048",
@@ -1806,6 +2135,50 @@
         "images": [
           "images/cat062_story_1787989201388.jpg",
           "images/cat062_story_1787989210697.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cat063",
+    "name": "昆昆",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "",
+    "lat": 21.679447,
+    "lng": 110.921936,
+    "photo": "images/cat063.jpg",
+    "album": [],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "去喵星了",
+    "firstSeen": "",
+    "leftAt": "2026年5月27日,车祸离世",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788020264802_dpvuh6",
+        "date": "2026-08-30",
+        "title": "站长与昆昆的故事",
+        "content": "站长当时在拍学校布置的视频作业,在一区旁边的雕像处,那是和昆昆的第一次见面~\n昆昆是只好猫,亲人,乖顺,可摸\n我第一眼以为是花花,虽然不是很像,但是站长比较脸盲,那时候我也没遇到过除花花之外的彩色猫咪\n所以就走去摸昆昆的头,还问他是谁\n那时候有他的存在,我顿时觉得拍这个视频作业不无聊了,就一直缠着昆昆\n后面遇到了个网球,我同学说丢球是遛狗的,遛猫不行\n于是有了昆昆踢足球的画面哈哈哈\n后面好几次遇到过昆昆,他都主动躺下露出肚子给我摸摸\n再后面听到他发烧的消息,我为他捏一把汗,后面治好了,我为他开心\n再再后面,就听到了他被车碾了的消息\n当你抚摸过一个生命,留下了这个生命的印记,而后这个生命消逝,再也捕捉不到这生命的连接,再看照片,它仿佛好像还在,还在喵叫着撒娇\n嗯....真是一种奇怪的感觉",
+        "cats": [
+          "cat063"
+        ],
+        "images": [
+          "images/cat063_story_1788020361726.jpg",
+          "images/cat063_story_1788020371018.jpg",
+          "images/cat063_story_1788020426684.jpg",
+          "images/cat063_story_1788020436357.jpg",
+          "images/cat063_story_1788020446041.jpg",
+          "images/cat063_story_1788020455460.jpg",
+          "images/cat063_story_1788020464157.jpg",
+          "images/cat063_story_1788020474383.jpg",
+          "images/cat063_story_1788020483163.jpg"
         ]
       }
     ]
