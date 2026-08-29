@@ -172,7 +172,7 @@ export function renderCatList(cats, onSelect) {
           <div class="cat-item-name">
             ${escapeHtml(cat.name)}
             ${cat.nickname && !cat.nickname.startsWith('img-') ? '<span class="cat-item-nick">（' + escapeHtml(cat.nickname) + '）</span>' : ''}
-            ${cat.life === '去喵星了' ? '<span class="tag tag-past">去喵星了</span>' : (cat.leftAt ? '<span class="tag tag-past">过往</span>' : '')}
+            ${cat.life === '去喵星了' || cat.leftAt ? '<span class="tag tag-past">离世' + (cat.leftAt ? ' ' + escapeHtml(cat.leftAt) : '') + '</span>' : ''}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '未知')}</span>
             ${cat.life === '失踪' ? '<span class="tag" style="background:#dc2626;color:#fff;">⚠️ 失踪</span>' : ''}
@@ -237,7 +237,7 @@ export function showModal(cat, cats, relations) {
     ['区域', cat.area],
     ['绝育状态', cat.status || '未知'],
     ['首次发现', cat.firstSeen],
-    ['离开时间', cat.life === '去喵星了' ? '' : gentleLeftAt(cat)],
+    ['离开时间', cat.leftAt || (cat.life === '去喵星了' ? '去喵星了' : '')],
     ['照料人', cat.caretaker],
   ];
 
@@ -315,7 +315,7 @@ export function showModal(cat, cats, relations) {
         <div class="modal-title-block">
           <h2 class="modal-name">${escapeHtml(cat.name)}</h2>
           <div class="modal-tags">
-            ${cat.leftAt ? '<span class="tag tag-past">过往</span>' : ''}
+            ${cat.life === '去喵星了' || cat.leftAt ? '<span class="tag tag-past">离世' + (cat.leftAt ? ' ' + escapeHtml(cat.leftAt) : '') + '</span>' : ''}
             <span class="tag tag-${cat.gender === 'male' ? 'male' : (cat.gender === 'female' ? 'female' : 'unknown')}">${GENDER_LABEL[cat.gender] || '未知'}</span>
             <span class="tag tag-${STATUS_TAG[cat.status] || 'unneutered'}">${escapeHtml(cat.status || '')}</span>
           </div>
@@ -477,6 +477,10 @@ export function bindJoin() {
     btn.textContent = hidden ? '✕ 收起' : '💛 加入我们 · 关于油喵';
     if (!hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
+  const poster = panel.querySelector('.join-poster img');
+  if (poster) poster.addEventListener('click', () => {
+    openLightbox(poster.getAttribute('src'), '油喵部门介绍 · 长按图片扫码加入我们');
+  });
 }
 
 export function bindCatPanel() {
@@ -605,7 +609,18 @@ export function openLightbox(src, caption) {
     box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><img class="lightbox-img" alt=""><div class="lightbox-caption"></div></div>';
     document.body.appendChild(box);
   }
-  box.querySelector('.lightbox-img').src = src;
+  const img = box.querySelector('.lightbox-img');
+  // 不把小图放得比原始尺寸大：按原始宽高与视口上限取较小值
+  const fit = () => {
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    const vw = window.innerWidth * 0.92;
+    const vh = window.innerHeight * 0.84;
+    img.style.maxWidth = Math.min(vw, img.naturalWidth) + 'px';
+    img.style.maxHeight = Math.min(vh, img.naturalHeight) + 'px';
+  };
+  img.onload = fit;
+  img.src = src;
+  if (img.complete && img.naturalWidth) fit();
   const cap = box.querySelector('.lightbox-caption');
   cap.textContent = caption || '';
   cap.style.display = caption ? '' : 'none';

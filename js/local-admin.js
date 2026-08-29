@@ -1804,6 +1804,8 @@
       log('👀 已在新标签打开预览（基于当前本地数据，不用推 GitHub）', 'info');
     });
     $('btn-push').addEventListener('click', pushToGitHub);
+    var saveOrderBtn = $('btn-save-story-order');
+    if (saveOrderBtn) saveOrderBtn.addEventListener('click', saveAll);
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
     if ($('btn-rel-add')) $('btn-rel-add').addEventListener('click', function () { addRelation(); });
     if ($('rel-type')) $('rel-type').addEventListener('change', updateRelLabels);

@@ -172,7 +172,7 @@ function render(cats, relations) {
   document.title = cat.name + ' · 猫咪档案';
 
   const photo = photoUrl(cat.photo);
-  const past = cat.life === '去喵星了' ? '<span class="tag tag-past">去喵星了</span>' : (cat.leftAt ? '<span class="tag tag-past">过往</span>' : '');
+  const past = (cat.life === '去喵星了' || cat.leftAt) ? '<span class="tag tag-past">离世' + (cat.leftAt ? ' ' + escapeHtml(cat.leftAt) : '') + '</span>' : '';
   const tags = (cat.tags || []).map(function (t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
 
   document.getElementById('profile-header').innerHTML = `
@@ -192,7 +192,7 @@ function render(cats, relations) {
     ['毛色', cat.color],
     ['常出现区域', cat.area],
     ['首次发现', cat.firstSeen],
-    ['离开时间', cat.life === '去喵星了' ? '' : gentleLeftAt(cat)],
+    ['离开时间', cat.leftAt || (cat.life === '去喵星了' ? '去喵星了' : '')],
     ['照料人', cat.caretaker],
     ['经纬度', cat.lat != null && cat.lng != null ? cat.lat + ', ' + cat.lng : '']
   ].filter(function (x) { return x[1]; });

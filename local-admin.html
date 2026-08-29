@@ -278,8 +278,12 @@
         <div class="page-head"><h1>📖 故事集</h1></div>
         <div class="card">
           <h2>故事置顶</h2>
-          <p class="hint">点击故事右侧「📌 置顶」把它固定到公开站故事集最前面（<b style="color:#e11d48;">最多 3 篇</b>）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。改完点工作台的「💾 保存到本地」，公开站刷新即可预览。</p>
+          <p class="hint">点击故事右侧「📌 置顶」把它固定到公开站故事集最前面（<b style="color:#e11d48;">最多 3 篇</b>）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。改完点下方「💾 保存到本地」，公开站刷新即可预览。</p>
           <div id="story-order-list" class="story-order-list"></div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-primary" id="btn-save-story-order">💾 保存到本地</button>
+            <span class="hint" id="story-order-save-tip" style="align-self:center;">置顶/编辑后记得点这里保存</span>
+          </div>
           <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用右侧 ▲▼ 调整先后；想换掉某篇，点「📌 置顶 N」取消后再置顶新的即可。</p>
         </div>
       </section>
