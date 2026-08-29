@@ -302,7 +302,7 @@ export function showModal(cat, cats, relations) {
   const album = Array.isArray(cat.album) ? cat.album : [];
   const albumHtml = album.length
     ? `<div class="modal-album">${album.map((src) => `
-        <div class="album-thumb"><img src="${thumbUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(src)}" onclick="openLightbox(this.dataset.full, '${escapeHtml(cat.name)}')" style="cursor:zoom-in;"></div>
+        <div class="album-thumb"><img src="${thumbUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(src)}" onclick="openLightbox(this.dataset.full, '${escapeHtml(cat.name)}', this.src)" style="cursor:zoom-in;"></div>
       `).join('')}</div>`
     : '<div class="relation-empty">暂无相册</div>';
 
@@ -437,7 +437,7 @@ export function renderEventsTimeline(cats) {
     const photo = thumbUrl(cat.photo); // 时间线头像用缩略图
     const imgs = item.images.length
       ? '<div class="tl-event-imgs">' + item.images.map((src) => {
-          return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="openLightbox(this.dataset.full)">';
+          return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="openLightbox(this.dataset.full, \'\', this.src)">';
         }).join('') + '</div>'
       : '';
     return `
@@ -794,7 +794,7 @@ export function renderStoriesTimeline(cats, siteConfig) {
       return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="点击查看「' + escapeHtml(cc.name) + '」档案"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
     }).join('') + '</div>' : '';
     const contentHtml = s.content ? storyContentHtml(s, si, 0) : '';
-    const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption)" style="cursor:zoom-in;">').join('') + '</div>' : '';
+    const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src)" style="cursor:zoom-in;">').join('') + '</div>' : '';
     return '<div class="story-item">' + pinHtml + dateHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '</div>';
   }).join('');
 }
