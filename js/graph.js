@@ -1,7 +1,6 @@
 // graph.js — 关系图模块（ECharts graph / force 力导向）
-import { RELATION_STYLE } from './config.js';
+import { RELATION_STYLE, deriveSiblingRelations } from './config.js';
 import { escapeHtml, thumbUrl } from './ui.js';
-import { deriveSiblingRelations } from './relations-util.js';
 
 // 记录全局唯一的 chart 实例，供绑定 resize 使用
 let currentChart = null;

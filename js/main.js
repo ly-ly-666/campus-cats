@@ -2,7 +2,32 @@
 import { initMap, initMapSearch } from './map.js';
 import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js';
 import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, prefetchCatOriginals } from './ui.js';
-import { loadData } from './data.js';
+
+// 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
+async function loadData() {
+  let cats, relations, siteConfig = {};
+  try {
+    const cfgResp = await fetch('./data/site-config.json?v=' + Date.now());
+    if (cfgResp.ok) siteConfig = await cfgResp.json();
+  } catch (e) {
+    siteConfig = {};
+  }
+  try {
+    const catResp = await fetch('./data/cats.json?v=' + Date.now());
+    if (!catResp.ok) throw new Error(`猫咪数据加载失败（HTTP ${catResp.status}）`);
+    cats = await catResp.json();
+  } catch (e) {
+    throw new Error(`无法加载 data/cats.json：${e.message}`);
+  }
+  try {
+    const relResp = await fetch('./data/relations.json?v=' + Date.now());
+    if (!relResp.ok) throw new Error(`关系数据加载失败（HTTP ${relResp.status}）`);
+    relations = await relResp.json();
+  } catch (e) {
+    throw new Error(`无法加载 data/relations.json：${e.message}`);
+  }
+  return { cats, relations, siteConfig };
+}
 
 window.__splashStart = performance.now();
 setTimeout(function() { var s = document.getElementById('splash'); if (s) { s.classList.add('fade-out'); s.addEventListener('transitionend', function() { s.remove(); }, { once: true }); setTimeout(function() { if (s.parentNode) s.remove(); }, 800); } }, 6000);

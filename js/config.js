@@ -38,3 +38,107 @@ export const RELATION_STYLE = {
   兄弟姐妹: { color: '#2ecc71', width: 1.5, type: 'dashed' },
   朋友:     { color: '#95a5a6', width: 1,   type: 'dotted' },
 };
+
+// ---------------- 共享工具（原 lightbox.js / relations-util.js，合并以省请求） ----------------
+
+// 关系派生：根据父母关系（母子/父子）自动推断「兄弟姐妹」关系。
+// 规则：两只猫共享至少一位父母（同母或同父）即视为兄弟姐妹；已在数据里手写的兄弟姐妹不重复。
+// 推出来的关系带 auto:true 标记（自动推断），可据此在界面上标注。
+export function deriveSiblingRelations(cats, relations) {
+  const catIds = new Set((cats || []).map((c) => c.id));
+  const rels = Array.isArray(relations) ? relations : [];
+
+  const explicit = new Set();
+  rels.forEach((r) => {
+    if (r.relation !== '兄弟姐妹') return;
+    const a = String(r.from), b = String(r.to);
+    explicit.add(a < b ? a + '_' + b : b + '_' + a);
+  });
+
+  const parents = new Map();
+  const addP = (child, parent) => {
+    if (!catIds.has(child) || !catIds.has(parent)) return;
+    if (!parents.has(child)) parents.set(child, new Set());
+    parents.get(child).add(parent);
+  };
+  rels.forEach((r) => {
+    if (r.relation === '母子' || r.relation === '父子') addP(r.to, r.from);
+  });
+
+  const children = [...parents.keys()];
+  const result = [];
+  const done = new Set(explicit);
+  for (let i = 0; i < children.length; i++) {
+    for (let j = i + 1; j < children.length; j++) {
+      const a = children[i], b = children[j];
+      const ps = parents.get(a);
+      const shared = [...ps].some((p) => parents.get(b) && parents.get(b).has(p));
+      if (!shared) continue;
+      const key = a < b ? a + '_' + b : b + '_' + a;
+      if (done.has(key)) continue;
+      done.add(key);
+      result.push({ from: a, to: b, relation: '兄弟姐妹', auto: true });
+    }
+  }
+  return result;
+}
+
+// 通用图片放大查看器（桌面 + 手机）。先显示已缓存缩略图（秒开），原图后台加载后淡入替换。
+export function openLightbox(src, caption, thumbSrc) {
+  if (!src) return;
+  let box = document.getElementById('lightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'lightbox';
+    box.className = 'lightbox';
+    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><div class="lightbox-loading"><span></span></div><img class="lightbox-img" alt=""><div class="lightbox-caption"></div></div>';
+    document.body.appendChild(box);
+  }
+  const img = box.querySelector('.lightbox-img');
+  const loadEl = box.querySelector('.lightbox-loading');
+  const fit = () => {
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    const vv = (window.visualViewport && window.visualViewport.width) ? window.visualViewport : window;
+    const vw = vv.width * 0.92;
+    const vh = vv.height * 0.84;
+    img.style.maxWidth = Math.min(vw, img.naturalWidth) + 'px';
+    img.style.maxHeight = Math.min(vh, img.naturalHeight) + 'px';
+  };
+  const isFull = !thumbSrc || thumbSrc === src;
+  loadEl.style.display = isFull ? 'none' : 'flex';
+  img.style.opacity = 0;
+  img.onload = () => { img.style.opacity = 1; fit(); };
+  img.src = thumbSrc || src;
+  if (img.complete && img.naturalWidth) img.onload();
+  if (!isFull) {
+    const full = new Image();
+    full.onload = () => {
+      img.src = src;
+      loadEl.style.display = 'none';
+      fit();
+    };
+    full.onerror = () => { loadEl.style.display = 'none'; };
+    full.src = src;
+  }
+  const cap = box.querySelector('.lightbox-caption');
+  cap.textContent = caption || '';
+  cap.style.display = caption ? '' : 'none';
+  box.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  var box = document.getElementById('lightbox');
+  if (!box) return;
+  box.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+export function initLightbox() {
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.lightbox-backdrop') || e.target.closest('.lightbox-close')) closeLightbox();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+}

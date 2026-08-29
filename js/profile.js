@@ -1,6 +1,5 @@
 // profile.js — 猫咪独立档案页
-import { DEFAULT_PHOTO } from './config.js';
-import { openLightbox } from './lightbox.js';
+import { DEFAULT_PHOTO, openLightbox } from './config.js';
 window.openLightbox = openLightbox;
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
