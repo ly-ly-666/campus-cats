@@ -1722,5 +1722,86 @@
         ]
       }
     ]
+  },
+  {
+    "id": "cat061",
+    "name": "车车",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "",
+    "lat": 21.678336,
+    "lng": 110.92171,
+    "photo": "images/cat061.jpg",
+    "album": [
+      "images/cat061_album_1787988912780.jpg",
+      "images/cat061_album_1787988924036.jpg"
+    ],
+    "description": "2026年一月中失踪",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "失踪已久",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787989050851_v4xha0",
+        "date": "2026-08-29",
+        "title": "我是车车,我是卡卡",
+        "content": "车车是个雀猫, 曾经我被困在摩托车里,是好心的人类救了我出来\n卡卡是只奶牛,不辜负奶牛的名声,我卡在了下水道,是好心的人类 在一教下水道把我捞出来的\n\n2026年1月中旬,卡卡和车车失踪......",
+        "cats": [
+          "cat062",
+          "cat061"
+        ],
+        "images": [
+          "images/cat062_story_1787989201388.jpg",
+          "images/cat062_story_1787989210697.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cat062",
+    "name": "卡卡",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "奶牛猫",
+    "area": "",
+    "lat": 21.678314,
+    "lng": 110.921623,
+    "photo": "images/cat062.jpg",
+    "album": [
+      "images/cat062_album_1787989000511.jpg"
+    ],
+    "description": "2026年一月中失踪",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "失踪已久",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1787989050851_v4xha0",
+        "date": "2026-08-29",
+        "title": "我是车车,我是卡卡",
+        "content": "车车是个雀猫, 曾经我被困在摩托车里,是好心的人类救了我出来\n卡卡是只奶牛,不辜负奶牛的名声,我卡在了下水道,是好心的人类 在一教下水道把我捞出来的\n\n2026年1月中旬,卡卡和车车失踪......",
+        "cats": [
+          "cat062",
+          "cat061"
+        ],
+        "images": [
+          "images/cat062_story_1787989201388.jpg",
+          "images/cat062_story_1787989210697.jpg"
+        ]
+      }
+    ]
   }
 ]

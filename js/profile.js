@@ -1,5 +1,7 @@
 // profile.js — 猫咪独立档案页
 import { DEFAULT_PHOTO } from './config.js';
+import { openLightbox } from './lightbox.js';
+window.openLightbox = openLightbox;
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
 const STATUS_TAG = { 已绝育: 'neutered', 未绝育: 'unneutered', 未知: 'unknown' };
@@ -151,7 +153,7 @@ function renderProfileStories(cat) {
     if (s.content) html += '<div class="story-item-content">' + escapeHtml(s.content) + '</div>';
     if (Array.isArray(s.images) && s.images.length) {
       html += '<div class="story-item-imgs">' + s.images.map(function(src) {
-        return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">';
+        return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption)" style="cursor:zoom-in;">';
       }).join('') + '</div>';
     }
     html += '</div>';
@@ -207,7 +209,7 @@ function render(cats, relations) {
       evts.slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); }).map(function (ev) {
         var imgs = Array.isArray(ev.images) && ev.images.length
           ? '<div class="event-imgs">' + ev.images.map(function (src) {
-            return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full,\'_blank\')">';
+            return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full, \'\')" style="cursor:zoom-in;">';
           }).join('') + '</div>'
           : '';
         return '<div class="event-tl-item">' +
@@ -278,7 +280,7 @@ function render(cats, relations) {
   `;
 
   document.querySelectorAll('.profile-album img').forEach(function (img) {
-    img.addEventListener('click', function () { window.open(img.dataset.full || img.src, '_blank'); });
+    img.addEventListener('click', function () { window.openLightbox(img.dataset.full || img.src, ''); });
   });
 }
 

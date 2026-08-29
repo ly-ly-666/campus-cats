@@ -1,6 +1,8 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO } from './config.js';
 import { deriveSiblingRelations } from './relations-util.js';
+import { openLightbox, initLightbox } from './lightbox.js';
+export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
 export function gentleLeftAt(cat) {
@@ -293,14 +295,14 @@ export function showModal(cat, cats, relations) {
         <div class="modal-event-item">
           <div class="modal-event-date">${escapeHtml(ev.date || '')}</div>
           <div class="modal-event-text">${escapeHtml(ev.text || '')}</div>
-          ${Array.isArray(ev.images) && ev.images.length ? `<div class="modal-event-imgs">${ev.images.map((src) => `<img src="${photoUrl(src)}" alt="" loading="lazy" onclick="window.open(this.src,'_blank')">`).join('')}</div>` : ''}
+          ${Array.isArray(ev.images) && ev.images.length ? `<div class="modal-event-imgs">${ev.images.map((src) => `<img src="${photoUrl(src)}" alt="" loading="lazy" onclick="window.openLightbox(this.src,'')" style="cursor:zoom-in;">`).join('')}</div>` : ''}
         </div>`).join('') + '</div>'
     : '';
 
   const album = Array.isArray(cat.album) ? cat.album : [];
   const albumHtml = album.length
     ? `<div class="modal-album">${album.map((src) => `
-        <div class="album-thumb"><img src="${thumbUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(src)}"></div>
+        <div class="album-thumb"><img src="${thumbUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(src)}" onclick="openLightbox(this.dataset.full, '${escapeHtml(cat.name)}')" style="cursor:zoom-in;"></div>
       `).join('')}</div>`
     : '<div class="relation-empty">暂无相册</div>';
 
@@ -594,53 +596,6 @@ export function initCorrection(cats, siteConfig) {
     if (btn) openCorrection(_corrCats, btn.dataset.catId);
   });
 }
-/**
- * 通用图片放大查看器（lightbox）。点击头像 / 相册图 / 事件截图会调用它。
- * @param {string} src 图片地址（可以是 dataURL 或路径）
- * @param {string} [caption] 可选：图片下方说明文字
- */
-export function openLightbox(src, caption) {
-  if (!src) return;
-  let box = document.getElementById('lightbox');
-  if (!box) {
-    box = document.createElement('div');
-    box.id = 'lightbox';
-    box.className = 'lightbox';
-    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><img class="lightbox-img" alt=""><div class="lightbox-caption"></div></div>';
-    document.body.appendChild(box);
-  }
-  const img = box.querySelector('.lightbox-img');
-  // 不把小图放得比原始尺寸大：按原始宽高与视口上限取较小值
-  const fit = () => {
-    if (!img.naturalWidth || !img.naturalHeight) return;
-    const vw = window.innerWidth * 0.92;
-    const vh = window.innerHeight * 0.84;
-    img.style.maxWidth = Math.min(vw, img.naturalWidth) + 'px';
-    img.style.maxHeight = Math.min(vh, img.naturalHeight) + 'px';
-  };
-  img.onload = fit;
-  img.src = src;
-  if (img.complete && img.naturalWidth) fit();
-  const cap = box.querySelector('.lightbox-caption');
-  cap.textContent = caption || '';
-  cap.style.display = caption ? '' : 'none';
-  box.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeLightbox() {
-  var box = document.getElementById('lightbox');
-  if (!box) return;
-  box.classList.remove('open');
-  document.body.style.overflow = '';
-}
-export function initLightbox() {
-  document.addEventListener('click', function (e) {
-    if (e.target.closest('.lightbox-backdrop') || e.target.closest('.lightbox-close')) closeLightbox();
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeLightbox();
-  });
-}
 
 /**
  * 渲染「故事集」视图：按猫聚合展示所有故事
@@ -839,7 +794,7 @@ export function renderStoriesTimeline(cats, siteConfig) {
       return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="点击查看「' + escapeHtml(cc.name) + '」档案"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
     }).join('') + '</div>' : '';
     const contentHtml = s.content ? storyContentHtml(s, si, 0) : '';
-    const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.open(this.dataset.full || this.src, \'_blank\')" style="cursor:zoom-in;">').join('') + '</div>' : '';
+    const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption)" style="cursor:zoom-in;">').join('') + '</div>' : '';
     return '<div class="story-item">' + pinHtml + dateHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '</div>';
   }).join('');
 }
