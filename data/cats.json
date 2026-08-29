@@ -22,7 +22,7 @@
     "tags": [],
     "status": "已绝育",
     "life": "在校",
-    "firstSeen": "2026-08",
+    "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
     "age": "",
@@ -100,6 +100,19 @@
         "images": [
           "images/cat002_story_1787934349693.jpg",
           "images/cat002_story_1787934384723.jpg"
+        ]
+      },
+      {
+        "id": "s_1787986552824_0vyneu",
+        "date": "2026-08-28",
+        "title": "喵站长回归广油的第一天",
+        "content": "喵喵咪咪咪咪咪咪喵喵喵喵喵喵喵喵喵喵喵喵喵\n",
+        "cats": [
+          "cat002",
+          "cat018"
+        ],
+        "images": [
+          "images/cat002_story_1787986582089.jpg"
         ]
       }
     ]
@@ -350,7 +363,7 @@
     "lng": 110.924069,
     "photo": "images/cat011.jpg",
     "album": [],
-    "description": "",
+    "description": "是校园里年纪最大的女咪，所以外号叫“红尾老太”。名字由来：年轻时尾巴受过伤，好心的人类用红蜡帮她封住伤口。小脑有点小毛病，走路摇摇晃晃的。",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -360,7 +373,21 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1787986257477_hbpstt",
+        "date": "2026-08-29",
+        "title": "红尾老太的来历",
+        "content": "年轻时尾巴受过伤，好心的人类用红蜡帮她封住伤口。小脑有点小毛病，走路摇摇晃晃的。是校园里年纪最大的女咪",
+        "cats": [
+          "cat011"
+        ],
+        "images": [
+          "images/cat011_story_1787986437947.jpg",
+          "images/cat011_story_1787986448304.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat012",
@@ -531,6 +558,19 @@
         "images": [
           "images/cat018_story_1787929262362.jpg",
           "images/cat018_story_1787929368095.jpg"
+        ]
+      },
+      {
+        "id": "s_1787986552824_0vyneu",
+        "date": "2026-08-28",
+        "title": "喵站长回归广油的第一天",
+        "content": "喵喵咪咪咪咪咪咪喵喵喵喵喵喵喵喵喵喵喵喵喵\n",
+        "cats": [
+          "cat002",
+          "cat018"
+        ],
+        "images": [
+          "images/cat002_story_1787986582089.jpg"
         ]
       }
     ]
@@ -878,7 +918,7 @@
     "lng": 110.921786,
     "photo": "images/cat032.jpg",
     "album": [],
-    "description": "极品好猫,假如你有一天,你被一只猫撞了,那绝对是乔乔在蹭你",
+    "description": "极品好猫,叫声很娇，尾巴会竖成天线一样奔向你。假如你有一天,你被一只猫撞了,那绝对是乔乔在蹭你",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -1407,7 +1447,7 @@
     "album": [
       "images/cat051_album_1787840234471.jpg"
     ],
-    "description": "",
+    "description": "疑似躲在车下地盘被带出学校",
     "story": "",
     "tags": [],
     "status": "未知",
@@ -1432,7 +1472,7 @@
     "album": [
       "images/cat052_album_1787840296653.jpg"
     ],
-    "description": "",
+    "description": "疑似躲在车下地盘被带出学校",
     "story": "",
     "tags": [],
     "status": "未知",
