@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap, initMapSearch } from './map.js';
 import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, prefetchCatOriginals } from './ui.js';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline } from './ui.js';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 async function loadData() {
@@ -90,9 +90,6 @@ async function boot() {
   }
 
   setLoading('');
-
-  // 缩略图已就绪后，后台慢慢预取原图（渐进式加载：预览快，详情秒开）
-  prefetchCatOriginals(cats);
 
   // 地图：点击标记 -> 弹出详情
   let map = null;

@@ -60,24 +60,6 @@ export function prefetchImages(urls, opts = {}) {
   });
 }
 
-/**
- * 预取所有猫的原图（渐进式加载）：头像优先，相册/事件图稍后。
- * 缩略图先显示，原图在后台慢慢拉进缓存，详情/放大时秒开。
- * @param {Array} cats 猫咪数组
- */
-export function prefetchCatOriginals(cats) {
-  const list = Array.isArray(cats) ? cats : [];
-  const photos = [];
-  const extras = [];
-  list.forEach((cat) => {
-    if (cat.photo && cat.photo.indexOf('placeholder') < 0) photos.push(photoUrl(cat.photo));
-    (cat.album || []).forEach((src) => extras.push(photoUrl(src)));
-    (cat.events || []).forEach((ev) => (ev.images || []).forEach((src) => extras.push(photoUrl(src))));
-  });
-  prefetchImages(photos, { delay: 0 });    // 头像最常用，先拉
-  prefetchImages(extras, { delay: 2000 }); // 相册/事件图，后拉
-}
-
 /** 生成猫咪名字首字占位图（SVG data URL），避免页面加载时并发请求 39 张照片 */
 function initialsPlaceholder(name) {
   const s = (name || '?').charAt(0).toUpperCase().replace(/[$`]/g, '?');
