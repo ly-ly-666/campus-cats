@@ -100,6 +100,31 @@
           "images/cat001_story_1788019345478.jpg",
           "images/cat001_story_1788019353415.jpg"
         ]
+      },
+      {
+        "id": "s_1788100914698_hjzhs6",
+        "date": "2026-08-30",
+        "title": "我很神秘",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788100921259.jpg"
+        ]
+      },
+      {
+        "id": "s_1788101237229_xyrj2p",
+        "date": "2026-08-30",
+        "title": "白猪的今日睡姿",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788101240220.jpg",
+          "images/cat001_story_1788101439778.jpg"
+        ]
       }
     ]
   },
@@ -165,6 +190,18 @@
         "images": [
           "images/cat002_story_1788019383759.jpg"
         ]
+      },
+      {
+        "id": "s_1788101114811_wjis9k",
+        "date": "2026-08-30",
+        "title": "大眼萌花",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1788101117915.jpg"
+        ]
       }
     ]
   },
@@ -191,7 +228,53 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788100961227_a9qukl",
+        "date": "2026-08-30",
+        "title": "毛毛瘦了",
+        "content": "",
+        "cats": [
+          "cat003"
+        ],
+        "images": [
+          "images/cat003_story_1788100971910.jpg",
+          "images/cat003_story_1788100991621.jpg"
+        ]
+      },
+      {
+        "id": "s_1788101478977_turfpi",
+        "date": "2026-08-30",
+        "title": "爱心猫毛毛",
+        "content": "",
+        "cats": [
+          "cat003"
+        ],
+        "images": [
+          "images/cat003_story_1788101484189.jpg",
+          "images/cat003_story_1788101493555.jpg"
+        ]
+      },
+      {
+        "id": "s_1788100577607_7xw9t6",
+        "date": "2026-08-30",
+        "title": "一些正脸照",
+        "content": "",
+        "cats": [
+          "cat005",
+          "cat003",
+          "cat038"
+        ],
+        "images": [
+          "images/cat005_story_1788100592003.jpg",
+          "images/cat005_story_1788100601174.jpg",
+          "images/cat005_story_1788100609950.jpg",
+          "images/cat005_story_1788100620289.jpg",
+          "images/cat005_story_1788100632862.jpg",
+          "images/cat005_story_1788100640078.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat004",
@@ -310,6 +393,25 @@
         "images": [
           "images/cat001_story_1788019281198.jpg"
         ]
+      },
+      {
+        "id": "s_1788100577607_7xw9t6",
+        "date": "2026-08-30",
+        "title": "一些正脸照",
+        "content": "",
+        "cats": [
+          "cat005",
+          "cat003",
+          "cat038"
+        ],
+        "images": [
+          "images/cat005_story_1788100592003.jpg",
+          "images/cat005_story_1788100601174.jpg",
+          "images/cat005_story_1788100609950.jpg",
+          "images/cat005_story_1788100620289.jpg",
+          "images/cat005_story_1788100632862.jpg",
+          "images/cat005_story_1788100640078.jpg"
+        ]
       }
     ]
   },
@@ -347,8 +449,7 @@
     "lng": 110.921875,
     "photo": "images/cat007.jpg",
     "album": [
-      "images/cat007_album_1787826668150.jpg",
-      "images/cat007_album_1787826687335.jpg"
+      "images/cat007_album_1787826668150.jpg"
     ],
     "description": "斗鸡眼",
     "story": "",
@@ -499,7 +600,7 @@
   {
     "id": "cat011",
     "name": "红尾",
-    "nickname": "红尾老太",
+    "nickname": "红尾老太,宏伟",
     "gender": "female",
     "color": "",
     "area": "五区水电站附近",
@@ -529,6 +630,18 @@
         "images": [
           "images/cat011_story_1787986437947.jpg",
           "images/cat011_story_1787986448304.jpg"
+        ]
+      },
+      {
+        "id": "s_1788101027947_po943y",
+        "date": "2026-08-30",
+        "title": "宏伟而非红尾",
+        "content": "",
+        "cats": [
+          "cat011"
+        ],
+        "images": [
+          "images/cat011_story_1788101048576.jpg"
         ]
       }
     ]
@@ -862,6 +975,22 @@
         ],
         "images": [
           "images/cat018_story_1788019438909.jpg"
+        ]
+      },
+      {
+        "id": "s_1788101267201_cvbcwg",
+        "date": "2026-08-30",
+        "title": "幼儿园小孩排队",
+        "content": "",
+        "cats": [
+          "cat036",
+          "cat037",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat036_story_1788101283116.jpg",
+          "images/cat036_story_1788101291194.jpg"
         ]
       }
     ]
@@ -1335,6 +1464,22 @@
         "images": [
           "images/cat018_story_1788019438909.jpg"
         ]
+      },
+      {
+        "id": "s_1788101267201_cvbcwg",
+        "date": "2026-08-30",
+        "title": "幼儿园小孩排队",
+        "content": "",
+        "cats": [
+          "cat036",
+          "cat037",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat036_story_1788101283116.jpg",
+          "images/cat036_story_1788101291194.jpg"
+        ]
       }
     ]
   },
@@ -1373,6 +1518,36 @@
         ],
         "images": [
           "images/cat019_story_1787929047552.jpg"
+        ]
+      },
+      {
+        "id": "s_1788100675739_otugd0",
+        "date": "2026-08-30",
+        "title": "给我们两兄弟拍个照",
+        "content": "",
+        "cats": [
+          "cat038",
+          "cat037"
+        ],
+        "images": [
+          "images/cat038_story_1788100690875.jpg",
+          "images/cat038_story_1788100700955.jpg"
+        ]
+      },
+      {
+        "id": "s_1788101267201_cvbcwg",
+        "date": "2026-08-30",
+        "title": "幼儿园小孩排队",
+        "content": "",
+        "cats": [
+          "cat036",
+          "cat037",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat036_story_1788101283116.jpg",
+          "images/cat036_story_1788101291194.jpg"
         ]
       }
     ]
@@ -1428,6 +1603,55 @@
           "images/cat038_story_1788018459402.jpg",
           "images/cat038_story_1788018466630.jpg",
           "images/cat038_story_1788018478318.jpg"
+        ]
+      },
+      {
+        "id": "s_1788100675739_otugd0",
+        "date": "2026-08-30",
+        "title": "给我们两兄弟拍个照",
+        "content": "",
+        "cats": [
+          "cat038",
+          "cat037"
+        ],
+        "images": [
+          "images/cat038_story_1788100690875.jpg",
+          "images/cat038_story_1788100700955.jpg"
+        ]
+      },
+      {
+        "id": "s_1788101267201_cvbcwg",
+        "date": "2026-08-30",
+        "title": "幼儿园小孩排队",
+        "content": "",
+        "cats": [
+          "cat036",
+          "cat037",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat036_story_1788101283116.jpg",
+          "images/cat036_story_1788101291194.jpg"
+        ]
+      },
+      {
+        "id": "s_1788100577607_7xw9t6",
+        "date": "2026-08-30",
+        "title": "一些正脸照",
+        "content": "",
+        "cats": [
+          "cat005",
+          "cat003",
+          "cat038"
+        ],
+        "images": [
+          "images/cat005_story_1788100592003.jpg",
+          "images/cat005_story_1788100601174.jpg",
+          "images/cat005_story_1788100609950.jpg",
+          "images/cat005_story_1788100620289.jpg",
+          "images/cat005_story_1788100632862.jpg",
+          "images/cat005_story_1788100640078.jpg"
         ]
       }
     ]
@@ -1687,7 +1911,7 @@
         "id": "s_1788019923763_3bixcs",
         "date": "2026-08-30",
         "title": "两弯月牙,一个八",
-        "content": "板鸭趴的小八",
+        "content": "板鸭趴的小八\n\n\n拍摄于2026年1月17日",
         "cats": [
           "cat047"
         ],
