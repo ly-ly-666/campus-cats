@@ -125,6 +125,30 @@
           "images/cat001_story_1788101240220.jpg",
           "images/cat001_story_1788101439778.jpg"
         ]
+      },
+      {
+        "id": "s_1788189062626_xgjvpo",
+        "date": "2026-08-31",
+        "title": "小白揣手手",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788189065223.jpg"
+        ]
+      },
+      {
+        "id": "s_1788189300681_v9qulm",
+        "date": "2026-08-31",
+        "title": "oi~",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788189305064.jpg"
+        ]
       }
     ]
   },
@@ -201,6 +225,23 @@
         ],
         "images": [
           "images/cat002_story_1788101117915.jpg"
+        ]
+      },
+      {
+        "id": "s_1788188804397_s1sq2x",
+        "date": "2026-08-31",
+        "title": "校花",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1788188807386.jpg",
+          "images/cat002_story_1788188830978.jpg",
+          "images/cat002_story_1788188847164.jpg",
+          "images/cat002_story_1788188872439.jpg",
+          "images/cat002_story_1788188919800.jpg",
+          "images/cat002_story_1788188971158.jpg"
         ]
       }
     ]
@@ -281,7 +322,7 @@
     "name": "年年",
     "nickname": "牛牛，肥牛, 西门霸王",
     "gender": "male",
-    "color": "灰色混白色",
+    "color": "白底狸花",
     "area": "西门",
     "lat": 21.678848,
     "lng": 110.923274,
@@ -412,6 +453,19 @@
           "images/cat005_story_1788100632862.jpg",
           "images/cat005_story_1788100640078.jpg"
         ]
+      },
+      {
+        "id": "s_1788188585624_rftf4x",
+        "date": "2026-08-31",
+        "title": "我是卷卷,我爱看书",
+        "content": "躲进书架里的卷卷",
+        "cats": [
+          "cat005"
+        ],
+        "images": [
+          "images/cat005_story_1788188598566.jpg",
+          "images/cat005_story_1788188609400.jpg"
+        ]
       }
     ]
   },
@@ -420,7 +474,7 @@
     "name": "十一",
     "nickname": "小老鼠",
     "gender": "female",
-    "color": "",
+    "color": "标准狸花猫",
     "area": "图书馆正门",
     "lat": 21.678423,
     "lng": 110.921775,
@@ -443,7 +497,7 @@
     "name": "小曲",
     "nickname": "",
     "gender": "female",
-    "color": "狸花猫",
+    "color": "标准狸花猫（也称棕色虎斑）",
     "area": "花坛",
     "lat": 21.679128,
     "lng": 110.921875,
@@ -468,7 +522,7 @@
     "name": "小草",
     "nickname": "蓝银草（大名），草哥，戚百草",
     "gender": "male",
-    "color": "疑似银渐层狸花串串",
+    "color": "银虎斑加白（也叫银花白 / 银虎斑花白）",
     "area": "所在区域不固定，一般在二区",
     "lat": 21.678756,
     "lng": 110.921306,
@@ -506,7 +560,7 @@
     "name": "奶油",
     "nickname": "白袜体育生",
     "gender": "male",
-    "color": "白猫",
+    "color": "纯白猫",
     "area": "五区门口",
     "lat": 21.678599,
     "lng": 110.923642,
@@ -552,6 +606,21 @@
           "images/cat009_story_1788019176401.jpg",
           "images/cat009_story_1788019183611.jpg"
         ]
+      },
+      {
+        "id": "s_1788189011633_s2385c",
+        "date": "2026-08-31",
+        "title": "葛优瘫",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1788189014578.jpg",
+          "images/cat009_story_1788189331975.jpg",
+          "images/cat009_story_1788189341611.jpg",
+          "images/cat009_story_1788189353614.jpg"
+        ]
       }
     ]
   },
@@ -560,7 +629,7 @@
     "name": "橘又白",
     "nickname": "焗油宝",
     "gender": "female",
-    "color": "橘色混白色",
+    "color": "橘白猫（也叫红虎斑加白 / 黄白花）",
     "area": "五区",
     "lat": 21.678743,
     "lng": 110.923639,
@@ -602,7 +671,7 @@
     "name": "红尾",
     "nickname": "红尾老太,宏伟",
     "gender": "female",
-    "color": "",
+    "color": "玳瑁猫（黑色与橘色混杂，无白色）",
     "area": "五区水电站附近",
     "lat": 21.677752,
     "lng": 110.924069,
@@ -886,6 +955,18 @@
         ],
         "images": [
           "images/cat018_story_1788019438909.jpg"
+        ]
+      },
+      {
+        "id": "s_1788189857980_3kowsr",
+        "date": "2026-08-31",
+        "title": "站长表示很搞笑",
+        "content": "",
+        "cats": [
+          "cat018"
+        ],
+        "images": [
+          "images/cat018_story_1788189860976.jpg"
         ]
       }
     ]
@@ -1308,7 +1389,23 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788188691251_qe83eb",
+        "date": "2026-08-31",
+        "title": "乔乔在吃饭,乔乔的近照",
+        "content": "吃饭的乔乔,感觉变大只了",
+        "cats": [
+          "cat032"
+        ],
+        "images": [
+          "images/cat032_story_1788188694944.jpg",
+          "images/cat032_story_1788188762790.jpg",
+          "images/cat032_story_1788188784448.jpg",
+          "images/cat032_story_1788189249940.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat033",
@@ -1553,6 +1650,18 @@
         "images": [
           "images/cat036_story_1788101283116.jpg",
           "images/cat036_story_1788101291194.jpg"
+        ]
+      },
+      {
+        "id": "s_1788189118590_ehnz70",
+        "date": "2026-08-31",
+        "title": "奇怪的坐姿",
+        "content": "",
+        "cats": [
+          "cat037"
+        ],
+        "images": [
+          "images/cat037_story_1788189121513.jpg"
         ]
       }
     ]
@@ -2411,5 +2520,30 @@
         ]
       }
     ]
+  },
+  {
+    "id": "cat064",
+    "name": "假当当",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "",
+    "lat": 21.677161,
+    "lng": 110.921321,
+    "photo": "images/cat064.jpg",
+    "album": [
+      "images/cat064_album_1788189188278.jpg"
+    ],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": []
   }
 ]
