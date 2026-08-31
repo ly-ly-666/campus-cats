@@ -1,0 +1,9 @@
+{
+  "name": "ymao-likes-function",
+  "version": "1.0.0",
+  "description": "油喵地图点赞计数函数（Netlify Blobs 存储）",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

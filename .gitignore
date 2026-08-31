@@ -25,3 +25,9 @@ _shot*.png
 # 调试临时文件
 _server2.mjs
 _mobile_preview.html
+
+# Netlify 部署压缩包（构建产物，不入库）
+netlify-deploy.zip
+
+# Netlify CLI 本地状态目录
+netlify-deploy/.netlify/

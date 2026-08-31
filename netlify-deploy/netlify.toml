@@ -1,0 +1,5 @@
+# Netlify 部署配置（本站纯静态 + 点赞计数函数）
+# 站点主站跑 GitHub Pages，这里只用 Netlify 承载点赞函数。
+[build]
+[functions]
+  node_bundler = "esbuild"

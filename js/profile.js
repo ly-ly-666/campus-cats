@@ -1,5 +1,6 @@
 // profile.js — 猫咪独立档案页
 import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox } from './config.js';
+import { mountLikeButton } from './likes.js';
 window.openLightbox = openLightbox;
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
@@ -285,6 +286,7 @@ function render(cats, relations) {
 
   document.getElementById('profile-main').innerHTML = `
     <a class="back-link" href="./index.html">← 返回地图</a>
+    <div class="profile-like" data-like-for="${cat.id}"></div>
     <section class="profile-section">
       <h3>📋 基本信息</h3>
       <div class="info-grid">${infoHtml}</div>
@@ -305,6 +307,9 @@ function render(cats, relations) {
   document.querySelectorAll('.profile-album img').forEach(function (img) {
     img.addEventListener('click', function () { window.openLightbox(img.dataset.full || img.src, img.dataset.caption || '', img.src); });
   });
+
+  const likeBox = document.querySelector('.profile-like[data-like-for="' + cat.id + '"]');
+  if (likeBox) mountLikeButton(likeBox, cat.id);
 }
 
 loadData();

@@ -874,3 +874,27 @@ body { display: flex; flex-direction: column; }
   /* 统计条压缩 */
   .site-stats { font-size: 11px; padding: 2px 10px; gap: 12px; }
 }
+
+/* ---------- 点赞（Netlify 计数） ---------- */
+.like-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff7ed; border: 1px solid #fdba74; border-radius: 999px;
+  padding: 8px 20px; cursor: pointer; font-size: 15px; font-weight: 600;
+  color: #9a3412; transition: transform .15s ease, background .2s ease, border-color .2s ease;
+  user-select: none;
+}
+.like-btn:hover { background: #ffedd5; transform: translateY(-1px); }
+.like-btn:active { transform: scale(.96); }
+.like-btn[data-liked="1"] { background: #ff4d4f; border-color: #ff4d4f; color: #fff; }
+.like-heart { font-size: 20px; line-height: 1; display: inline-block; }
+.like-btn[data-liked="1"] .like-heart { animation: like-pop .45s ease; }
+.like-heart.pop { animation: like-pop .45s ease; }
+@keyframes like-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.7) rotate(-10deg); }
+  70% { transform: scale(.88); }
+  100% { transform: scale(1); }
+}
+.like-count { font-variant-numeric: tabular-nums; min-width: 24px; text-align: left; }
+.modal-like { margin: 12px 0 6px; display: flex; justify-content: center; }
+.profile-like { margin: 14px 0 8px; display: flex; justify-content: center; }

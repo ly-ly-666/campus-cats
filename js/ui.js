@@ -1,5 +1,6 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, collectStoryAlbumImages, openLightbox, initLightbox } from './config.js';
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js';
+import { mountLikeButton } from './likes.js';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -318,6 +319,7 @@ export function showModal(cat, cats, relations) {
       ${statusBanner}
       ${cat.description ? `<p class="modal-desc">${escapeHtml(cat.description)}</p>` : ''}
       <div class="modal-info">${infoHtml}</div>
+      <div class="modal-like" data-like-for="${cat.id}"></div>
       <div style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a><button class="btn btn-sm" id="corr-from-modal" data-cat-id="${cat.id}">🐾 信息有误？更正</button></div>
       <h3 class="modal-section-title">关系</h3>
       <div class="modal-relations">${relationHtml}</div>
@@ -335,6 +337,9 @@ export function showModal(cat, cats, relations) {
   };
   modal.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
   window.__closeModal = close;
+
+  const likeBox = modal.querySelector('[data-like-for="' + cat.id + '"]');
+  if (likeBox) mountLikeButton(likeBox, cat.id);
 }
 
 /**
