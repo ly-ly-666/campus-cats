@@ -1,0 +1,36 @@
+# 每日自动备份点赞数据：把 Netlify 后端的点赞数拉下来存进仓库，
+# 与猫咪/故事数据一起由 Git 历史永久保留，防止 Netlify 侧数据丢失。
+name: Likes daily backup
+
+on:
+  schedule:
+    # 每天 UTC 00:00 执行（北京时间 08:00）
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 拉取点赞汇总
+        run: |
+          curl -sf "https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes?stats=true" > /tmp/likes.json \
+            || { echo "拉取失败，跳过本次备份"; exit 0; }
+          # 校验是合法 JSON 且含 stats，避免把错误内容写进仓库
+          node -e "const d=require('/tmp/likes.json'); if(!d||typeof d.stats!=='object'){console.error('非法响应');process.exit(1)}"
+          mkdir -p data
+          cp /tmp/likes.json data/likes-backup.json
+
+      - name: 有变化才提交
+        run: |
+          git config user.name "likes-backup[bot]"
+          git config user.email "likes-backup@users.noreply.github.com"
+          git add data/likes-backup.json
+          if git diff --cached --quiet; then echo "点赞数据无变化，跳过提交"; exit 0; fi
+          git commit -m "data: 自动备份点赞数据 $(date -u +%Y%m%d-%H%M)"
+          git push origin HEAD:main
