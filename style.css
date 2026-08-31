@@ -899,3 +899,32 @@ body { display: flex; flex-direction: column; }
 .modal-like { margin: 12px 0 6px; display: flex; justify-content: center; }
 .profile-like { margin: 14px 0 8px; display: flex; justify-content: center; }
 .story-item-like { margin-top: 10px; display: flex; justify-content: flex-end; }
+
+/* ---------- 故事评论区 ---------- */
+.story-item-comment { margin-top: 8px; border-top: 1px dashed var(--border, #e8e1d6); padding-top: 8px; }
+.comment-toggle {
+  width: 100%; background: #fffdf9; border: 1px solid var(--border, #e8e1d6);
+  border-radius: 8px; padding: 7px; font-size: 12.5px; color: var(--muted, #8a857d); cursor: pointer;
+}
+.comment-toggle:hover { background: #fff7ed; color: #7c2d12; }
+.comment-panel { margin-top: 8px; }
+.comment-list { display: flex; flex-direction: column; gap: 7px; max-height: 240px; overflow-y: auto; }
+.comment-row { background: #fffdf9; border: 1px solid #efe8db; border-radius: 8px; padding: 7px 10px; }
+.comment-name-tag { font-size: 12px; font-weight: 700; color: #b45309; }
+.comment-time { font-size: 11px; color: #a8a096; margin-left: 6px; }
+.comment-text-show { font-size: 13px; color: #3b3834; margin-top: 3px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+.comment-empty { font-size: 12px; color: #a8a096; padding: 6px 0; }
+.comment-form { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.comment-form input {
+  border: 1px solid var(--border, #e8e1d6); border-radius: 8px; padding: 6px 9px; font-size: 12.5px;
+  font-family: inherit; background: #fff;
+}
+.comment-form .comment-name { width: 86px; }
+.comment-form .comment-text { flex: 1; min-width: 120px; }
+.comment-send {
+  border: none; background: #b45309; color: #fff; border-radius: 8px; padding: 6px 14px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.comment-send:hover { background: #92400e; }
+.comment-send:disabled { opacity: .55; cursor: default; }
+.comment-tip { font-size: 11.5px; color: #b45309; margin-top: 5px; min-height: 16px; }

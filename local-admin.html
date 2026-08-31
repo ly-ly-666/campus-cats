@@ -42,6 +42,13 @@
     .logbox { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; max-height: 180px; overflow: auto; }
     .logbox .ok { color: #059669; } .logbox .err { color: #dc2626; } .logbox .info { color: var(--muted); }
 
+    .comment-admin-row { border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; background: #fffdf9; margin-bottom: 8px; }
+    .comment-admin-row .cm-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+    .comment-admin-row .cm-title { font-weight: 700; font-size: 12.5px; color: #7c2d12; }
+    .comment-admin-row .cm-name { font-size: 12px; color: #b45309; }
+    .comment-admin-row .cm-time { font-size: 11px; color: var(--muted); }
+    .comment-admin-row .cm-body { font-size: 13px; color: var(--text); margin: 5px 0 7px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
+
     .catcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 8px; }
     .catcard { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
     .catcard .th { height: 140px; background: #f0ebe2; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
@@ -337,8 +344,17 @@
             <button class="btn btn-green" id="btn-refresh-likes">🔄 刷新统计</button>
             <span class="hint" id="likes-load-tip" style="align-self:center;">上次刷新：—</span>
           </div>
+          <div class="hint" id="likes-backup-tip" style="margin-top:10px;">💾 备份状态：查询中…</div>
           <div id="likes-summary" class="row" style="margin-top:10px;"></div>
           <div id="likes-list" class="likes-list"></div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+          <h2 style="font-size:14px;color:var(--primary-dark);margin-bottom:4px;">💬 故事评论管理</h2>
+          <p class="hint">查看各篇故事收到的真实评论，可删除不合适的内容（删除需口令）。</p>
+          <div class="row" style="margin-top:4px;">
+            <button class="btn btn-green" id="btn-load-comments">📄 加载评论</button>
+            <span class="hint" id="comments-tip" style="align-self:center;">—</span>
+          </div>
+          <div id="comments-manage" class="comments-manage" style="margin-top:10px;"></div>
         </div>
       </section>
 

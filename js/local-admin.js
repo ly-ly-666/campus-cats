@@ -2205,11 +2205,118 @@
           if (tip) tip.textContent = '拉取失败';
           listEl.innerHTML = '<p class="hint" style="margin:6px 0;">拉取失败（' + esc(e.message || e) + '）。请确认 Netlify 函数已部署。</p>';
         });
+      updateBackupTip();
+    }
+    function updateBackupTip() {
+      var el = $('likes-backup-tip');
+      if (!el) return;
+      el.textContent = '💾 备份状态：查询中…';
+      fetch('https://api.github.com/repos/ly-ly-666/campus-cats/commits?path=data/likes-backup.json&per_page=1')
+        .then(function (r) { return r.json(); })
+        .then(function (arr) {
+          if (!Array.isArray(arr) || !arr.length || !arr[0] || !arr[0].commit) {
+            el.textContent = '⚠️ 暂未查询到 GitHub 记录，备份可能还没跑过（每天 08:00 自动备份）';
+            return;
+          }
+          var d = new Date(arr[0].commit.author.date);
+          var msg = '💾 最近备份：' + d.toLocaleString('zh-CN') + '（GitHub 每日自动保存）';
+          var now = Date.now(), since = now - d.getTime();
+          var day = 86400000;
+          if (since > day * 2) msg += '　⚠️ 已超过 2 天未更新，可去 GitHub→Actions 手动触发一次';
+          el.textContent = msg;
+        })
+        .catch(function () {
+          el.textContent = '— 备份状态暂不可见（网络/仓库地址问题）';
+        });
     }
     var refreshLikesBtn = $('btn-refresh-likes');
     if (refreshLikesBtn) refreshLikesBtn.addEventListener('click', function () {
       if (!dirHandle) { log('❌ 请先选择项目文件夹后使用', 'err'); return; }
       refreshLikes();
+    });
+    // 备份状态与本地文件夹无关，打开页面即查询一次
+    updateBackupTip();
+
+    // ---------- 故事评论管理 ----------
+    function isStoryGridActive() { return true; }
+    var _storyTitleMap = {};
+    function buildStoryTitleMap() {
+      var m = {};
+      (cats || []).forEach(function (c) {
+        (Array.isArray(c.stories) ? c.stories : []).forEach(function (st) {
+          if (!st || !st.id) return;
+          if (!m[st.id]) m[st.id] = { title: st.title || '', cats: [] };
+          if (c.name) m[st.id].cats.push(c.name);
+        });
+      });
+      _storyTitleMap = m;
+    }
+    function storyTitleOf(sid) {
+      var m = _storyTitleMap[sid];
+      if (!m) return '故事 #' + sid;
+      var t = m.title || ('故事 #' + sid);
+      if (m.cats.length) t += '（' + m.cats.join('、') + '）';
+      return t;
+    }
+    function fmtCommentTime(ts) {
+      var d = new Date(ts), p = function (n) { return (n < 10 ? '0' : '') + n; };
+      return (d.getFullYear()) + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+    function renderComments(rows) {
+      var box = $('comments-manage'), tip = $('comments-tip');
+      if (!box) return;
+      if (!rows.length) { box.innerHTML = '<p class="hint" style="margin:4px 0;">暂无用户评论。</p>'; if (tip) tip.textContent = '共 0 条'; return; }
+      box.innerHTML = rows.map(function (r) {
+        var c = r.comment;
+        return '<div class="comment-admin-row" data-sid="' + esc(r.storyId) + '" data-cid="' + esc(c.id) + '">' +
+          '<div class="cm-head"><span class="cm-title">' + esc(storyTitleOf(r.storyId)) + '</span>' +
+          '<span class="cm-name">' + esc(c.name) + '</span>' +
+          '<span class="cm-time">' + fmtCommentTime(c.at) + '</span></div>' +
+          '<div class="cm-body">' + esc(c.content) + '</div>' +
+          '<button type="button" class="btn btn-sm btn-danger cm-del">🗑 删除</button></div>';
+      }).join('');
+      if (tip) tip.textContent = '共 ' + rows.length + ' 条';
+      box.querySelectorAll('.cm-del').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var row = btn.closest('.comment-admin-row');
+          if (!row) return;
+          var k = prompt('请输入删除口令：');
+          if (k === null || k === '') return;
+          btn.disabled = true;
+          fetch(LIKES_API, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'del-comment', storyId: row.dataset.sid, commentId: row.dataset.cid, adminKey: k }),
+          }).then(function (r) { return r.json(); }).then(function (d) {
+            if (d && d.ok) { row.remove(); if (tip) tip.textContent = '已删除，余 ' + box.querySelectorAll('.comment-admin-row').length + ' 条'; }
+            else { alert((d && d.error) || '删除失败'); btn.disabled = false; }
+          }).catch(function () { alert('删除失败（网络问题）'); btn.disabled = false; });
+        });
+      });
+    }
+    function loadComments() {
+      var box = $('comments-manage'), tip = $('comments-tip');
+      if (!box) return;
+      box.innerHTML = '<p class="hint">正在拉取各篇故事评论…</p>';
+      if (tip) tip.textContent = '加载中';
+      buildStoryTitleMap();
+      var ids = [];
+      Object.keys(_storyTitleMap).forEach(function (id) { ids.push(id); });
+      if (!ids.length) { box.innerHTML = '<p class="hint" style="margin:4px 0;">数据里还没有故事，先录入故事再管理评论。</p>'; if (tip) tip.textContent = '—'; return; }
+      var rows = [], todo = ids.length;
+      ids.forEach(function (sid) {
+        fetch(LIKES_API + '?comments=' + encodeURIComponent(sid), { method: 'GET', cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && Array.isArray(d.comments)) d.comments.forEach(function (c) { rows.push({ storyId: sid, comment: c }); });
+            if (--todo === 0) renderComments(rows);
+          })
+          .catch(function () { if (--todo === 0) renderComments(rows); });
+      });
+    }
+    var loadCommentsBtn = $('btn-load-comments');
+    if (loadCommentsBtn) loadCommentsBtn.addEventListener('click', function () {
+      if (!cats || !cats.length) { log('❌ 请先选择项目文件夹加载数据', 'err'); return; }
+      loadComments();
     });
 
     // 粘贴截图按钮：循环 0→头像→相册→0
