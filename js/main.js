@@ -1,11 +1,11 @@
 // main.js — 入口模块（装配并启动应用）
 import { initMap, initMapSearch } from './map.js';
 import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline } from './ui.js';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline } from './ui.js';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 async function loadData() {
-  let cats, relations, siteConfig = {};
+  let cats, relations, siteConfig = {}, knowledge = [];
   try {
     const cfgResp = await fetch('./data/site-config.json?v=' + Date.now());
     if (cfgResp.ok) siteConfig = await cfgResp.json();
@@ -26,7 +26,13 @@ async function loadData() {
   } catch (e) {
     throw new Error(`无法加载 data/relations.json：${e.message}`);
   }
-  return { cats, relations, siteConfig };
+  try {
+    const knResp = await fetch('./data/knowledge.json?v=' + Date.now());
+    if (knResp.ok) knowledge = await knResp.json();
+  } catch (e) {
+    knowledge = [];
+  }
+  return { cats, relations, siteConfig, knowledge };
 }
 
 window.__splashStart = performance.now();
@@ -83,7 +89,7 @@ async function boot() {
     return;
   }
 
-  const { cats, relations, siteConfig } = data;
+  const { cats, relations, siteConfig, knowledge } = data;
   if (!Array.isArray(cats) || !cats.length) {
     showError('猫咪数据为空，请检查 data/cats.json');
     return;
@@ -132,10 +138,11 @@ async function boot() {
   initLightbox();
   renderEventsTimeline(cats);
   renderStoriesTimeline(cats, siteConfig);
+  renderKnowledgeTimeline(knowledge, cats);
 
   // 标签页
   bindTabs(
-    { map: '#map-view', graph: '#graph-view', events: '#events-view', stories: '#stories-view' },
+    { map: '#map-view', graph: '#graph-view', events: '#events-view', stories: '#stories-view', knowledge: '#knowledge-view' },
     { onGraphShow: () => {
       if (!graphInitDone) { lazyInitGraph().then(() => setTimeout(() => resizeGraph(), 100)); }
       else { resizeGraph(); }

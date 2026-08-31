@@ -157,6 +157,18 @@
     .so-pin:hover { background: #fff7ed; }
     .so-pin.on { background: #e11d48; border-color: #e11d48; color: #fff; font-weight: 600; }
 
+    /* ---------- 猫咪小知识列表 ---------- */
+    .knowledge-list { display: flex; flex-direction: column; gap: 8px; }
+    .kl-item { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: #fffdf9; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .kl-main { flex: 1; min-width: 0; }
+    .kl-title { font-weight: 600; color: var(--text); }
+    .kl-null { color: var(--muted); font-style: italic; font-weight: 400; }
+    .kl-meta { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .kl-date { background: #f3efe6; border-radius: 6px; padding: 1px 6px; }
+    .kl-cat { background: #b45309; color: #fff; border-radius: 6px; padding: 1px 7px; }
+    .kl-imgs { color: #d97706; }
+    .kl-ops { display: flex; gap: 6px; }
+
     /* ---------- 工作台布局 ---------- */
     .workbench { display: flex; min-height: 100vh; }
     .wb-side { width: 208px; flex-shrink: 0; background: #2b261f; color: #f5f0e8; padding: 16px 10px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; overflow: auto; }
@@ -177,6 +189,8 @@
     #cat-modal .modal-panel { max-width: 1120px; width: 100%; }
     #story-edit-modal .modal-panel { max-width: 1120px; width: 100%; }
     #story-edit-modal .stories-editor .story-edit-item { padding: 14px; }
+    #knowledge-edit-modal .modal-panel { max-width: 1120px; width: 100%; }
+    #knowledge-edit-modal .stories-editor .story-edit-item { padding: 14px; }
     #cat-modal .modal-panel .grid3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
     #cat-modal .modal-panel .photo-preview { height: 200px; }
     #cat-modal .album-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
@@ -198,6 +212,7 @@
       <button type="button" class="wb-nav" data-page="cats">🐱 猫咪管理</button>
       <button type="button" class="wb-nav" data-page="relations">🪢 关系管理</button>
       <button type="button" class="wb-nav" data-page="stories">📖 故事集</button>
+      <button type="button" class="wb-nav" data-page="knowledge">📚 猫咪小知识</button>
       <button type="button" class="wb-nav" data-page="deploy">🚀 部署到 GitHub</button>
     </aside>
     <main class="wb-main">
@@ -285,6 +300,22 @@
             <span class="hint" id="story-order-save-tip" style="align-self:center;">置顶/编辑后记得点这里保存</span>
           </div>
           <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用右侧 ▲▼ 调整先后；想换掉某篇，点「📌 置顶 N」取消后再置顶新的即可。</p>
+        </div>
+      </section>
+
+      <!-- 📚 猫咪小知识 -->
+      <section class="page" data-page="knowledge">
+        <div class="page-head">
+          <h1>📚 猫咪小知识</h1>
+          <button class="btn btn-primary" id="btn-knowledge-add">＋ 添加小知识</button>
+        </div>
+        <div class="card">
+          <p class="hint">这是公开站顶部「📚 猫咪小知识」栏目。点「＋ 添加小知识」或某篇的「编辑」即可修改，支持配图、关联猫咪；正文写不下可分段，公开站会自动折叠长文。</p>
+          <div id="knowledge-list" class="knowledge-list"></div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-primary" id="btn-save-knowledge">💾 保存到本地</button>
+            <span class="hint" id="knowledge-save-tip" style="align-self:center;">编辑 / 增删后记得点这里保存</span>
+          </div>
         </div>
       </section>
 
@@ -411,6 +442,21 @@
       <div class="modal-actions">
         <button class="btn btn-primary" id="quick-story-save">保存</button>
         <button class="btn" id="quick-story-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 猫咪小知识编辑弹窗 -->
+  <div class="modal-bg" id="knowledge-edit-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="knowledge-edit-close">×</button>
+      <h3>✏️ 编辑猫咪小知识</h3>
+      <div id="knowledge-editor" class="stories-editor"></div>
+      <input type="file" id="f-knowledge-img" accept="image/*" multiple style="display:none;">
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="knowledge-save">保存</button>
+        <button class="btn btn-danger" id="knowledge-del">删除</button>
+        <button class="btn" id="knowledge-cancel">取消</button>
       </div>
     </div>
   </div>

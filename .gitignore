@@ -21,3 +21,7 @@ Python/
 # 调试截图
 _shot*.png
 *.png.bak
+
+# 调试临时文件
+_server2.mjs
+_mobile_preview.html

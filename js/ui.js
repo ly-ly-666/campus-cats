@@ -799,5 +799,120 @@ function storyDisplayDate(s) {
   return d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
 }
 
+// ---------- 猫咪小知识 ----------
+const KNOWLEDGE_TRUNCATE = 320;
+let _knowledgeFilter = { q: '' };
+let _knowledgeCats = [];
+
+function knowledgeTs(k) {
+  const d = String((k && k.date) || '').replace(/-/g, '');
+  if (/^\d{6,8}$/.test(d)) return Number(d + '000000'.slice(0, 8 - d.length));
+  const m = String((k && k.id) || '').match(/_?(\d{10,13})/);
+  return m ? Number(m[1]) : 0;
+}
+function knowledgeDisplayDate(k) {
+  if (k && k.date) return storyDateLabel(k.date);
+  const ts = knowledgeTs(k);
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
+}
+function knowledgeContentHtml(k, idx) {
+  const text = k.content || '';
+  if (text.length <= KNOWLEDGE_TRUNCATE) {
+    return '<div class="knowledge-item-content">' + escapeHtml(text) + '</div>';
+  }
+  const id = 'kc-' + idx;
+  const preview = text.slice(0, KNOWLEDGE_TRUNCATE);
+  return '<div class="knowledge-item-content">'
+    + '<span class="knowledge-content-preview">' + escapeHtml(preview) + '…</span>'
+    + '<button type="button" class="story-fold-btn" data-act="expand" data-id="' + id + '" aria-expanded="false">展开全文 ▾</button>'
+    + '<span class="knowledge-content-full" id="' + id + '" hidden>' + escapeHtml(text) + '</span>'
+    + '</div>';
+}
+
+export function renderKnowledgeTimeline(knowledge, cats) {
+  const box = document.getElementById('knowledge-timeline');
+  if (!box) return;
+  // 事件委托：展开/收起（只绑一次）
+  if (!box.__knowledgeFoldBound) {
+    box.addEventListener('click', (e) => {
+      const btn = e.target.closest ? e.target.closest('.story-fold-btn') : null;
+      if (!btn) return;
+      const item = btn.closest('.knowledge-item');
+      if (!item) return;
+      const preview = item.querySelector('.knowledge-content-preview');
+      const full = item.querySelector('.knowledge-content-full');
+      if (!preview || !full) return;
+      if (btn.dataset.act === 'expand') {
+        preview.style.display = 'none';
+        full.hidden = false;
+        btn.textContent = '收起 ▲';
+        btn.dataset.act = 'collapse';
+        btn.setAttribute('aria-expanded', 'true');
+      } else {
+        preview.style.display = '';
+        full.hidden = true;
+        btn.textContent = '展开全文 ▾';
+        btn.dataset.act = 'expand';
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    box.__knowledgeFoldBound = true;
+  }
+
+  _knowledgeCats = Array.isArray(cats) ? cats : _knowledgeCats;
+  const list = (Array.isArray(knowledge) ? knowledge : []).filter((k) => k && (k.title || k.content || (Array.isArray(k.images) && k.images.length)));
+  const catMap = new Map(_knowledgeCats.map((c) => [c.id, c]));
+
+  if (!box.__knowledgeFilterBound) {
+    box.innerHTML =
+      '<div class="story-filter-bar">' +
+        '<div class="story-filter-row">' +
+          '<input type="search" class="knowledge-filter-q" placeholder="🔍 搜索标题 / 正文…" autocomplete="off">' +
+        '</div>' +
+        '<div class="story-filter-count"></div>' +
+      '</div>' +
+      '<div class="knowledge-filter-results"></div>';
+    const qEl = box.querySelector('.knowledge-filter-q');
+    qEl.addEventListener('input', () => {
+      _knowledgeFilter.q = qEl.value.trim();
+      renderKnowledgeTimeline(list, _knowledgeCats);
+    });
+    box.__knowledgeFilterBound = true;
+  } else {
+    const qEl = box.querySelector('.knowledge-filter-q');
+    if (qEl) qEl.value = _knowledgeFilter.q;
+  }
+
+  const q = _knowledgeFilter.q.toLowerCase();
+  const visible = list.filter((k) => {
+    if (q && !((k.title || '') + ' ' + (k.content || '')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const countBox = box.querySelector('.story-filter-count');
+  if (countBox) countBox.textContent = '共 ' + visible.length + ' 篇' + (visible.length !== list.length ? '（全部 ' + list.length + ' 篇）' : '');
+  const resultsBox = box.querySelector('.knowledge-filter-results');
+  if (!visible.length) {
+    resultsBox.innerHTML = '<div class="events-empty">📚 还没有猫咪小知识，等站长慢慢补充～</div>';
+    return;
+  }
+  const ordered = visible.slice().sort((a, b) => knowledgeTs(b) - knowledgeTs(a) || String(a.title || '').localeCompare(String(b.title || ''), 'zh'));
+  resultsBox.innerHTML = ordered.map((k, ki) => {
+    const dateLabel = knowledgeDisplayDate(k);
+    const dateHtml = dateLabel ? '<span class="story-item-date">🗓 ' + escapeHtml(dateLabel) + '</span>' : '';
+    const catHtml = k.category ? '<span class="knowledge-category">' + escapeHtml(k.category) + '</span>' : '';
+    const titleHtml = k.title ? '<div class="knowledge-item-title">' + escapeHtml(k.title) + '</div>' : '<div class="knowledge-item-title knowledge-item-no-title">无标题</div>';
+    const catsHtml = (Array.isArray(k.cats) && k.cats.length) ? '<div class="knowledge-item-cats"><span class="story-item-cats-label">🐾 关联猫咪</span>' + k.cats.map((cid) => {
+      const cc = catMap.get(cid);
+      if (!cc) return '';
+      return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="点击查看「' + escapeHtml(cc.name) + '」档案"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
+    }).join('') + '</div>' : '';
+    const contentHtml = k.content ? knowledgeContentHtml(k, ki) : '';
+    const imgsHtml = (Array.isArray(k.images) && k.images.length) ? '<div class="knowledge-item-imgs">' + k.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(k.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src)" style="cursor:zoom-in;">').join('') + '</div>' : '';
+    return '<div class="knowledge-item">' + dateHtml + catHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '</div>';
+  }).join('');
+}
+
 // 挂到 window，供地图标记等内联 onclick 使用
 window.openLightbox = openLightbox;

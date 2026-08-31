@@ -126,7 +126,7 @@ body { display: flex; flex-direction: column; }
 
 .app-title { font-size: 18px; font-weight: 700; }
 
-.tab-bar { display: flex; gap: 6px; }
+.tab-bar { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .tab-btn {
   border: 1px solid transparent;
@@ -748,6 +748,20 @@ body { display: flex; flex-direction: column; }
 /* 故事集视图可滚动 */
 #stories-view { padding: 0; overflow-y: auto; flex-direction: column; }
 .stories-timeline { max-width: 720px; margin: 0 auto; }
+
+/* ---------- 猫咪小知识 ---------- */
+#knowledge-view { padding: 0; overflow-y: auto; flex-direction: column; }
+.knowledge-timeline { padding: 16px; max-width: 720px; margin: 0 auto; }
+.knowledge-item { background: #fffdf9; border: 1px solid var(--border, #e8e1d6); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.knowledge-category { display: inline-block; font-size: 11px; color: #fff; background: #b45309; border-radius: 999px; padding: 2px 9px; margin-left: 6px; margin-bottom: 6px; font-weight: 600; vertical-align: middle; }
+.knowledge-item-title { font-size: 16px; font-weight: 700; color: var(--primary-dark, #d97706); margin-bottom: 6px; line-height: 1.4; }
+.knowledge-item-no-title { color: var(--muted, #8a857d); font-style: italic; font-weight: 400; }
+.knowledge-item-cats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+.knowledge-item-content { font-size: 14px; line-height: 1.7; color: var(--text, #2d2a26); white-space: pre-line; }
+.knowledge-item-imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.knowledge-item-imgs img { width: 140px; height: 140px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border, #e8e1d6); cursor: zoom-in; }
+@media (max-width: 768px) { .knowledge-item-imgs img { width: 100px; height: 100px; } }
+.knowledge-filter-q { flex: 1; min-width: 180px; padding: 7px 12px; border: 1px solid var(--border, #e8e1d6); border-radius: 999px; font-size: 13px; background: #fff; }
 
 /* ---------- 地图内搜索定位（左上角收起按钮，展开时不挡中央猫咪） ---------- */
 .map-search {
