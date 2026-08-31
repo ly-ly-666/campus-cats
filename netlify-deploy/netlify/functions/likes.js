@@ -11,6 +11,7 @@ const HEADERS = {
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Content-Type': 'application/json; charset=utf-8',
+  'Cache-Control': 'no-store',
 };
 
 function json(status, obj) {
@@ -36,9 +37,30 @@ export default async (req) => {
     const url = new URL(req.url);
     const body = (req.method === 'POST') ? await req.json().catch(() => ({})) : {};
     const id = url.searchParams.get('catId') || body.catId || '';
-    if (!id) return json(400, { ok: false, error: '缺少 catId' });
 
     const store = getStore({ name: 'likes', consistency: 'strong' });
+
+    // 汇总接口：GET ?stats=true  -> 返回全部猫咪点赞数 {stats:{catId:count}}
+    if (url.searchParams.get('stats') === 'true') {
+      const stats = {};
+      let cursor;
+      do {
+        const page = { cursor: cursor || undefined };
+        const listing = await store.list(page);
+        for (const item of listing.blobs || []) {
+          const s = await store.get(item.key).catch(() => null);
+          if (!s) continue;
+          let count = 0;
+          try { count = JSON.parse(s).count || 0; } catch (e) {}
+          if (count > 0) stats[item.key] = count;
+        }
+        cursor = listing.nextCursor;
+      } while (cursor);
+      return json(200, { ok: true, stats });
+    }
+
+    if (!id) return json(400, { ok: false, error: '缺少 catId，或使用 ?stats=true 获取汇总' });
+
     const raw = await store.get(id).catch(() => null);
     const data = raw ? JSON.parse(raw) : { count: 0, visitors: {} };
     const vk = visitorKey(req);

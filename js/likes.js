@@ -12,7 +12,7 @@ const localData = () => { try { return JSON.parse(localStorage.getItem(LS_KEY) |
 const saveLocal = (d) => { try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch (e) {} };
 
 async function apiGet(catId) {
-  const r = await fetch(LIKES_API + '?catId=' + encodeURIComponent(catId), { method: 'GET' });
+  const r = await fetch(LIKES_API + '?catId=' + encodeURIComponent(catId), { method: 'GET', cache: 'no-store' });
   return r.json();
 }
 async function apiSend(catId, toggle) {

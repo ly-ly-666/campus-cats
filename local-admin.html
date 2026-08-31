@@ -201,6 +201,14 @@
       .wb-brand { border-bottom: none; padding: 2px 10px 2px 4px; margin: 0; }
       .wb-nav { width: auto; padding: 7px 10px; }
     }
+    .likes-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .like-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px;
+      padding: 9px 14px; font-size: 13px;
+    }
+    .like-row-name { font-weight: 600; color: #7c2d12; }
+    .like-row-count { color: #ea580c; font-weight: 700; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -213,6 +221,7 @@
       <button type="button" class="wb-nav" data-page="relations">🪢 关系管理</button>
       <button type="button" class="wb-nav" data-page="stories">📖 故事集</button>
       <button type="button" class="wb-nav" data-page="knowledge">📚 猫咪小知识</button>
+      <button type="button" class="wb-nav" data-page="likes">❤️ 点赞统计</button>
       <button type="button" class="wb-nav" data-page="deploy">🚀 部署到 GitHub</button>
     </aside>
     <main class="wb-main">
@@ -316,6 +325,20 @@
             <button class="btn btn-primary" id="btn-save-knowledge">💾 保存到本地</button>
             <span class="hint" id="knowledge-save-tip" style="align-self:center;">编辑 / 增删后记得点这里保存</span>
           </div>
+        </div>
+      </section>
+
+      <!-- ❤️ 点赞统计 -->
+      <section class="page" data-page="likes">
+        <div class="page-head"><h1>❤️ 点赞统计</h1></div>
+        <div class="card">
+          <p class="hint">读取 Netlify 后端（melodic-crepe-74a890.netlify.app）里每只猫的真实点赞数。点「🔄 刷新统计」拉取最新数字。</p>
+          <div class="row" style="margin-top:0;">
+            <button class="btn btn-green" id="btn-refresh-likes">🔄 刷新统计</button>
+            <span class="hint" id="likes-load-tip" style="align-self:center;">上次刷新：—</span>
+          </div>
+          <div id="likes-summary" class="row" style="margin-top:10px;"></div>
+          <div id="likes-list" class="likes-list"></div>
         </div>
       </section>
 

@@ -347,6 +347,7 @@
     updateRelLabels();
     renderStoryOrder();
     renderKnowledgeList();
+    if (typeof refreshLikes === 'function') refreshLikes();
   }
 
   async function saveAll() {
@@ -2151,6 +2152,48 @@
     $('knowledge-cancel').addEventListener('click', closeKnowledgeEditor);
     $('knowledge-edit-close').addEventListener('click', closeKnowledgeEditor);
     $('knowledge-edit-modal').addEventListener('click', function (e) { if (e.target === $('knowledge-edit-modal')) closeKnowledgeEditor(); });
+
+    // ❤️ 点赞统计（读取 Netlify 后端）
+    var LIKES_API = 'https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes';
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function refreshLikes() {
+      var tip = $('likes-load-tip');
+      var listEl = $('likes-list');
+      if (!listEl) return;
+      if (tip) tip.textContent = '正在拉取…';
+      fetch(LIKES_API + '?stats=true', { method: 'GET' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var stats = (data && data.stats) ? data.stats : {};
+          var catMap = {};
+          (cats || []).forEach(function (c) { catMap[c.id] = c; });
+          var rows = Object.keys(stats).map(function (id) {
+            return { id: id, name: catMap[id] ? (catMap[id].name || id) : id, count: stats[id] || 0 };
+          }).sort(function (a, b) { return b.count - a.count; });
+          var total = rows.reduce(function (s, r) { return s + r.count; }, 0);
+          var sumEl = $('likes-summary');
+          if (sumEl) {
+            sumEl.innerHTML = '<span class="hint">共 <b>' + total + '</b> 个赞，<b>' + rows.length + '</b> 只猫有被赞</span>';
+          }
+          if (tip) tip.textContent = '上次刷新：' + new Date().toLocaleTimeString();
+          if (!rows.length) { listEl.innerHTML = '<p class="hint" style="margin:6px 0;">还没有点赞记录，去公开站点心形给猫点个赞吧～</p>'; return; }
+          listEl.innerHTML = rows.map(function (r) {
+            var cat = catMap[r.id];
+            var name = cat ? (esc(cat.name) + (cat.nickname ? '（' + esc(cat.nickname) + '）' : '')) : esc(r.id);
+            return '<div class="like-row"><span class="like-row-name">🐱 ' + name + '</span>' +
+              '<span class="like-row-count">❤️ ' + r.count + '</span></div>';
+          }).join('');
+        })
+        .catch(function (e) {
+          if (tip) tip.textContent = '拉取失败';
+          listEl.innerHTML = '<p class="hint" style="margin:6px 0;">拉取失败（' + esc(e.message || e) + '）。请确认 Netlify 函数已部署。</p>';
+        });
+    }
+    var refreshLikesBtn = $('btn-refresh-likes');
+    if (refreshLikesBtn) refreshLikesBtn.addEventListener('click', function () {
+      if (!dirHandle) { log('❌ 请先选择项目文件夹后使用', 'err'); return; }
+      refreshLikes();
+    });
 
     // 粘贴截图按钮：循环 0→头像→相册→0
     $('btn-paste').addEventListener('click', function () {
