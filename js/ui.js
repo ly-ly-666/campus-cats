@@ -1,6 +1,6 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js';
-import { mountLikeButton } from './likes.js';
+import { mountLikeButton, mountStoryLikeButton } from './likes.js';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -792,8 +792,12 @@ export function renderStoriesTimeline(cats, siteConfig) {
     }).join('') + '</div>' : '';
     const contentHtml = s.content ? storyContentHtml(s, si, 0) : '';
     const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src)" style="cursor:zoom-in;">').join('') + '</div>' : '';
-    return '<div class="story-item">' + pinHtml + dateHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '</div>';
+    return '<div class="story-item">' + pinHtml + dateHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '<div class="story-item-like" data-story="' + escapeHtml(String(s.id)) + '"></div>' + '</div>';
   }).join('');
+  // 为每篇故事挂载独立点赞按钮
+  resultsBox.querySelectorAll('.story-item-like[data-story]').forEach((el) => {
+    mountStoryLikeButton(el, el.dataset.story);
+  });
 }
 
 // 故事日期显示：2026-08-28 → "2026 年 8 月 28 日"

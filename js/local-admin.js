@@ -2167,20 +2167,37 @@
           var stats = (data && data.stats) ? data.stats : {};
           var catMap = {};
           (cats || []).forEach(function (c) { catMap[c.id] = c; });
-          var rows = Object.keys(stats).map(function (id) {
-            return { id: id, name: catMap[id] ? (catMap[id].name || id) : id, count: stats[id] || 0 };
+          // 从猫咪数据里汇总故事标题（同一故事跨猫去重）
+          var storyMap = {};
+          (cats || []).forEach(function (c) {
+            (Array.isArray(c.stories) ? c.stories : []).forEach(function (st) {
+              if (!st || !st.id) return;
+              if (!storyMap[st.id]) storyMap[st.id] = { title: st.title || '', cats: [] };
+              storyMap[st.id].cats.push(c);
+            });
+          });
+          var catKeys = Object.keys(stats).filter(function (k) { return k.indexOf('story_') !== 0; });
+          var storyKeys = Object.keys(stats).filter(function (k) { return k.indexOf('story_') === 0; });
+          var catRows = catKeys.map(function (id) {
+            return { id: id, name: catMap[id] ? (catMap[id].name || id) : id, count: stats[id] || 0, tag: '🐱' };
           }).sort(function (a, b) { return b.count - a.count; });
+          var storyRows = storyKeys.map(function (k) {
+            var sid = k.slice(6);
+            var sm = storyMap[sid];
+            var title = (sm && sm.title) ? sm.title : ('故事 #' + sid);
+            if (sm && sm.cats && sm.cats.length) title += '（' + sm.cats.map(function (c) { return c.name || c.id; }).join('、') + '）';
+            return { id: k, name: title, count: stats[k] || 0, tag: '📖' };
+          }).sort(function (a, b) { return b.count - a.count; });
+          var rows = catRows.concat(storyRows);
           var total = rows.reduce(function (s, r) { return s + r.count; }, 0);
           var sumEl = $('likes-summary');
           if (sumEl) {
-            sumEl.innerHTML = '<span class="hint">共 <b>' + total + '</b> 个赞，<b>' + rows.length + '</b> 只猫有被赞</span>';
+            sumEl.innerHTML = '<span class="hint">共 <b>' + total + '</b> 个赞｜猫咪 <b>' + catRows.length + '</b> 只被赞｜故事 <b>' + storyRows.length + '</b> 篇被赞</span>';
           }
           if (tip) tip.textContent = '上次刷新：' + new Date().toLocaleTimeString();
-          if (!rows.length) { listEl.innerHTML = '<p class="hint" style="margin:6px 0;">还没有点赞记录，去公开站点心形给猫点个赞吧～</p>'; return; }
+          if (!rows.length) { listEl.innerHTML = '<p class="hint" style="margin:6px 0;">还没有点赞记录，去公开站给猫咪或故事点个赞吧～</p>'; return; }
           listEl.innerHTML = rows.map(function (r) {
-            var cat = catMap[r.id];
-            var name = cat ? (esc(cat.name) + (cat.nickname ? '（' + esc(cat.nickname) + '）' : '')) : esc(r.id);
-            return '<div class="like-row"><span class="like-row-name">🐱 ' + name + '</span>' +
+            return '<div class="like-row"><span class="like-row-name">' + r.tag + ' ' + esc(r.name) + '</span>' +
               '<span class="like-row-count">❤️ ' + r.count + '</span></div>';
           }).join('');
         })

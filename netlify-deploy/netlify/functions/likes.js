@@ -36,11 +36,15 @@ export default async (req) => {
 
     const url = new URL(req.url);
     const body = (req.method === 'POST') ? await req.json().catch(() => ({})) : {};
-    const id = url.searchParams.get('catId') || body.catId || '';
+    // 支持猫咪与故事点赞：猫用 catId(key=id)，故事用 storyId(key=story_<id>)，互不冲突
+    const rawCat = url.searchParams.get('catId') || body.catId || '';
+    const rawStory = url.searchParams.get('storyId') || body.storyId || '';
+    const id = rawCat || (rawStory ? 'story_' + rawStory : '');
+    const kind = rawStory ? 'story' : 'cat';
 
     const store = getStore({ name: 'likes', consistency: 'strong' });
 
-    // 汇总接口：GET ?stats=true  -> 返回全部猫咪点赞数 {stats:{catId:count}}
+    // 汇总接口：GET ?stats=true  -> 返回全部点赞数 {stats:{key:count}}，key 含 story_ 前缀代表故事
     if (url.searchParams.get('stats') === 'true') {
       const stats = {};
       let cursor;
@@ -59,14 +63,14 @@ export default async (req) => {
       return json(200, { ok: true, stats });
     }
 
-    if (!id) return json(400, { ok: false, error: '缺少 catId，或使用 ?stats=true 获取汇总' });
+    if (!id) return json(400, { ok: false, error: '缺少 catId/storyId，或使用 ?stats=true 获取汇总' });
 
     const raw = await store.get(id).catch(() => null);
     const data = raw ? JSON.parse(raw) : { count: 0, visitors: {} };
     const vk = visitorKey(req);
 
     if (req.method === 'GET') {
-      return json(200, { ok: true, catId: id, likes: data.count, likedByMe: !!data.visitors[vk] });
+      return json(200, { ok: true, key: id, kind, likes: data.count, likedByMe: !!data.visitors[vk] });
     }
 
     const toggle = body.toggle !== false;

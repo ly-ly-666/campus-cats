@@ -898,3 +898,4 @@ body { display: flex; flex-direction: column; }
 .like-count { font-variant-numeric: tabular-nums; min-width: 24px; text-align: left; }
 .modal-like { margin: 12px 0 6px; display: flex; justify-content: center; }
 .profile-like { margin: 14px 0 8px; display: flex; justify-content: center; }
+.story-item-like { margin-top: 10px; display: flex; justify-content: flex-end; }
