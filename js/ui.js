@@ -1,5 +1,5 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox } from './config.js';
+import { DEFAULT_PHOTO, deriveSiblingRelations, collectStoryAlbumImages, openLightbox, initLightbox } from './config.js';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -203,9 +203,9 @@ export function showModal(cat, cats, relations) {
   const catById = new Map(cats.map((c) => [c.id, c]));
 
   const photo = photoUrl(cat.photo);
-  // 用户在查看这只猫，后台预取它的相册/事件原图，避免点开时等待
+  // 用户在查看这只猫，后台预取它的相册/故事/事件原图，避免点开时等待
   const _catExtras = []
-    .concat(cat.album || [], (cat.events || []).map((ev) => ev.images || []).flat());
+    .concat(cat.album || [], collectStoryAlbumImages(cat, cats).map((it) => it.src), (cat.events || []).map((ev) => ev.images || []).flat());
   if (_catExtras.length) prefetchImages(_catExtras.map((s) => photoUrl(s)), { delay: 0 });
   let statusBanner = '';
   if (cat.life === '失踪') statusBanner = '<div style="background:#dc2626;color:#fff;padding:12px 14px;border-radius:10px;margin-bottom:12px;font-weight:600;font-size:14px;line-height:1.6;">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音 / 小红书 / B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
@@ -279,10 +279,22 @@ export function showModal(cat, cats, relations) {
         </div>`).join('') + '</div>'
     : '';
 
-  const album = Array.isArray(cat.album) ? cat.album : [];
-  const albumHtml = album.length
-    ? `<div class="modal-album">${album.map((src) => `
-        <div class="album-thumb"><img src="${thumbUrl(src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(src)}" onclick="openLightbox(this.dataset.full, '${escapeHtml(cat.name)}', this.src)" style="cursor:zoom-in;"></div>
+  // 相册 = 猫自己的照片 + 关联它的故事配图（按 src 去重，保留相册优先）
+  const albumItems = [];
+  const albumSeen = new Set();
+  (Array.isArray(cat.album) ? cat.album : []).forEach((src) => {
+    if (albumSeen.has(src)) return;
+    albumSeen.add(src);
+    albumItems.push({ src, title: cat.name });
+  });
+  collectStoryAlbumImages(cat, cats).forEach((it) => {
+    if (albumSeen.has(it.src)) return;
+    albumSeen.add(it.src);
+    albumItems.push(it);
+  });
+  const albumHtml = albumItems.length
+    ? `<div class="modal-album">${albumItems.map((it) => `
+        <div class="album-thumb">${it.title && it.title !== cat.name ? `<span class="album-badge" title="来自故事：${escapeHtml(it.title)}">📖 故事</span>` : ''}<img src="${thumbUrl(it.src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(it.src)}" onclick="openLightbox(this.dataset.full, '${escapeHtml(it.title || cat.name)}', this.src)" style="cursor:zoom-in;"></div>
       `).join('')}</div>`
     : '<div class="relation-empty">暂无相册</div>';
 

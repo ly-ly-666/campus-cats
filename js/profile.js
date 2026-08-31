@@ -1,5 +1,5 @@
 // profile.js — 猫咪独立档案页
-import { DEFAULT_PHOTO, openLightbox } from './config.js';
+import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox } from './config.js';
 window.openLightbox = openLightbox;
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
@@ -86,6 +86,8 @@ function showToast(message) {
   setTimeout(function () { el.classList.remove('show'); }, 4200);
 }
 
+let _lastData = null;
+
 async function loadData() {
   try {
     const [catsRes, relsRes] = await Promise.all([
@@ -94,11 +96,17 @@ async function loadData() {
     ]);
     const cats = await catsRes.json();
     const relations = await relsRes.json();
+    _lastData = { cats, relations };
     render(cats, relations);
   } catch (e) {
     document.getElementById('profile-main').innerHTML = '<div class="not-found">数据加载失败：' + escapeHtml(e.message) + '</div>';
   }
 }
+
+// 同页切换 #hash 时（例如从档案页跳到另一只猫的档案）也重新渲染
+window.addEventListener('hashchange', function () {
+  if (_lastData) render(_lastData.cats, _lastData.relations);
+});
 
 // 温和化展示「离开时间」
 function gentleLeftAt(cat) {
@@ -220,10 +228,26 @@ function render(cats, relations) {
       '</div></section>'
     : '';
 
-  const album = Array.isArray(cat.album) ? cat.album : [];
-  const albumHtml = album.length
-    ? '<div class="profile-album">' + album.map(function (src) {
-      return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+  // 相册 = 猫自己的照片 + 关联它的故事配图（按 src 去重，保留相册优先）
+  var albumItems = [];
+  var albumSeen = {};
+  (Array.isArray(cat.album) ? cat.album : []).forEach(function (src) {
+    if (albumSeen[src]) return;
+    albumSeen[src] = 1;
+    albumItems.push({ src: src, title: cat.name });
+  });
+  collectStoryAlbumImages(cat, cats).forEach(function (it) {
+    if (albumSeen[it.src]) return;
+    albumSeen[it.src] = 1;
+    albumItems.push(it);
+  });
+  var albumHtml = albumItems.length
+    ? '<div class="profile-album">' + albumItems.map(function (it) {
+      var isStory = it.title && it.title !== cat.name;
+      return '<div class="p-album-item"' + (isStory ? ' title="来自故事：' + escapeHtml(it.title) + '"' : '') + '>' +
+        (isStory ? '<span class="album-badge">📖 故事</span>' : '') +
+        '<img src="' + thumbUrl(it.src) + '" data-full="' + photoUrl(it.src) + '" data-caption="' + escapeHtml(it.title || cat.name) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
+        '</div>';
     }).join('') + '</div>'
     : '<p class="hint">暂无相册照片</p>';
 
@@ -279,7 +303,7 @@ function render(cats, relations) {
   `;
 
   document.querySelectorAll('.profile-album img').forEach(function (img) {
-    img.addEventListener('click', function () { window.openLightbox(img.dataset.full || img.src, '', img.src); });
+    img.addEventListener('click', function () { window.openLightbox(img.dataset.full || img.src, img.dataset.caption || '', img.src); });
   });
 }
 

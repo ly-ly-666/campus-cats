@@ -83,6 +83,33 @@ export function deriveSiblingRelations(cats, relations) {
   return result;
 }
 
+// 收集与某只猫关联的「故事配图」（判定逻辑与故事集卡片一致）：
+// 故事把这只猫列为关联猫咪（cats 数组包含它且猫咪存在），或故事未关联任何猫时这只猫是发布者（宿主）。
+// 返回 [{src, title}]，title 为故事标题（可空），用于相册合并展示。
+export function collectStoryAlbumImages(cat, cats) {
+  if (!cat) return [];
+  const catIds = new Set((cats || []).map((c) => c && c.id));
+  const out = [];
+  const seen = new Set();
+  const add = (src, title) => {
+    if (!src || seen.has(src)) return;
+    seen.add(src);
+    out.push({ src, title: title || '' });
+  };
+  (cats || []).forEach((c) => {
+    if (!c || !Array.isArray(c.stories)) return;
+    c.stories.forEach((s) => {
+      if (!s || !Array.isArray(s.images) || !s.images.length) return;
+      const linked = (Array.isArray(s.cats) ? s.cats : []).filter((cid) => catIds.has(cid));
+      const shown = linked.length ? linked : [c.id];
+      if (shown.indexOf(cat.id) < 0) return;
+      const t = s.title || '';
+      s.images.forEach((src) => add(src, t));
+    });
+  });
+  return out;
+}
+
 // 通用图片放大查看器（桌面 + 手机）。先显示已缓存缩略图（秒开），原图后台加载后淡入替换。
 export function openLightbox(src, caption, thumbSrc) {
   if (!src) return;

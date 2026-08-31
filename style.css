@@ -401,8 +401,9 @@ body { display: flex; flex-direction: column; }
 .modal-section-title { font-size: 15px; margin-bottom: 8px; border-top: 1px solid var(--border); padding-top: 12px; }
 .modal-relations { display: flex; flex-direction: column; gap: 6px; }
 .modal-album { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
-.album-thumb { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #f0ebe2; border: 1px solid var(--border); }
+.album-thumb { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #f0ebe2; border: 1px solid var(--border); }
 .album-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.album-badge { position: absolute; left: 4px; top: 4px; z-index: 2; font-size: 10px; line-height: 1; background: rgba(0,0,0,.55); color: #fff; padding: 3px 6px; border-radius: 999px; pointer-events: none; }
 .relation-item {
   display: flex;
   align-items: center;
