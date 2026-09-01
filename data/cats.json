@@ -26,7 +26,13 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-09-01",
+        "text": "馆长温馨提示 : 大家不要喂星星和包包，猫协将在明天带两小只去绝育",
+        "images": []
+      }
+    ],
     "stories": [
       {
         "id": "s_1787851379508_cjo8cf",
@@ -149,6 +155,21 @@
         "images": [
           "images/cat001_story_1788189305064.jpg"
         ]
+      },
+      {
+        "id": "s_1788274920070_brl8ea",
+        "date": "2026-09-01",
+        "title": "今日份白猪",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788274927356.jpg",
+          "images/cat001_story_1788274937710.jpg",
+          "images/cat001_story_1788274950169.jpg",
+          "images/cat001_story_1788274959696.jpg"
+        ]
       }
     ]
   },
@@ -242,6 +263,19 @@
           "images/cat002_story_1788188872439.jpg",
           "images/cat002_story_1788188919800.jpg",
           "images/cat002_story_1788188971158.jpg"
+        ]
+      },
+      {
+        "id": "s_1788275648266_fy3f3f",
+        "date": "2026-09-01",
+        "title": "花奶年轻时候",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1788275661484.jpg",
+          "images/cat002_story_1788275669771.jpg"
         ]
       }
     ]
@@ -465,6 +499,19 @@
         "images": [
           "images/cat005_story_1788188598566.jpg",
           "images/cat005_story_1788188609400.jpg"
+        ]
+      },
+      {
+        "id": "s_1788275335619_n7aukz",
+        "date": "2026-09-01",
+        "title": "干嘛~",
+        "content": "",
+        "cats": [
+          "cat005"
+        ],
+        "images": [
+          "images/cat005_story_1788275348920.jpg",
+          "images/cat005_story_1788275357637.jpg"
         ]
       }
     ]
@@ -824,6 +871,13 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
+    "events": [
+      {
+        "date": "2026-09-01",
+        "text": "大家不要喂星星和包包，猫协将带两小只带去绝育",
+        "images": []
+      }
+    ],
     "stories": [
       {
         "id": "s_1788019429988_l7y52c",
@@ -1077,6 +1131,18 @@
         "images": [
           "images/cat036_story_1788101283116.jpg",
           "images/cat036_story_1788101291194.jpg"
+        ]
+      },
+      {
+        "id": "s_1788274972527_43ehqg",
+        "date": "2026-09-01",
+        "title": "老人坐",
+        "content": "",
+        "cats": [
+          "cat019"
+        ],
+        "images": [
+          "images/cat019_story_1788274987112.jpg"
         ]
       }
     ]
@@ -1766,6 +1832,21 @@
           "images/cat005_story_1788100620289.jpg",
           "images/cat005_story_1788100632862.jpg",
           "images/cat005_story_1788100640078.jpg"
+        ]
+      },
+      {
+        "id": "s_1788274729133_2ngizt",
+        "date": "2026-09-01",
+        "title": "星星偷冻干",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat038_story_1788274742426.jpg",
+          "images/cat038_story_1788274784303.jpg",
+          "images/cat038_story_1788274799356.jpg",
+          "images/cat038_story_1788274813993.jpg"
         ]
       }
     ]
@@ -2544,6 +2625,150 @@
     "caretaker": "",
     "age": "",
     "events": [],
+    "stories": []
+  },
+  {
+    "id": "cat065",
+    "name": "小吴",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "教职工",
+    "lat": 21.681029,
+    "lng": 110.923514,
+    "photo": "images/cat065.jpg",
+    "album": [
+      "images/cat065_album_1788275130833.jpg"
+    ],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788275278541_a08ls1",
+        "date": "2026-09-01",
+        "title": "煤气罐小吴",
+        "content": "",
+        "cats": [
+          "cat065"
+        ],
+        "images": [
+          "images/cat065_story_1788275286298.jpg",
+          "images/cat065_story_1788275295628.jpg",
+          "images/cat065_story_1788275304614.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cat066",
+    "name": "小流浪",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "",
+    "lat": 21.678029,
+    "lng": 110.92271,
+    "photo": "images/cat066.jpg",
+    "album": [
+      "images/cat066_album_1788275449682.jpg",
+      "images/cat066_album_1788275464864.jpg"
+    ],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788275481294_ai4xnz",
+        "date": "2026-09-01",
+        "title": "新猫",
+        "content": "不知道名字",
+        "cats": [
+          "cat066"
+        ],
+        "images": [
+          "images/cat066_story_1788275507496.jpg",
+          "images/cat066_story_1788275545986.jpg"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cat067",
+    "name": "暂时没有名字",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "",
+    "lat": 21.678961,
+    "lng": 110.921252,
+    "photo": "images/cat067.jpg",
+    "album": [
+      "images/cat067_album_1788275796768.jpg",
+      "images/cat067_album_1788275805505.jpg"
+    ],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [
+      {
+        "date": "2026-09-01",
+        "text": "新出现一只小咪",
+        "images": [
+          "images/cat067_event_1788275822172.jpg",
+          "images/cat067_event_1788275829840.jpg"
+        ]
+      }
+    ],
+    "stories": []
+  },
+  {
+    "id": "cat068",
+    "name": "无名无姓",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "",
+    "lat": 21.680528,
+    "lng": 110.923561,
+    "photo": "images/cat068.jpg",
+    "album": [],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [
+      {
+        "date": "2026-09-01",
+        "text": "也是新咪",
+        "images": []
+      }
+    ],
     "stories": []
   }
 ]
