@@ -31,6 +31,11 @@
         "date": "2026-09-01",
         "text": "馆长温馨提示 : 大家不要喂星星和包包，猫协将在明天带两小只去绝育",
         "images": []
+      },
+      {
+        "date": "2026-08-26",
+        "text": "今天!一切都源自于一个想法",
+        "images": []
       }
     ],
     "stories": [
@@ -170,6 +175,36 @@
           "images/cat001_story_1788274950169.jpg",
           "images/cat001_story_1788274959696.jpg"
         ]
+      },
+      {
+        "id": "s_1788363412294_8pzew1",
+        "date": "2026-09-02",
+        "title": "喂!白猪!肚子掉地上了!",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788363450048.jpg",
+          "images/cat001_story_1788363457996.jpg",
+          "images/cat001_story_1788363468461.jpg",
+          "images/cat001_story_1788363476356.jpg",
+          "images/cat001_story_1788363484973.jpg",
+          "images/cat001_story_1788365031028.jpg",
+          "images/cat001_story_1788365041947.jpg",
+          "images/cat001_story_1788365051887.jpg",
+          "images/cat001_story_1788365236869.jpg"
+        ]
+      },
+      {
+        "id": "s_1788364300362_sbv36f",
+        "date": "2026-09-02",
+        "title": "馆长的温馨提示 : 校园网可能打开图片比较卡 , 建议使用流量打开哦~",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": []
       }
     ]
   },
@@ -276,6 +311,19 @@
         "images": [
           "images/cat002_story_1788275661484.jpg",
           "images/cat002_story_1788275669771.jpg"
+        ]
+      },
+      {
+        "id": "s_1788365087809_2qj4h7",
+        "date": "2026-09-03",
+        "title": "花奶神图",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1788365100054.jpg",
+          "images/cat002_story_1788365216291.jpg"
         ]
       }
     ]
@@ -393,6 +441,20 @@
         "images": [
           "images/cat004_story_1788018743924.jpg",
           "images/cat004_story_1788018762104.jpg"
+        ]
+      },
+      {
+        "id": "s_1788363516163_idx21v",
+        "date": "2026-09-02",
+        "title": "门神雕像年年",
+        "content": "实则应该在拉屎,感觉是中年大叔,拉不出,痛苦嗷嗷叫",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1788363574136.jpg",
+          "images/cat004_story_1788363605864.jpg",
+          "images/cat004_story_1788363616743.jpg"
         ]
       }
     ]
@@ -1168,7 +1230,22 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788363744422_jzchj8",
+        "date": "2026-09-02",
+        "title": "QQ奶",
+        "content": "",
+        "cats": [
+          "cat020"
+        ],
+        "images": [
+          "images/cat020_story_1788363760740.jpg",
+          "images/cat020_story_1788363769645.jpg",
+          "images/cat020_story_1788363778481.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat021",
@@ -1648,6 +1725,21 @@
           "images/cat036_story_1788101283116.jpg",
           "images/cat036_story_1788101291194.jpg"
         ]
+      },
+      {
+        "id": "s_1788365122705_3y9iwn",
+        "date": "2026-09-03",
+        "title": "萌萌萌",
+        "content": "",
+        "cats": [
+          "cat036"
+        ],
+        "images": [
+          "images/cat036_story_1788365125064.jpg",
+          "images/cat036_story_1788365143904.jpg",
+          "images/cat036_story_1788365150040.jpg",
+          "images/cat036_story_1788365196515.jpg"
+        ]
       }
     ]
   },
@@ -1671,7 +1763,15 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-09-02",
+        "text": "包包今天已经绝育,成功拆弹,步入无情道,目前需要禁食，请大家晚上十点之后再进行投喂哦 ,星星还没抓到",
+        "images": [
+          "images/cat037_event_1788363054076.jpg"
+        ]
+      }
+    ],
     "stories": [
       {
         "id": "s_1787929035230_xhszhq",
@@ -2740,7 +2840,21 @@
         ]
       }
     ],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788363810267_2jqeww",
+        "date": "2026-09-02",
+        "title": "来广油的第一天 : 我是蜘蛛侠",
+        "content": "mj",
+        "cats": [
+          "cat067"
+        ],
+        "images": [
+          "images/cat067_story_1788364226006.jpg",
+          "images/cat067_story_1788364240093.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat068",
