@@ -110,7 +110,8 @@ export function collectStoryAlbumImages(cat, cats) {
   return out;
 }
 
-// 通用图片放大查看器（桌面 + 手机）。先显示已缓存缩略图（秒开），原图后台加载后淡入替换。
+// 通用图片放大查看器（桌面 + 手机）。微信式「查看原图」：
+// 先秒出已缓存缩略图；原图约 600ms 内能加载完则自动替换成高清，否则出现「查看原图」按钮，点击再按需加载（带进度）。
 export function openLightbox(src, caption, thumbSrc) {
   if (!src) return;
   let box = document.getElementById('lightbox');
@@ -118,11 +119,13 @@ export function openLightbox(src, caption, thumbSrc) {
     box = document.createElement('div');
     box.id = 'lightbox';
     box.className = 'lightbox';
-    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><div class="lightbox-loading"><span></span></div><img class="lightbox-img" alt=""><div class="lightbox-caption"></div></div>';
+    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><div class="lightbox-loading"><span></span><b class="lightbox-loading-pct"></b></div><img class="lightbox-img" alt=""><button class="lightbox-fullbtn" type="button">👀 查看原图</button><div class="lightbox-caption"></div></div>';
     document.body.appendChild(box);
   }
   const img = box.querySelector('.lightbox-img');
   const loadEl = box.querySelector('.lightbox-loading');
+  const pctEl = box.querySelector('.lightbox-loading-pct');
+  const fullBtn = box.querySelector('.lightbox-fullbtn');
   const fit = () => {
     if (!img.naturalWidth || !img.naturalHeight) return;
     const vv = (window.visualViewport && window.visualViewport.width) ? window.visualViewport : window;
@@ -132,21 +135,54 @@ export function openLightbox(src, caption, thumbSrc) {
     img.style.maxHeight = Math.min(vh, img.naturalHeight) + 'px';
   };
   const isFull = !thumbSrc || thumbSrc === src;
-  loadEl.style.display = isFull ? 'none' : 'flex';
+  loadEl.style.display = 'none';
+  pctEl.style.display = 'none';
+  pctEl.textContent = '';
+  fullBtn.style.display = 'none';
+
+  // 先显示缩略图（秒开）
   img.style.opacity = 0;
   img.onload = () => { img.style.opacity = 1; fit(); };
   img.src = thumbSrc || src;
   if (img.complete && img.naturalWidth) img.onload();
+
   if (!isFull) {
-    const full = new Image();
-    full.onload = () => {
-      img.src = src;
+    let done = false, inGrace = true, userAsked = false, revealed = false;
+    const reveal = () => {
+      if (revealed) return;
+      revealed = true;
+      fullBtn.style.display = 'none';
       loadEl.style.display = 'none';
-      fit();
+      img.onload = () => { img.style.opacity = 1; fit(); };
+      img.src = src;
+      if (img.complete && img.naturalWidth) img.onload();
     };
-    full.onerror = () => { loadEl.style.display = 'none'; };
+    const full = new Image();
+    full.onload = () => { done = true; if (inGrace || userAsked) reveal(); };
+    full.onerror = () => { done = true; loadEl.style.display = 'none'; fullBtn.style.display = 'none'; };
+    // 若浏览器提供加载进度则显示百分比（微信式）
+    if (typeof full.addEventListener === 'function') {
+      full.addEventListener('progress', (e) => {
+        if (!revealed && e.lengthComputable) {
+          pctEl.style.display = 'block';
+          pctEl.textContent = Math.round(e.loaded / e.total * 100) + '%';
+        }
+      });
+    }
     full.src = src;
+    setTimeout(() => {
+      inGrace = false;
+      if (!done && !revealed) fullBtn.style.display = 'block';
+    }, 600);
+    fullBtn.onclick = () => {
+      userAsked = true;
+      fullBtn.style.display = 'none';
+      if (done) { reveal(); return; }
+      loadEl.style.display = 'flex';
+      pctEl.style.display = 'block';
+    };
   }
+
   const cap = box.querySelector('.lightbox-caption');
   cap.textContent = caption || '';
   cap.style.display = caption ? '' : 'none';

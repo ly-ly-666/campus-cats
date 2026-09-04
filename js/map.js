@@ -1,12 +1,12 @@
 // map.js — 地图模块（Leaflet 初始化与圆形猫咪标记）
-import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS, MAP_BOUNDS_SW, MAP_BOUNDS_NE } from './config.js';
+import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS, MAP_BOUNDS_SW, MAP_BOUNDS_NE } from './config.js?v=20260904b';
 const IMG_CACHE_BUST = 'v1'; // 固定版本，浏览器可正常缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
   return src + '?v=' + IMG_CACHE_BUST;
 }
-import { showToast, thumbUrl, gentleLeftAt } from './ui.js';
+import { showToast, thumbUrl, gentleLeftAt } from './ui.js?v=20260904b';
 
 let currentProviderIdx = 0;
 let tileErrors = 0;

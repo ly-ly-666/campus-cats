@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
-import { initMap, initMapSearch } from './map.js';
-import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline } from './ui.js';
+import { initMap, initMapSearch } from './map.js?v=20260904b';
+import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260904b';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline } from './ui.js?v=20260904b';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 async function loadData() {
@@ -130,8 +130,8 @@ async function boot() {
   });
   var graph = null;
 
-  // 列表
-  renderCatList(cats, (cat) => { closeCatPanel(); showModal(cat, cats, relations); });
+  // 列表：点击猫咪弹出详情卡片时保持列表浮层不关闭，返回后仍停留在列表（可连续浏览）
+  renderCatList(cats, (cat) => showModal(cat, cats, relations));
   bindCatPanel();
   updateStats(cats);
   bindJoin();

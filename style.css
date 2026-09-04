@@ -36,6 +36,7 @@
   padding: 2px 8px; border-radius: 999px;
 }
 .cat-promo-name { font-size: 12px; color: #7c2d12; font-weight: 600; }
+.cat-promo-label { font-size: 11px; color: #9a3412; font-weight: 700; }
 @media (max-width: 600px) {
   .cat-promo-logo { width: 44px; height: 44px; font-size: 28px; }
   .cat-promo-title { font-size: 14px; }
@@ -78,6 +79,7 @@
   padding: 2px 8px; border-radius: 999px;
 }
 .cat-promo-name { font-size: 12px; color: #7c2d12; font-weight: 600; }
+.cat-promo-label { font-size: 11px; color: #9a3412; font-weight: 700; }
 @media (max-width: 600px) {
   .cat-promo-logo { width: 44px; height: 44px; font-size: 28px; }
   .cat-promo-title { font-size: 14px; }
@@ -117,16 +119,17 @@ body { display: flex; flex-direction: column; }
   border-bottom: 1px solid var(--border);
   padding: 10px 16px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   z-index: 10;
 }
 
 .app-title { font-size: 18px; font-weight: 700; }
 
-.tab-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+/* 标语，放在宣传条标题「这里油只喵 · 油喵地图」右侧 */
+.cat-promo-motto { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+
+.tab-bar { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; justify-content: center; }
 
 .tab-btn {
   border: 1px solid transparent;
@@ -332,7 +335,7 @@ body { display: flex; flex-direction: column; }
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 2000; /* 详情卡片必须盖住地图控件（搜索栏/图例 1100） */
+  z-index: 20000; /* 详情卡片必须盖住地图控件(1100)和猫咪列表浮层(10000)，保证返回后仍停留在列表 */
 }
 .modal.open { display: flex; }
 
@@ -631,6 +634,20 @@ body { display: flex; flex-direction: column; }
 .lightbox-close { position: absolute; top: -6px; right: -6px; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,.18); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; }
 .lightbox-close:hover { background: rgba(255,255,255,.35); }
 
+/* 微信式「查看原图」：按需加载高清原图按钮 + 加载百分比 */
+.lightbox-fullbtn {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  z-index: 2; border: none; cursor: pointer;
+  padding: 8px 18px; border-radius: 999px;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 14px;
+  backdrop-filter: blur(4px); display: none;
+  animation: lbox-pulse 1.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+.lightbox-fullbtn:hover { background: rgba(0,0,0,.8); }
+@keyframes lbox-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+.lightbox-loading-pct { color: #fff; font-size: 13px; margin-left: 10px; font-weight: 600; }
+
 /* 地图标记头像可点击放大 */
 .cat-marker img { cursor: zoom-in; }
 /* ---------- 最近事件总入口（时间线视图） ---------- */
@@ -713,6 +730,7 @@ body { display: flex; flex-direction: column; }
 .story-filter-q { flex: 1; min-width: 180px; padding: 7px 12px; border: 1px solid var(--border, #e8e1d6); border-radius: 999px; font-size: 13px; background: #fff; }
 .story-filter-dates { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .story-filter-dates-more { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.story-filter-dates-more[hidden] { display: none; }
 .story-filter-more { padding: 4px 12px; font-size: 12px; border-radius: 999px; border: 1px dashed var(--border, #e8e1d6); background: #fff; color: #b45309; cursor: pointer; }
 .story-filter-more:hover { background: #fdf3e3; }
 .story-filter-date-chip { padding: 4px 12px; font-size: 12px; border-radius: 999px; border: 1px solid var(--border, #e8e1d6); background: #fff; color: #6b645a; cursor: pointer; transition: all .15s; }
@@ -853,26 +871,39 @@ body { display: flex; flex-direction: column; }
   font-size: 12px; font-weight: 700; padding: 1px 6px; margin-left: 4px;
 }
 @media (max-width: 768px) {
-  .map-search { bottom: 84px; }
-  .map-search-toggle { height: 38px; padding: 0 12px; font-size: 13px; }
+  /* 5 个标签强制一行：等宽 grid 布局，挤压内边距保证刚好容下 */
+  .tab-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .tab-btn { text-align: center; white-space: nowrap; padding: 8px 2px; font-size: 12px; }
+  /* 手机端：搜索按钮移到顶部居中，搜索框向下展开；底部留给「猫咪列表」和「反馈」 */
+  .map-search { top: 10px; left: 50%; transform: translateX(-50%); bottom: auto; flex-direction: column; align-items: center; gap: 6px; }
+  .map-search-toggle { height: 36px; padding: 0 12px; font-size: 12px; }
   .map-search-box { width: min(300px, calc(100vw - 20px)); }
-  .map-legend { right: 10px; bottom: 20px; }
+  /* 圈圈含义移到右上角，与顶部居中的搜索按钮水平错开不重叠 */
+  .map-legend { right: 10px; top: 10px; bottom: auto; }
+  .map-legend-toggle { padding: 7px 12px; font-size: 12px; }
 }
 
 /* ---------- 手机端适配：压缩顶部区块，让地图更大 ---------- */
 @media (max-width: 600px) {
-  .app-header { padding: 6px 10px; gap: 4px; }
-  .app-title { font-size: 15px; }
-  .tab-btn { padding: 6px 10px; font-size: 12px; }
-  /* 宣传条：压缩（保留标题+描述小字，账号占位大则隐藏） */
-  .cat-promo { padding: 8px 12px; }
+  .app-header { padding: 6px 10px 4px; gap: 4px; }
+  .app-title { font-size: 14px; }
+  .cat-promo-motto { font-size: 10px; margin-left: 6px; }
+  .tab-btn { padding: 7px 2px; font-size: 12px; }
+  /* 宣传条：压成一行，只留图标+标题（描述与下方站点声明重复故隐藏，省空间让地图更大） */
+  .cat-promo { padding: 6px 12px; }
   .cat-promo-inner { gap: 8px; }
-  .cat-promo-logo { width: 30px; height: 30px; font-size: 18px; }
+  .cat-promo-logo { width: 28px; height: 28px; font-size: 16px; }
   .cat-promo-title { font-size: 12px; }
-  .cat-promo-desc { font-size: 11px; margin-top: 2px; }
-  .cat-promo-accounts { display: none; }
+  .cat-promo-desc { display: none; }
+  /* 手机端也显示官方账号，让「这里油只喵」在顶部易被看到（紧凑版） */
+  .cat-promo-accounts { padding: 4px 8px; }
+  .cat-promo-tag { padding: 1px 6px; font-size: 10px; }
+  .cat-promo-name { font-size: 11px; }
+  /* 站点声明再压薄 */
+  .site-disclaimer { padding: 2px 12px; }
+  .site-disclaimer-summary { font-size: 10px; }
   /* 统计条压缩 */
-  .site-stats { font-size: 11px; padding: 2px 10px; gap: 12px; }
+  .site-stats { font-size: 11px; padding: 2px 10px; gap: 10px; }
 }
 
 /* ---------- 点赞（Netlify 计数） ---------- */

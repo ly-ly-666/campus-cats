@@ -1,6 +1,6 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js';
-import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js';
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904b';
+import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904b';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -494,7 +494,14 @@ export function bindCatPanel() {
     });
   }
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('cat-panel') && document.getElementById('cat-panel').classList.contains('open')) {
+    if (e.key !== 'Escape') return;
+    // 详情卡片打开时优先关闭卡片，列表浮层保持原样，返回后仍停在列表
+    const modal = document.getElementById('modal');
+    if (modal && modal.classList.contains('open')) {
+      if (window.__closeModal) window.__closeModal();
+      return;
+    }
+    if (document.getElementById('cat-panel') && document.getElementById('cat-panel').classList.contains('open')) {
       closeCatPanel();
     }
   });

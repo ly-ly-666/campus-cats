@@ -24,7 +24,7 @@ const HEADERS = {
 };
 
 // 管理评论删除口令：优先读环境变量 ADMIN_KEY，可避免提交到仓库硬编码
-const ADMIN_KEY = process.env.ADMIN_KEY || 'ymdt2026';
+const ADMIN_KEY = process.env.ADMIN_KEY || 'lyf48d7f1e719409';
 const MAX_COMMENTS = 100;   // 每篇故事最多保留多少条（超出丢弃最旧的）
 const COOLDOWN_MS = 20000;  // 防刷：同一访客 20 秒内只能发一条评论
 
