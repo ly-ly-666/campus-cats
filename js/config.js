@@ -112,20 +112,34 @@ export function collectStoryAlbumImages(cat, cats) {
 
 // 通用图片放大查看器（桌面 + 手机）。微信式「查看原图」：
 // 先秒出已缓存缩略图；原图约 600ms 内能加载完则自动替换成高清，否则出现「查看原图」按钮，点击再按需加载（带进度）。
-export function openLightbox(src, caption, thumbSrc) {
-  if (!src) return;
+// 传入 gallery（数组 {src,thumb,caption}）与 index 时，支持左右滑动/方向键/箭头在一组图片间切换，并显示序号「x / n」。
+export function openLightbox(src, caption, thumbSrc, gallery, index) {
+  if (!src && !(Array.isArray(gallery) && gallery.length)) return;
   let box = document.getElementById('lightbox');
   if (!box) {
     box = document.createElement('div');
     box.id = 'lightbox';
     box.className = 'lightbox';
-    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body"><button class="lightbox-close" aria-label="关闭">×</button><div class="lightbox-loading"><span></span><b class="lightbox-loading-pct"></b></div><img class="lightbox-img" alt=""><button class="lightbox-fullbtn" type="button">👀 查看原图</button><div class="lightbox-caption"></div></div>';
+    box.innerHTML = '<div class="lightbox-backdrop"></div><div class="lightbox-body">'
+      + '<button class="lightbox-close" aria-label="关闭">×</button>'
+      + '<div class="lightbox-loading"><span></span><b class="lightbox-loading-pct"></b></div>'
+      + '<img class="lightbox-img" alt="">'
+      + '<button class="lightbox-fullbtn" type="button">👀 查看原图</button>'
+      + '<button class="lightbox-nav lightbox-prev" type="button" aria-label="上一张">‹</button>'
+      + '<button class="lightbox-nav lightbox-next" type="button" aria-label="下一张">›</button>'
+      + '<div class="lightbox-index"></div>'
+      + '<div class="lightbox-caption"></div></div>';
     document.body.appendChild(box);
   }
   const img = box.querySelector('.lightbox-img');
   const loadEl = box.querySelector('.lightbox-loading');
   const pctEl = box.querySelector('.lightbox-loading-pct');
   const fullBtn = box.querySelector('.lightbox-fullbtn');
+  const cap = box.querySelector('.lightbox-caption');
+  const idxEl = box.querySelector('.lightbox-index');
+  const prevBtn = box.querySelector('.lightbox-prev');
+  const nextBtn = box.querySelector('.lightbox-next');
+
   const fit = () => {
     if (!img.naturalWidth || !img.naturalHeight) return;
     const vv = (window.visualViewport && window.visualViewport.width) ? window.visualViewport : window;
@@ -134,58 +148,103 @@ export function openLightbox(src, caption, thumbSrc) {
     img.style.maxWidth = Math.min(vw, img.naturalWidth) + 'px';
     img.style.maxHeight = Math.min(vh, img.naturalHeight) + 'px';
   };
-  const isFull = !thumbSrc || thumbSrc === src;
-  loadEl.style.display = 'none';
-  pctEl.style.display = 'none';
-  pctEl.textContent = '';
-  fullBtn.style.display = 'none';
 
-  // 先显示缩略图（秒开）
-  img.style.opacity = 0;
-  img.onload = () => { img.style.opacity = 1; fit(); };
-  img.src = thumbSrc || src;
-  if (img.complete && img.naturalWidth) img.onload();
+  const g = Array.isArray(gallery) && gallery.length ? gallery : null;
+  let gIdx = 0;
+  if (g) gIdx = (typeof index === 'number') ? Math.min(Math.max(index, 0), g.length - 1) : 0;
 
-  if (!isFull) {
+  const showNav = () => {
+    const multi = !!g && g.length > 1;
+    if (!multi) idxEl.textContent = '';
+    prevBtn.style.display = multi ? 'block' : 'none';
+    nextBtn.style.display = multi ? 'block' : 'none';
+    idxEl.style.display = multi ? 'block' : 'none';
+  };
+
+  let loadToken = 0;
+  let loadTimer = 0;
+
+  function loadItem(item) {
+    const myToken = ++loadToken;
+    const iSrc = item ? item.src : src;
+    const iThumb = item ? item.thumb : thumbSrc;
+    const iCap = item ? (item.caption || '') : (caption || '');
+    const isFull = !iThumb || iThumb === iSrc;
+    clearTimeout(loadTimer);
     let done = false, inGrace = true, userAsked = false, revealed = false;
+    loadEl.style.display = 'none';
+    pctEl.style.display = 'none';
+    pctEl.textContent = '';
+    fullBtn.style.display = 'none';
+    img.style.opacity = 0;
+    img.onload = () => { img.style.opacity = 1; fit(); };
+    img.src = iThumb || iSrc;
+    if (img.complete && img.naturalWidth) img.onload();
+
     const reveal = () => {
-      if (revealed) return;
+      if (myToken !== loadToken || revealed) return;
       revealed = true;
+      clearTimeout(loadTimer);
       fullBtn.style.display = 'none';
       loadEl.style.display = 'none';
       img.onload = () => { img.style.opacity = 1; fit(); };
-      img.src = src;
+      img.src = iSrc;
       if (img.complete && img.naturalWidth) img.onload();
     };
-    const full = new Image();
-    full.onload = () => { done = true; if (inGrace || userAsked) reveal(); };
-    full.onerror = () => { done = true; loadEl.style.display = 'none'; fullBtn.style.display = 'none'; };
-    // 若浏览器提供加载进度则显示百分比（微信式）
-    if (typeof full.addEventListener === 'function') {
-      full.addEventListener('progress', (e) => {
-        if (!revealed && e.lengthComputable) {
+    if (!isFull) {
+      const full = new Image();
+      full.onload = () => { if (myToken !== loadToken) return; done = true; if (inGrace || userAsked) reveal(); };
+      full.onerror = () => { if (myToken !== loadToken) return; done = true; loadEl.style.display = 'none'; fullBtn.style.display = 'none'; };
+      if (typeof full.addEventListener === 'function') {
+        full.addEventListener('progress', (e) => {
+          if (myToken !== loadToken || revealed || !e.lengthComputable) return;
           pctEl.style.display = 'block';
           pctEl.textContent = Math.round(e.loaded / e.total * 100) + '%';
-        }
-      });
+        });
+      }
+      full.src = iSrc;
+      loadTimer = setTimeout(() => { inGrace = false; if (myToken === loadToken && !done && !revealed) fullBtn.style.display = 'block'; }, 600);
+      fullBtn.onclick = () => {
+        userAsked = true;
+        fullBtn.style.display = 'none';
+        if (done) { reveal(); return; }
+        loadEl.style.display = 'flex';
+        pctEl.style.display = 'block';
+      };
     }
-    full.src = src;
-    setTimeout(() => {
-      inGrace = false;
-      if (!done && !revealed) fullBtn.style.display = 'block';
-    }, 600);
-    fullBtn.onclick = () => {
-      userAsked = true;
-      fullBtn.style.display = 'none';
-      if (done) { reveal(); return; }
-      loadEl.style.display = 'flex';
-      pctEl.style.display = 'block';
-    };
+    cap.textContent = iCap;
+    cap.style.display = iCap ? '' : 'none';
+    showNav();
+    if (g) idxEl.textContent = (gIdx + 1) + ' / ' + g.length;
   }
 
-  const cap = box.querySelector('.lightbox-caption');
-  cap.textContent = caption || '';
-  cap.style.display = caption ? '' : 'none';
+  function goTo(delta) {
+    if (!g) return;
+    gIdx = (gIdx + delta + g.length) % g.length;
+    loadItem(g[gIdx]);
+  }
+
+  box.__nav = (d) => goTo(d);
+  loadItem(g ? g[gIdx] : null);
+
+  // 触摸左右滑动切换（不干扰页面纵向滚动）
+  let tx = 0, ty = 0, touching = false;
+  box.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY; touching = true;
+  }, { passive: true });
+  box.addEventListener('touchend', (e) => {
+    if (!touching) return;
+    touching = false;
+    if (!g || g.length < 2 || !e.changedTouches.length) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - tx, dy = t.clientY - ty;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) goTo(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  prevBtn.onclick = () => goTo(-1);
+  nextBtn.onclick = () => goTo(1);
+
   box.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -197,11 +256,29 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
+// 图集辅助：把容器内所有「可查看图」（带 data-full）组成可左右滑动的图集，并从当前点击图打开
+export function openImgGallery(imgEl, containerSel) {
+  if (!imgEl || typeof imgEl.closest !== 'function' || !containerSel) return;
+  const box = imgEl.closest(containerSel);
+  if (!box) return;
+  const imgs = Array.from(box.querySelectorAll('img[data-full]'));
+  if (!imgs.length) return;
+  const idx = Math.max(0, imgs.indexOf(imgEl));
+  const cur = imgs[idx];
+  const list = imgs.map((el) => ({ src: el.getAttribute('data-full') || el.src, thumb: el.src, caption: el.getAttribute('data-caption') || '' }));
+  openLightbox(cur.getAttribute('data-full') || cur.src, list[idx].caption, cur.src, list, idx);
+}
+window.__openImgGallery = openImgGallery;
+
 export function initLightbox() {
   document.addEventListener('click', function (e) {
     if (e.target.closest('.lightbox-backdrop') || e.target.closest('.lightbox-close')) closeLightbox();
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'Escape') { closeLightbox(); return; }
+    const box = document.getElementById('lightbox');
+    if (box && box.classList.contains('open') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && typeof box.__nav === 'function') {
+      box.__nav(e.key === 'ArrowLeft' ? -1 : 1);
+    }
   });
 }

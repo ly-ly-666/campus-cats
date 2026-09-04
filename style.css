@@ -648,6 +648,24 @@ body { display: flex; flex-direction: column; }
 @keyframes lbox-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
 .lightbox-loading-pct { color: #fff; font-size: 13px; margin-left: 10px; font-weight: 600; }
 
+/* 灯箱图集左右切换：箭头 + 序号 */
+.lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 2; border: none; cursor: pointer; display: none;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(0,0,0,.45); color: #fff; font-size: 26px; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.lightbox-prev { left: 8px; }
+.lightbox-next { right: 8px; }
+.lightbox-nav:hover { background: rgba(0,0,0,.7); }
+.lightbox-index {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 2; color: #fff; font-size: 13px; display: none;
+  background: rgba(0,0,0,.45); padding: 3px 12px; border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* 地图标记头像可点击放大 */
 .cat-marker img { cursor: zoom-in; }
 /* ---------- 最近事件总入口（时间线视图） ---------- */

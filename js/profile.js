@@ -1,6 +1,6 @@
 // profile.js — 猫咪独立档案页
-import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox } from './config.js?v=20260904b';
-import { mountLikeButton } from './likes.js?v=20260904b';
+import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox } from './config.js?v=20260904f';
+import { mountLikeButton } from './likes.js?v=20260904f';
 window.openLightbox = openLightbox;
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };
@@ -161,7 +161,7 @@ function renderProfileStories(cat) {
     if (s.content) html += '<div class="story-item-content">' + escapeHtml(s.content) + '</div>';
     if (Array.isArray(s.images) && s.images.length) {
       html += '<div class="story-item-imgs">' + s.images.map(function(src) {
-        return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src)" style="cursor:zoom-in;">';
+        return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.__openImgGallery(this, \'.story-item-imgs\')" style="cursor:zoom-in;">';
       }).join('') + '</div>';
     }
     html += '</div>';
@@ -217,7 +217,7 @@ function render(cats, relations) {
       evts.slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); }).map(function (ev) {
         var imgs = Array.isArray(ev.images) && ev.images.length
           ? '<div class="event-imgs">' + ev.images.map(function (src) {
-            return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full, \'\', this.src)" style="cursor:zoom-in;">';
+            return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.__openImgGallery(this, \'.event-imgs\')" style="cursor:zoom-in;">';
           }).join('') + '</div>'
           : '';
         return '<div class="event-tl-item">' +
@@ -247,7 +247,7 @@ function render(cats, relations) {
       var isStory = it.title && it.title !== cat.name;
       return '<div class="p-album-item"' + (isStory ? ' title="来自故事：' + escapeHtml(it.title) + '"' : '') + '>' +
         (isStory ? '<span class="album-badge">📖 故事</span>' : '') +
-        '<img src="' + thumbUrl(it.src) + '" data-full="' + photoUrl(it.src) + '" data-caption="' + escapeHtml(it.title || cat.name) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
+        '<img src="' + thumbUrl(it.src) + '" data-full="' + photoUrl(it.src) + '" data-caption="' + escapeHtml(it.title || cat.name) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'" onclick="window.__openImgGallery(this, \'.profile-album\')" style="cursor:zoom-in;">' +
         '</div>';
     }).join('') + '</div>'
     : '<p class="hint">暂无相册照片</p>';

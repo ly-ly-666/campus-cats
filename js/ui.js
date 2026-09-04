@@ -1,6 +1,6 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904b';
-import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904b';
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904f';
+import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904f';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -276,7 +276,7 @@ export function showModal(cat, cats, relations) {
         <div class="modal-event-item">
           <div class="modal-event-date">${escapeHtml(ev.date || '')}</div>
           <div class="modal-event-text">${escapeHtml(ev.text || '')}</div>
-          ${Array.isArray(ev.images) && ev.images.length ? `<div class="modal-event-imgs">${ev.images.map((src) => `<img src="${photoUrl(src)}" alt="" loading="lazy" onclick="window.openLightbox(this.src,'')" style="cursor:zoom-in;">`).join('')}</div>` : ''}
+          ${Array.isArray(ev.images) && ev.images.length ? `<div class="modal-event-imgs">${ev.images.map((src) => `<img src="${photoUrl(src)}" data-full="${photoUrl(src)}" alt="" loading="lazy" onclick="window.__openImgGallery(this,'.modal-event-imgs')" style="cursor:zoom-in;">`).join('')}</div>` : ''}
         </div>`).join('') + '</div>'
     : '';
 
@@ -295,7 +295,7 @@ export function showModal(cat, cats, relations) {
   });
   const albumHtml = albumItems.length
     ? `<div class="modal-album">${albumItems.map((it) => `
-        <div class="album-thumb">${it.title && it.title !== cat.name ? `<span class="album-badge" title="来自故事：${escapeHtml(it.title)}">📖 故事</span>` : ''}<img src="${thumbUrl(it.src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(it.src)}" onclick="openLightbox(this.dataset.full, '${escapeHtml(it.title || cat.name)}', this.src)" style="cursor:zoom-in;"></div>
+        <div class="album-thumb">${it.title && it.title !== cat.name ? `<span class="album-badge" title="来自故事：${escapeHtml(it.title)}">📖 故事</span>` : ''}<img src="${thumbUrl(it.src)}" alt="" loading="lazy" onerror="this.style.display='none'" data-full="${photoUrl(it.src)}" data-caption="${escapeHtml(it.title || cat.name)}" onclick="window.__openImgGallery(this,'.modal-album')" style="cursor:zoom-in;"></div>
       `).join('')}</div>`
     : '<div class="relation-empty">暂无相册</div>';
 
@@ -434,7 +434,7 @@ export function renderEventsTimeline(cats) {
     const photo = thumbUrl(cat.photo); // 时间线头像用缩略图
     const imgs = item.images.length
       ? '<div class="tl-event-imgs">' + item.images.map((src) => {
-          return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="openLightbox(this.dataset.full, \'\', this.src)">';
+          return '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" alt="" loading="lazy" onclick="window.__openImgGallery(this, \'.tl-event-imgs\')">';
         }).join('') + '</div>'
       : '';
     return `
@@ -633,6 +633,13 @@ function storyContentHtml(s, catId, idx) {
     + '</div>';
 }
 
+// 故事图灯箱图集辅助：解析该张图所在故事的全部图片，供左右滑动切换位置
+window.__storyGallery = function (img) {
+  const box = img && img.closest ? img.closest('.story-item-imgs') : null;
+  if (!box || !box.dataset.gallery) return null;
+  try { return JSON.parse(box.dataset.gallery); } catch (e) { return null; }
+};
+
 export function renderStoriesTimeline(cats, siteConfig) {
   const box = document.getElementById('stories-timeline');
   if (!box) return;
@@ -798,7 +805,9 @@ export function renderStoriesTimeline(cats, siteConfig) {
       return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="点击查看「' + escapeHtml(cc.name) + '」档案"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
     }).join('') + '</div>' : '';
     const contentHtml = s.content ? storyContentHtml(s, si, 0) : '';
-    const imgsHtml = s.images.length ? '<div class="story-item-imgs">' + s.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(s.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src)" style="cursor:zoom-in;">').join('') + '</div>' : '';
+    const galleryArr = s.images.map((p) => ({ src: photoUrl(p), thumb: thumbUrl(p), caption: (s.title || '') }));
+    const galleryAttr = (galleryArr.length > 1 ? ' data-gallery=\'' + JSON.stringify(galleryArr).replace(/'/g, '&#39;') + '\'' : '');
+    const imgsHtml = s.images.length ? '<div class="story-item-imgs"' + galleryAttr + '>' + s.images.map((p, pi) => '<img src="' + thumbUrl(p) + '" data-full="' + photoUrl(p) + '" data-caption="' + escapeHtml(s.title || '') + '" data-idx="' + pi + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src, window.__storyGallery(this), Number(this.dataset.idx || 0))" style="cursor:zoom-in;">').join('') + '</div>' : '';
     return '<div class="story-item">' + pinHtml + dateHtml + titleHtml + catsHtml + contentHtml + imgsHtml +
       '<div class="story-item-like" data-story="' + escapeHtml(String(s.id)) + '"></div>' +
       '<div class="story-item-comment" data-story="' + escapeHtml(String(s.id)) + '"></div>' + '</div>';
@@ -942,7 +951,7 @@ export function renderKnowledgeTimeline(knowledge, cats) {
       return '<a class="story-item-cat" href="./profile.html#' + escapeHtml(cc.id) + '" title="点击查看「' + escapeHtml(cc.name) + '」档案"><img src="' + thumbUrl(cc.photo) + '" alt="" onerror="this.src=\'' + DEFAULT_PHOTO + '\'"><span>' + escapeHtml(cc.name) + '</span></a>';
     }).join('') + '</div>' : '';
     const contentHtml = k.content ? knowledgeContentHtml(k, ki) : '';
-    const imgsHtml = (Array.isArray(k.images) && k.images.length) ? '<div class="knowledge-item-imgs">' + k.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(k.title || '') + '" alt="" loading="lazy" onclick="window.openLightbox(this.dataset.full || this.src, this.dataset.caption, this.src)" style="cursor:zoom-in;">').join('') + '</div>' : '';
+    const imgsHtml = (Array.isArray(k.images) && k.images.length) ? '<div class="knowledge-item-imgs">' + k.images.map((src) => '<img src="' + thumbUrl(src) + '" data-full="' + photoUrl(src) + '" data-caption="' + escapeHtml(k.title || '') + '" alt="" loading="lazy" onclick="window.__openImgGallery(this, \'.knowledge-item-imgs\')" style="cursor:zoom-in;">').join('') + '</div>' : '';
     return '<div class="knowledge-item">' + dateHtml + catHtml + titleHtml + catsHtml + contentHtml + imgsHtml + '</div>';
   }).join('');
 }
