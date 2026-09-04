@@ -17,7 +17,7 @@
       "images/cat001_album_1787812115676.jpg",
       "images/cat001_album_1787934292123.jpg"
     ],
-    "description": "脾气很好。经常睡在图书馆门口或者里面。有时会在图书馆里面巡逻。心情不好时有概率会抓人。被人类骚扰到厌烦时会咬人（假咬，起恐吓威慑作用）",
+    "description": "馆长的标志性,是它身上有朵小蘑菇,脾气很好。经常睡在图书馆门口或者里面。有时会在图书馆里面巡逻。心情不好时有概率会抓人。被人类骚扰到厌烦时会咬人（假咬，起恐吓威慑作用）有吃就是奴隶,没吃就是皇帝,天天在图书馆睡觉",
     "story": "",
     "tags": [],
     "status": "已绝育",
@@ -35,6 +35,11 @@
       {
         "date": "2026-08-26",
         "text": "今天!一切都源自于一个想法",
+        "images": []
+      },
+      {
+        "date": "2026-09-03",
+        "text": "馆长温馨提示 : 大家明天不要喂图书馆的橘猫星星哦，要带去绝育，上次没成功",
         "images": []
       }
     ],
@@ -205,6 +210,38 @@
           "cat001"
         ],
         "images": []
+      },
+      {
+        "id": "s_1788496713951_lf3hl3",
+        "date": "2026-09-03",
+        "title": "今日份白猪",
+        "content": "早上的白猪,像老鼠\n我觉得白猪天天睡觉,是因为晚上不睡和早起的原因 , 我上早八也会睡懒觉",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788496717451.jpg",
+          "images/cat001_story_1788496729757.jpg",
+          "images/cat001_story_1788496787502.jpg",
+          "images/cat001_story_1788496797814.jpg",
+          "images/cat001_story_1788496811974.jpg",
+          "images/cat001_story_1788496823781.jpg",
+          "images/cat001_story_1788497045514.jpg",
+          "images/cat001_story_1788497210407.jpg"
+        ]
+      },
+      {
+        "id": "s_1788502409013_nr6uu3",
+        "date": "2026-09-03",
+        "title": "炸毛猪",
+        "content": "和哈哈吵架了",
+        "cats": [
+          "cat001",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1788502427371.jpg"
+        ]
       }
     ]
   },
@@ -396,6 +433,25 @@
           "images/cat005_story_1788100632862.jpg",
           "images/cat005_story_1788100640078.jpg"
         ]
+      },
+      {
+        "id": "s_1788500930766_c0328b",
+        "date": "2026-09-03",
+        "title": "泥嚎~",
+        "content": "别说,闯闯和毛毛真像两兄弟\n闯闯猛虎出击!",
+        "cats": [
+          "cat036",
+          "cat003"
+        ],
+        "images": [
+          "images/cat036_story_1788500942240.jpg",
+          "images/cat036_story_1788501057075.jpg",
+          "images/cat036_story_1788501065870.jpg",
+          "images/cat036_story_1788501074516.jpg",
+          "images/cat036_story_1788501102343.jpg",
+          "images/cat036_story_1788501112022.jpg",
+          "images/cat036_story_1788501120137.jpg"
+        ]
       }
     ]
   },
@@ -455,6 +511,21 @@
           "images/cat004_story_1788363574136.jpg",
           "images/cat004_story_1788363605864.jpg",
           "images/cat004_story_1788363616743.jpg"
+        ]
+      },
+      {
+        "id": "s_1788501216887_4luicc",
+        "date": "2026-09-03",
+        "title": "超绝前庭的年年",
+        "content": "嘴奴子嘎嘎长",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1788501252001.jpg",
+          "images/cat004_story_1788501260109.jpg",
+          "images/cat004_story_1788501268940.jpg",
+          "images/cat004_story_1788501279356.jpg"
         ]
       }
     ]
@@ -574,6 +645,34 @@
         "images": [
           "images/cat005_story_1788275348920.jpg",
           "images/cat005_story_1788275357637.jpg"
+        ]
+      },
+      {
+        "id": "s_1788499487365_jlic2m",
+        "date": "2026-09-03",
+        "title": "举报有小猫躲在图书馆不学习",
+        "content": "",
+        "cats": [
+          "cat005"
+        ],
+        "images": [
+          "images/cat005_story_1788499510029.jpg",
+          "images/cat005_story_1788499531234.jpg"
+        ]
+      },
+      {
+        "id": "s_1788502596880_33qlf9",
+        "date": "2026-09-04",
+        "title": "大胆的咪先享受世界",
+        "content": "",
+        "cats": [
+          "cat005"
+        ],
+        "images": [
+          "images/cat005_story_1788502607719.jpg",
+          "images/cat005_story_1788502616980.jpg",
+          "images/cat005_story_1788502626090.jpg",
+          "images/cat005_story_1788502634782.jpg"
         ]
       }
     ]
@@ -729,6 +828,34 @@
           "images/cat009_story_1788189331975.jpg",
           "images/cat009_story_1788189341611.jpg",
           "images/cat009_story_1788189353614.jpg"
+        ]
+      },
+      {
+        "id": "s_1788499339323_sh5aqm",
+        "date": "2026-09-03",
+        "title": "忍不住化身一条固执的🐟",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1788499366482.jpg",
+          "images/cat009_story_1788499375497.jpg"
+        ]
+      },
+      {
+        "id": "s_1788502300869_gri20p",
+        "date": "2026-09-03",
+        "title": "无师自通的跨越围栏方式",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1788502304529.jpg",
+          "images/cat009_story_1788502317130.jpg",
+          "images/cat009_story_1788502330116.jpg",
+          "images/cat009_story_1788502343406.jpg"
         ]
       }
     ]
@@ -933,13 +1060,7 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [
-      {
-        "date": "2026-09-01",
-        "text": "大家不要喂星星和包包，猫协将带两小只带去绝育",
-        "images": []
-      }
-    ],
+    "events": [],
     "stories": [
       {
         "id": "s_1788019429988_l7y52c",
@@ -954,6 +1075,32 @@
         ],
         "images": [
           "images/cat018_story_1788019438909.jpg"
+        ]
+      },
+      {
+        "id": "s_1788497248853_rpk09l",
+        "date": "2026-09-03",
+        "title": "蛋蛋小宝宝",
+        "content": "",
+        "cats": [
+          "cat016"
+        ],
+        "images": [
+          "images/cat016_story_1788497260479.jpg",
+          "images/cat016_story_1788497292358.jpg",
+          "images/cat016_story_1788497310216.jpg"
+        ]
+      },
+      {
+        "id": "s_1788502650430_ty6p0t",
+        "date": "2026-09-04",
+        "title": "人 ,咪好像受伤了",
+        "content": "",
+        "cats": [
+          "cat016"
+        ],
+        "images": [
+          "images/cat016_story_1788502672625.jpg"
         ]
       }
     ]
@@ -991,6 +1138,20 @@
         "images": [
           "images/cat017_story_1788019089092.jpg",
           "images/cat017_story_1788019095620.jpg"
+        ]
+      },
+      {
+        "id": "s_1788501815500_3zlnse",
+        "date": "2026-09-03",
+        "title": "当姐驾到!",
+        "content": "当姐饿了\n冷知识: 当姐吃饭时 ,不要摸当姐 ,容易降龙十八掌挨打",
+        "cats": [
+          "cat017"
+        ],
+        "images": [
+          "images/cat017_story_1788501837417.jpg",
+          "images/cat017_story_1788501845424.jpg",
+          "images/cat017_story_1788501859247.jpg"
         ]
       }
     ]
@@ -1206,6 +1367,32 @@
         "images": [
           "images/cat019_story_1788274987112.jpg"
         ]
+      },
+      {
+        "id": "s_1788499306631_aoulyk",
+        "date": "2026-09-03",
+        "title": "妖娆",
+        "content": "",
+        "cats": [
+          "cat019"
+        ],
+        "images": [
+          "images/cat019_story_1788499315808.jpg",
+          "images/cat019_story_1788501152462.jpg"
+        ]
+      },
+      {
+        "id": "s_1788502409013_nr6uu3",
+        "date": "2026-09-03",
+        "title": "炸毛猪",
+        "content": "和哈哈吵架了",
+        "cats": [
+          "cat001",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1788502427371.jpg"
+        ]
       }
     ]
   },
@@ -1243,6 +1430,19 @@
           "images/cat020_story_1788363760740.jpg",
           "images/cat020_story_1788363769645.jpg",
           "images/cat020_story_1788363778481.jpg"
+        ]
+      },
+      {
+        "id": "s_1788501945554_85gn5z",
+        "date": "2026-09-03",
+        "title": "QQ和年年的相似",
+        "content": "佝偻的姿势",
+        "cats": [
+          "cat020"
+        ],
+        "images": [
+          "images/cat020_story_1788501949191.jpg",
+          "images/cat020_story_1788502070297.jpg"
         ]
       }
     ]
@@ -1739,6 +1939,38 @@
           "images/cat036_story_1788365143904.jpg",
           "images/cat036_story_1788365150040.jpg",
           "images/cat036_story_1788365196515.jpg"
+        ]
+      },
+      {
+        "id": "s_1788500930766_c0328b",
+        "date": "2026-09-03",
+        "title": "泥嚎~",
+        "content": "别说,闯闯和毛毛真像两兄弟\n闯闯猛虎出击!",
+        "cats": [
+          "cat036",
+          "cat003"
+        ],
+        "images": [
+          "images/cat036_story_1788500942240.jpg",
+          "images/cat036_story_1788501057075.jpg",
+          "images/cat036_story_1788501065870.jpg",
+          "images/cat036_story_1788501074516.jpg",
+          "images/cat036_story_1788501102343.jpg",
+          "images/cat036_story_1788501112022.jpg",
+          "images/cat036_story_1788501120137.jpg"
+        ]
+      },
+      {
+        "id": "s_1788502475508_sk78ke",
+        "date": "2026-09-03",
+        "title": "咏春 . 叶咪",
+        "content": "原因疑似有个男生吓唬闯闯,闯闯立志苦练Chinese功夫!\n: 两脚兽 , 下次你小心点 ,攻你下盘",
+        "cats": [
+          "cat036"
+        ],
+        "images": [
+          "images/cat036_story_1788502490216.jpg",
+          "images/cat036_story_1788502501169.jpg"
         ]
       }
     ]
@@ -2763,6 +2995,22 @@
           "images/cat065_story_1788275286298.jpg",
           "images/cat065_story_1788275295628.jpg",
           "images/cat065_story_1788275304614.jpg"
+        ]
+      },
+      {
+        "id": "s_1788499743796_xegs0h",
+        "date": "2026-09-03",
+        "title": "小吴~小吴~",
+        "content": "",
+        "cats": [
+          "cat065"
+        ],
+        "images": [
+          "images/cat065_story_1788499777733.jpg",
+          "images/cat065_story_1788499786612.jpg",
+          "images/cat065_story_1788499799276.jpg",
+          "images/cat065_story_1788499810028.jpg",
+          "images/cat065_story_1788499818441.jpg"
         ]
       }
     ]
