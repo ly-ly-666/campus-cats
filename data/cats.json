@@ -41,6 +41,13 @@
         "date": "2026-09-03",
         "text": "馆长温馨提示 : 大家明天不要喂图书馆的橘猫星星哦，要带去绝育，上次没成功",
         "images": []
+      },
+      {
+        "date": "2026-09-06",
+        "text": "馆长寻猫启示 : 教职工附近的一只猫失踪了 ,叫墨宝,是家养的 , 比较聪明 , 游泳池那边那条路出没比较多 ,各位可以留意一下 ",
+        "images": [
+          "images/cat001_event_1788747172682.jpg"
+        ]
       }
     ],
     "stories": [
@@ -241,6 +248,19 @@
         ],
         "images": [
           "images/cat001_story_1788502427371.jpg"
+        ]
+      },
+      {
+        "id": "s_1788746570894_vzmhza",
+        "date": "2026-09-06",
+        "title": "腿长的白猪",
+        "content": "难道穿了增高鞋垫?",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788746624153.jpg",
+          "images/cat001_story_1788746636309.jpg"
         ]
       }
     ]
@@ -452,6 +472,23 @@
           "images/cat036_story_1788501112022.jpg",
           "images/cat036_story_1788501120137.jpg"
         ]
+      },
+      {
+        "id": "s_1788746826710_78bhmq",
+        "date": "2026-09-06",
+        "title": "毛毛的小时候 VS 现在",
+        "content": "通过对比,可以看出猫协确实付出了很大努力,爱会疯狂滋生出血肉",
+        "cats": [
+          "cat003"
+        ],
+        "images": [
+          "images/cat003_story_1788746915338.jpg",
+          "images/cat003_story_1788746925564.jpg",
+          "images/cat003_story_1788746933596.jpg",
+          "images/cat003_story_1788746940782.jpg",
+          "images/cat003_story_1788746950501.jpg",
+          "images/cat003_story_1788747343758.jpg"
+        ]
       }
     ]
   },
@@ -526,6 +563,19 @@
           "images/cat004_story_1788501260109.jpg",
           "images/cat004_story_1788501268940.jpg",
           "images/cat004_story_1788501279356.jpg"
+        ]
+      },
+      {
+        "id": "s_1788747402310_9uzaj8",
+        "date": "2026-09-06",
+        "title": "可以顶起一瓶汽水",
+        "content": "",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1788747421735.jpg",
+          "images/cat004_story_1788747429159.jpg"
         ]
       }
     ]
@@ -1038,7 +1088,22 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1788747004620_afrman",
+        "date": "2026-09-06",
+        "title": "聚会吃饭",
+        "content": "",
+        "cats": [
+          "cat060",
+          "cat015",
+          "cat065"
+        ],
+        "images": [
+          "images/cat060_story_1788747011396.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat016",
@@ -1152,6 +1217,20 @@
           "images/cat017_story_1788501837417.jpg",
           "images/cat017_story_1788501845424.jpg",
           "images/cat017_story_1788501859247.jpg"
+        ]
+      },
+      {
+        "id": "s_1788746656425_ywfacl",
+        "date": "2026-09-06",
+        "title": "绝美当姐",
+        "content": "",
+        "cats": [
+          "cat017"
+        ],
+        "images": [
+          "images/cat017_story_1788746673196.jpg",
+          "images/cat017_story_1788746680714.jpg",
+          "images/cat017_story_1788746687798.jpg"
         ]
       }
     ]
@@ -2084,7 +2163,15 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-09-05",
+        "text": "星星绝育归来,成功失去蛋蛋,听说绝育后开始躲着人了",
+        "images": [
+          "images/cat038_event_1788746278574.jpg"
+        ]
+      }
+    ],
     "stories": [
       {
         "id": "s_1787929035230_xhszhq",
@@ -2179,6 +2266,19 @@
           "images/cat038_story_1788274784303.jpg",
           "images/cat038_story_1788274799356.jpg",
           "images/cat038_story_1788274813993.jpg"
+        ]
+      },
+      {
+        "id": "s_1788746711131_cgylb8",
+        "date": "",
+        "title": "星星",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat038_story_1788746747335.jpg",
+          "images/cat038_story_1788746758279.jpg"
         ]
       }
     ]
@@ -2806,6 +2906,20 @@
         "images": [
           "images/cat060_story_1787933810490.jpg"
         ]
+      },
+      {
+        "id": "s_1788747004620_afrman",
+        "date": "2026-09-06",
+        "title": "聚会吃饭",
+        "content": "",
+        "cats": [
+          "cat060",
+          "cat015",
+          "cat065"
+        ],
+        "images": [
+          "images/cat060_story_1788747011396.jpg"
+        ]
       }
     ]
   },
@@ -3011,6 +3125,20 @@
           "images/cat065_story_1788499799276.jpg",
           "images/cat065_story_1788499810028.jpg",
           "images/cat065_story_1788499818441.jpg"
+        ]
+      },
+      {
+        "id": "s_1788747004620_afrman",
+        "date": "2026-09-06",
+        "title": "聚会吃饭",
+        "content": "",
+        "cats": [
+          "cat060",
+          "cat015",
+          "cat065"
+        ],
+        "images": [
+          "images/cat060_story_1788747011396.jpg"
         ]
       }
     ]
