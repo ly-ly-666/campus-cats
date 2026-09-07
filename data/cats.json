@@ -382,6 +382,24 @@
           "images/cat002_story_1788365100054.jpg",
           "images/cat002_story_1788365216291.jpg"
         ]
+      },
+      {
+        "id": "s_1788748533447_7t4a5l",
+        "date": "2026-09-06",
+        "title": "花花~",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1788748548411.jpg",
+          "images/cat002_story_1788748571421.jpg",
+          "images/cat002_story_1788748586974.jpg",
+          "images/cat002_story_1788748617115.jpg",
+          "images/cat002_story_1788748630916.jpg",
+          "images/cat002_story_1788748642346.jpg",
+          "images/cat002_story_1788748649513.jpg"
+        ]
       }
     ]
   },
@@ -487,7 +505,9 @@
           "images/cat003_story_1788746933596.jpg",
           "images/cat003_story_1788746940782.jpg",
           "images/cat003_story_1788746950501.jpg",
-          "images/cat003_story_1788747343758.jpg"
+          "images/cat003_story_1788747343758.jpg",
+          "images/cat003_story_1788748501204.jpg",
+          "images/cat003_story_1788748518366.jpg"
         ]
       }
     ]
@@ -1088,6 +1108,7 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
+    "events": [],
     "stories": [
       {
         "id": "s_1788747004620_afrman",
@@ -1101,6 +1122,18 @@
         ],
         "images": [
           "images/cat060_story_1788747011396.jpg"
+        ]
+      },
+      {
+        "id": "s_1788748664140_d61tga",
+        "date": "2026-09-06",
+        "title": ".....有点丑",
+        "content": "",
+        "cats": [
+          "cat015"
+        ],
+        "images": [
+          "images/cat015_story_1788748701039.jpg"
         ]
       }
     ]
@@ -1546,7 +1579,23 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788747723289_y5gxfc",
+        "date": "2026-09-06",
+        "title": "咪咪在车底睡的好舒服",
+        "content": "和人撑着手睡觉一样哈哈哈\n无名无姓的一只小橘猫,睡觉还是很警觉的,我拍照的时候还睁眼看了我一眼",
+        "cats": [
+          "cat021"
+        ],
+        "images": [
+          "images/cat021_story_1788747758397.jpg",
+          "images/cat021_story_1788747765697.jpg",
+          "images/cat021_story_1788747773528.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat022",
@@ -1683,7 +1732,7 @@
     "color": "",
     "area": "",
     "lat": 21.677617,
-    "lng": 110.924185,
+    "lng": 110.924216,
     "photo": "images/cat027.jpg",
     "album": [],
     "description": "长得像菲菲",
@@ -2278,7 +2327,10 @@
         ],
         "images": [
           "images/cat038_story_1788746747335.jpg",
-          "images/cat038_story_1788746758279.jpg"
+          "images/cat038_story_1788746758279.jpg",
+          "images/cat038_story_1788748411500.jpg",
+          "images/cat038_story_1788748420466.jpg",
+          "images/cat038_story_1788748459449.jpg"
         ]
       }
     ]
@@ -3139,6 +3191,20 @@
         ],
         "images": [
           "images/cat060_story_1788747011396.jpg"
+        ]
+      },
+      {
+        "id": "s_1788747482774_x3e7h5",
+        "date": "2026-09-06",
+        "title": "挂上姓名牌的小吴",
+        "content": "",
+        "cats": [
+          "cat065"
+        ],
+        "images": [
+          "images/cat065_story_1788747536721.jpg",
+          "images/cat065_story_1788747545026.jpg",
+          "images/cat065_story_1788747554117.jpg"
         ]
       }
     ]
