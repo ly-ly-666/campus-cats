@@ -1178,10 +1178,10 @@
       {
         "id": "s_1788497248853_rpk09l",
         "date": "2026-09-03",
-        "title": "蛋蛋小宝宝",
+        "title": "星星小宝宝",
         "content": "",
         "cats": [
-          "cat016"
+          "cat038"
         ],
         "images": [
           "images/cat016_story_1788497260479.jpg",
@@ -2331,6 +2331,20 @@
           "images/cat038_story_1788748411500.jpg",
           "images/cat038_story_1788748420466.jpg",
           "images/cat038_story_1788748459449.jpg"
+        ]
+      },
+      {
+        "id": "s_1788497248853_rpk09l",
+        "date": "2026-09-03",
+        "title": "星星小宝宝",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat016_story_1788497260479.jpg",
+          "images/cat016_story_1788497292358.jpg",
+          "images/cat016_story_1788497310216.jpg"
         ]
       }
     ]
