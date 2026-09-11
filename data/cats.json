@@ -48,6 +48,16 @@
         "images": [
           "images/cat001_event_1788747172682.jpg"
         ]
+      },
+      {
+        "date": "2026-09-08",
+        "text": "感谢猫协的及时救助，让这只受伤的小猫重新有了依靠。这只小猫耳朵有道撕裂的伤口,身上也有破伤,疑似是教职工那边,被狗撕咬的伤口",
+        "images": [
+          "images/cat001_event_1789139102601.jpg",
+          "images/cat001_event_1789139129222.jpg",
+          "images/cat001_event_1789139158569.jpg",
+          "images/cat001_event_1789139219935.jpg"
+        ]
       }
     ],
     "stories": [
@@ -261,6 +271,29 @@
         "images": [
           "images/cat001_story_1788746624153.jpg",
           "images/cat001_story_1788746636309.jpg"
+        ]
+      },
+      {
+        "id": "s_1789138504317_f65qwy",
+        "date": "2026-09-11",
+        "title": "最近有点烦,总是有人类在我睡觉的时候打扰我 ",
+        "content": "最近摸白猪和卷卷的时候,要看看他们的心情怎么样哦",
+        "cats": [
+          "cat001",
+          "cat005"
+        ],
+        "images": [
+          "images/cat001_story_1789138585387.jpg",
+          "images/cat001_story_1789138603835.jpg",
+          "images/cat001_story_1789138618593.jpg",
+          "images/cat001_story_1789138641742.jpg",
+          "images/cat001_story_1789138656738.jpg",
+          "images/cat001_story_1789138665545.jpg",
+          "images/cat001_story_1789138691348.jpg",
+          "images/cat001_story_1789138720289.jpg",
+          "images/cat001_story_1789138743546.jpg",
+          "images/cat001_story_1789138763013.jpg",
+          "images/cat001_story_1789138789752.jpg"
         ]
       }
     ]
@@ -743,6 +776,29 @@
           "images/cat005_story_1788502616980.jpg",
           "images/cat005_story_1788502626090.jpg",
           "images/cat005_story_1788502634782.jpg"
+        ]
+      },
+      {
+        "id": "s_1789138504317_f65qwy",
+        "date": "2026-09-11",
+        "title": "最近有点烦,总是有人类在我睡觉的时候打扰我 ",
+        "content": "最近摸白猪和卷卷的时候,要看看他们的心情怎么样哦",
+        "cats": [
+          "cat001",
+          "cat005"
+        ],
+        "images": [
+          "images/cat001_story_1789138585387.jpg",
+          "images/cat001_story_1789138603835.jpg",
+          "images/cat001_story_1789138618593.jpg",
+          "images/cat001_story_1789138641742.jpg",
+          "images/cat001_story_1789138656738.jpg",
+          "images/cat001_story_1789138665545.jpg",
+          "images/cat001_story_1789138691348.jpg",
+          "images/cat001_story_1789138720289.jpg",
+          "images/cat001_story_1789138743546.jpg",
+          "images/cat001_story_1789138763013.jpg",
+          "images/cat001_story_1789138789752.jpg"
         ]
       }
     ]
@@ -1888,7 +1944,10 @@
     "lat": 21.679124,
     "lng": 110.921697,
     "photo": "images/cat033.jpg",
-    "album": [],
+    "album": [
+      "images/cat033_album_1789139668779.jpg",
+      "images/cat033_album_1789139698457.jpg"
+    ],
     "description": "",
     "story": "",
     "tags": [],
@@ -1899,12 +1958,28 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1789140323042_fix7r2",
+        "date": "2026-09-11",
+        "title": "囧囧专辑",
+        "content": "为什么叫囧囧? 我觉得应该是写在脸上了吧, 脸上大写的囧\n囧囧很奇怪 ,一年四季都穿着黑色的毛裤",
+        "cats": [
+          "cat033"
+        ],
+        "images": [
+          "images/cat033_story_1789140330769.jpg",
+          "images/cat033_story_1789140411415.jpg",
+          "images/cat033_story_1789140419784.jpg",
+          "images/cat033_story_1789140455058.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat034",
-    "name": "无名无姓",
-    "nickname": "",
+    "name": "妮妮",
+    "nickname": "尼尼",
     "gender": "female",
     "color": "三花",
     "area": "",
@@ -1921,8 +1996,28 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
-    "stories": []
+    "events": [
+      {
+        "date": "2026-09-10",
+        "text": "大家好,我是妮妮 ,我有名字啦",
+        "images": []
+      }
+    ],
+    "stories": [
+      {
+        "id": "s_1789138326310_lr4301",
+        "date": "2026-09-11",
+        "title": "大家好,我是妮妮 , 我有名字啦",
+        "content": "大家好,我是妮妮",
+        "cats": [
+          "cat034"
+        ],
+        "images": [
+          "images/cat034_story_1789138329485.jpg",
+          "images/cat034_story_1789138440607.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat035",
