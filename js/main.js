@@ -1,7 +1,7 @@
 // main.js — 入口模块（装配并启动应用）
-import { initMap, initMapSearch } from './map.js?v=20260904f';
-import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260904f';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline } from './ui.js?v=20260904f';
+import { initMap, initMapSearch } from './map.js?v=20260904g';
+import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260904g';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260904j';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 async function loadData() {
@@ -142,12 +142,18 @@ async function boot() {
 
   // 标签页
   bindTabs(
-    { map: '#map-view', graph: '#graph-view', events: '#events-view', stories: '#stories-view', knowledge: '#knowledge-view' },
-    { onGraphShow: () => {
-      if (!graphInitDone) { lazyInitGraph().then(() => setTimeout(() => resizeGraph(), 100)); }
-      else { resizeGraph(); }
-    }}
+    { map: '#map-view', graph: '#graph-view', events: '#events-view', stories: '#stories-view', knowledge: '#knowledge-view', rank: '#rank-view' },
+    {
+      onGraphShow: () => {
+        if (!graphInitDone) { lazyInitGraph().then(() => setTimeout(() => resizeGraph(), 100)); }
+        else { resizeGraph(); }
+      },
+      onTabShow: (key) => {
+        if (key === 'rank') renderRankTimeline(cats);
+      }
+    }
   );
+  renderRankTimeline(cats);
 
   // 手机端：关系图平移/缩放按钮
   const gc = document.getElementById('graph-controls');

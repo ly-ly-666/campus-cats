@@ -34,7 +34,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="./style.css?v=17">
+  <link rel="stylesheet" href="./style.css?v=19">
 </head>
 <body>
   <!-- 加载页 -->
@@ -53,6 +53,7 @@
       <button class="tab-btn" data-tab="events" type="button">📅 最近事件</button>
       <button class="tab-btn" data-tab="stories" type="button">📖 故事集</button>
       <button class="tab-btn" data-tab="knowledge" type="button">📚 猫咪小知识</button>
+      <button class="tab-btn" data-tab="rank" type="button">🏆 猫咪评分榜</button>
       <a class="tab-btn" href="./admin.html" title="在线编辑数据并自动部署" style="display:none">⚙️ 编辑</a>
     </nav>
   </header>
@@ -163,6 +164,11 @@
     <section id="knowledge-view" class="view">
       <div id="knowledge-timeline" class="knowledge-timeline"></div>
     </section>
+
+    <!-- 猫咪评分榜视图 -->
+    <section id="rank-view" class="view">
+      <div id="rank-list" class="rank-list"></div>
+    </section>
   </main>
 
   <!-- 详情弹窗 -->
@@ -253,6 +259,6 @@
   </script>
 
   <!-- 入口模块（?v= 版本号：改版时递增，防止浏览器/CDN 缓存旧 JS 导致加载失败） -->
-  <script type="module" src="./js/main.js?v=20260904f"></script>
+  <script type="module" src="./js/main.js?v=20260904j"></script>
 </body>
 </html>

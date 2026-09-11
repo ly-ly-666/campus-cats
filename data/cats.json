@@ -41,6 +41,23 @@
         "date": "2026-09-03",
         "text": "馆长温馨提示 : 大家明天不要喂图书馆的橘猫星星哦，要带去绝育，上次没成功",
         "images": []
+      },
+      {
+        "date": "2026-09-06",
+        "text": "馆长寻猫启示 : 教职工附近的一只猫失踪了 ,叫墨宝,是家养的 , 比较聪明 , 游泳池那边那条路出没比较多 ,各位可以留意一下 ",
+        "images": [
+          "images/cat001_event_1788747172682.jpg"
+        ]
+      },
+      {
+        "date": "2026-09-08",
+        "text": "感谢猫协的及时救助，让这只受伤的小猫重新有了依靠。这只小猫耳朵有道撕裂的伤口,身上也有破伤,疑似是教职工那边,被狗撕咬的伤口",
+        "images": [
+          "images/cat001_event_1789139102601.jpg",
+          "images/cat001_event_1789139129222.jpg",
+          "images/cat001_event_1789139158569.jpg",
+          "images/cat001_event_1789139219935.jpg"
+        ]
       }
     ],
     "stories": [
@@ -242,6 +259,42 @@
         "images": [
           "images/cat001_story_1788502427371.jpg"
         ]
+      },
+      {
+        "id": "s_1788746570894_vzmhza",
+        "date": "2026-09-06",
+        "title": "腿长的白猪",
+        "content": "难道穿了增高鞋垫?",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1788746624153.jpg",
+          "images/cat001_story_1788746636309.jpg"
+        ]
+      },
+      {
+        "id": "s_1789138504317_f65qwy",
+        "date": "2026-09-11",
+        "title": "最近有点烦,总是有人类在我睡觉的时候打扰我 ",
+        "content": "最近摸白猪和卷卷的时候,要看看他们的心情怎么样哦",
+        "cats": [
+          "cat001",
+          "cat005"
+        ],
+        "images": [
+          "images/cat001_story_1789138585387.jpg",
+          "images/cat001_story_1789138603835.jpg",
+          "images/cat001_story_1789138618593.jpg",
+          "images/cat001_story_1789138641742.jpg",
+          "images/cat001_story_1789138656738.jpg",
+          "images/cat001_story_1789138665545.jpg",
+          "images/cat001_story_1789138691348.jpg",
+          "images/cat001_story_1789138720289.jpg",
+          "images/cat001_story_1789138743546.jpg",
+          "images/cat001_story_1789138763013.jpg",
+          "images/cat001_story_1789138789752.jpg"
+        ]
       }
     ]
   },
@@ -362,6 +415,24 @@
           "images/cat002_story_1788365100054.jpg",
           "images/cat002_story_1788365216291.jpg"
         ]
+      },
+      {
+        "id": "s_1788748533447_7t4a5l",
+        "date": "2026-09-06",
+        "title": "花花~",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1788748548411.jpg",
+          "images/cat002_story_1788748571421.jpg",
+          "images/cat002_story_1788748586974.jpg",
+          "images/cat002_story_1788748617115.jpg",
+          "images/cat002_story_1788748630916.jpg",
+          "images/cat002_story_1788748642346.jpg",
+          "images/cat002_story_1788748649513.jpg"
+        ]
       }
     ]
   },
@@ -452,6 +523,25 @@
           "images/cat036_story_1788501112022.jpg",
           "images/cat036_story_1788501120137.jpg"
         ]
+      },
+      {
+        "id": "s_1788746826710_78bhmq",
+        "date": "2026-09-06",
+        "title": "毛毛的小时候 VS 现在",
+        "content": "通过对比,可以看出猫协确实付出了很大努力,爱会疯狂滋生出血肉",
+        "cats": [
+          "cat003"
+        ],
+        "images": [
+          "images/cat003_story_1788746915338.jpg",
+          "images/cat003_story_1788746925564.jpg",
+          "images/cat003_story_1788746933596.jpg",
+          "images/cat003_story_1788746940782.jpg",
+          "images/cat003_story_1788746950501.jpg",
+          "images/cat003_story_1788747343758.jpg",
+          "images/cat003_story_1788748501204.jpg",
+          "images/cat003_story_1788748518366.jpg"
+        ]
       }
     ]
   },
@@ -526,6 +616,19 @@
           "images/cat004_story_1788501260109.jpg",
           "images/cat004_story_1788501268940.jpg",
           "images/cat004_story_1788501279356.jpg"
+        ]
+      },
+      {
+        "id": "s_1788747402310_9uzaj8",
+        "date": "2026-09-06",
+        "title": "可以顶起一瓶汽水",
+        "content": "",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1788747421735.jpg",
+          "images/cat004_story_1788747429159.jpg"
         ]
       }
     ]
@@ -673,6 +776,29 @@
           "images/cat005_story_1788502616980.jpg",
           "images/cat005_story_1788502626090.jpg",
           "images/cat005_story_1788502634782.jpg"
+        ]
+      },
+      {
+        "id": "s_1789138504317_f65qwy",
+        "date": "2026-09-11",
+        "title": "最近有点烦,总是有人类在我睡觉的时候打扰我 ",
+        "content": "最近摸白猪和卷卷的时候,要看看他们的心情怎么样哦",
+        "cats": [
+          "cat001",
+          "cat005"
+        ],
+        "images": [
+          "images/cat001_story_1789138585387.jpg",
+          "images/cat001_story_1789138603835.jpg",
+          "images/cat001_story_1789138618593.jpg",
+          "images/cat001_story_1789138641742.jpg",
+          "images/cat001_story_1789138656738.jpg",
+          "images/cat001_story_1789138665545.jpg",
+          "images/cat001_story_1789138691348.jpg",
+          "images/cat001_story_1789138720289.jpg",
+          "images/cat001_story_1789138743546.jpg",
+          "images/cat001_story_1789138763013.jpg",
+          "images/cat001_story_1789138789752.jpg"
         ]
       }
     ]
@@ -1038,7 +1164,35 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788747004620_afrman",
+        "date": "2026-09-06",
+        "title": "聚会吃饭",
+        "content": "",
+        "cats": [
+          "cat060",
+          "cat015",
+          "cat065"
+        ],
+        "images": [
+          "images/cat060_story_1788747011396.jpg"
+        ]
+      },
+      {
+        "id": "s_1788748664140_d61tga",
+        "date": "2026-09-06",
+        "title": ".....有点丑",
+        "content": "",
+        "cats": [
+          "cat015"
+        ],
+        "images": [
+          "images/cat015_story_1788748701039.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat016",
@@ -1080,10 +1234,10 @@
       {
         "id": "s_1788497248853_rpk09l",
         "date": "2026-09-03",
-        "title": "蛋蛋小宝宝",
+        "title": "星星小宝宝",
         "content": "",
         "cats": [
-          "cat016"
+          "cat038"
         ],
         "images": [
           "images/cat016_story_1788497260479.jpg",
@@ -1152,6 +1306,20 @@
           "images/cat017_story_1788501837417.jpg",
           "images/cat017_story_1788501845424.jpg",
           "images/cat017_story_1788501859247.jpg"
+        ]
+      },
+      {
+        "id": "s_1788746656425_ywfacl",
+        "date": "2026-09-06",
+        "title": "绝美当姐",
+        "content": "",
+        "cats": [
+          "cat017"
+        ],
+        "images": [
+          "images/cat017_story_1788746673196.jpg",
+          "images/cat017_story_1788746680714.jpg",
+          "images/cat017_story_1788746687798.jpg"
         ]
       }
     ]
@@ -1467,7 +1635,23 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1788747723289_y5gxfc",
+        "date": "2026-09-06",
+        "title": "咪咪在车底睡的好舒服",
+        "content": "和人撑着手睡觉一样哈哈哈\n无名无姓的一只小橘猫,睡觉还是很警觉的,我拍照的时候还睁眼看了我一眼",
+        "cats": [
+          "cat021"
+        ],
+        "images": [
+          "images/cat021_story_1788747758397.jpg",
+          "images/cat021_story_1788747765697.jpg",
+          "images/cat021_story_1788747773528.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat022",
@@ -1604,7 +1788,7 @@
     "color": "",
     "area": "",
     "lat": 21.677617,
-    "lng": 110.924185,
+    "lng": 110.924216,
     "photo": "images/cat027.jpg",
     "album": [],
     "description": "长得像菲菲",
@@ -1760,7 +1944,10 @@
     "lat": 21.679124,
     "lng": 110.921697,
     "photo": "images/cat033.jpg",
-    "album": [],
+    "album": [
+      "images/cat033_album_1789139668779.jpg",
+      "images/cat033_album_1789139698457.jpg"
+    ],
     "description": "",
     "story": "",
     "tags": [],
@@ -1771,12 +1958,28 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1789140323042_fix7r2",
+        "date": "2026-09-11",
+        "title": "囧囧专辑",
+        "content": "为什么叫囧囧? 我觉得应该是写在脸上了吧, 脸上大写的囧\n囧囧很奇怪 ,一年四季都穿着黑色的毛裤",
+        "cats": [
+          "cat033"
+        ],
+        "images": [
+          "images/cat033_story_1789140330769.jpg",
+          "images/cat033_story_1789140411415.jpg",
+          "images/cat033_story_1789140419784.jpg",
+          "images/cat033_story_1789140455058.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat034",
-    "name": "无名无姓",
-    "nickname": "",
+    "name": "妮妮",
+    "nickname": "尼尼",
     "gender": "female",
     "color": "三花",
     "area": "",
@@ -1793,8 +1996,28 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
-    "stories": []
+    "events": [
+      {
+        "date": "2026-09-10",
+        "text": "大家好,我是妮妮 ,我有名字啦",
+        "images": []
+      }
+    ],
+    "stories": [
+      {
+        "id": "s_1789138326310_lr4301",
+        "date": "2026-09-11",
+        "title": "大家好,我是妮妮 , 我有名字啦",
+        "content": "大家好,我是妮妮",
+        "cats": [
+          "cat034"
+        ],
+        "images": [
+          "images/cat034_story_1789138329485.jpg",
+          "images/cat034_story_1789138440607.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat035",
@@ -2084,7 +2307,15 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-09-05",
+        "text": "星星绝育归来,成功失去蛋蛋,听说绝育后开始躲着人了",
+        "images": [
+          "images/cat038_event_1788746278574.jpg"
+        ]
+      }
+    ],
     "stories": [
       {
         "id": "s_1787929035230_xhszhq",
@@ -2180,6 +2411,36 @@
           "images/cat038_story_1788274799356.jpg",
           "images/cat038_story_1788274813993.jpg"
         ]
+      },
+      {
+        "id": "s_1788746711131_cgylb8",
+        "date": "2026-09-08",
+        "title": "星星",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat038_story_1788746747335.jpg",
+          "images/cat038_story_1788746758279.jpg",
+          "images/cat038_story_1788748411500.jpg",
+          "images/cat038_story_1788748420466.jpg",
+          "images/cat038_story_1788748459449.jpg"
+        ]
+      },
+      {
+        "id": "s_1788497248853_rpk09l",
+        "date": "2026-09-03",
+        "title": "星星小宝宝",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat016_story_1788497260479.jpg",
+          "images/cat016_story_1788497292358.jpg",
+          "images/cat016_story_1788497310216.jpg"
+        ]
       }
     ]
   },
@@ -2222,6 +2483,26 @@
           "images/cat039_story_1788019859418.jpg",
           "images/cat039_story_1788019870102.jpg",
           "images/cat039_story_1788019883732.jpg"
+        ]
+      },
+      {
+        "id": "s_1788926119462_mjy1z5",
+        "date": "2026-09-09",
+        "title": "黄咪咪专辑",
+        "content": "九月九日忆黄咪咪\n在我的印象中 , 黄咪咪是只很聪明的猫,甚至是霸王猫,在25年的时候,常驻在图书馆前面的草坪上,那时候的小白还在中专楼游荡,每次小白靠近图书馆,小白都要小心翼翼的,一旦黄咪咪发现小白 ,就会上演一场追逐战\n黄咪咪也很聪明,渴了的时候会自己跑去中专楼那个洗手池里,让人类开水给他喝\n当然,他也会谄媚,求吃的,那时候是大早上遇到黄咪咪,第一次见他那么主动蹭人,站长也是体验了一把,可惜站长没吃的,黄咪咪后面就摇着尾巴走了\n当然,黄咪咪还坐过电动车,当然还有很多站长都不知道的故事\n虽然 , 黄咪咪已经消失很久了,但他的故事 ,一直留在每一个接触过的人的心中",
+        "cats": [
+          "cat039"
+        ],
+        "images": [
+          "images/cat039_story_1788926258809.jpg",
+          "images/cat039_story_1788926270622.jpg",
+          "images/cat039_story_1788926278095.jpg",
+          "images/cat039_story_1788926289104.jpg",
+          "images/cat039_story_1788926296969.jpg",
+          "images/cat039_story_1788926311009.jpg",
+          "images/cat039_story_1788926329044.jpg",
+          "images/cat039_story_1788926886973.jpg",
+          "images/cat039_story_1788926895019.jpg"
         ]
       }
     ]
@@ -2806,6 +3087,20 @@
         "images": [
           "images/cat060_story_1787933810490.jpg"
         ]
+      },
+      {
+        "id": "s_1788747004620_afrman",
+        "date": "2026-09-06",
+        "title": "聚会吃饭",
+        "content": "",
+        "cats": [
+          "cat060",
+          "cat015",
+          "cat065"
+        ],
+        "images": [
+          "images/cat060_story_1788747011396.jpg"
+        ]
       }
     ]
   },
@@ -3011,6 +3306,34 @@
           "images/cat065_story_1788499799276.jpg",
           "images/cat065_story_1788499810028.jpg",
           "images/cat065_story_1788499818441.jpg"
+        ]
+      },
+      {
+        "id": "s_1788747004620_afrman",
+        "date": "2026-09-06",
+        "title": "聚会吃饭",
+        "content": "",
+        "cats": [
+          "cat060",
+          "cat015",
+          "cat065"
+        ],
+        "images": [
+          "images/cat060_story_1788747011396.jpg"
+        ]
+      },
+      {
+        "id": "s_1788747482774_x3e7h5",
+        "date": "2026-09-06",
+        "title": "挂上姓名牌的小吴",
+        "content": "",
+        "cats": [
+          "cat065"
+        ],
+        "images": [
+          "images/cat065_story_1788747536721.jpg",
+          "images/cat065_story_1788747545026.jpg",
+          "images/cat065_story_1788747554117.jpg"
         ]
       }
     ]

@@ -1,6 +1,7 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904f';
-import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904f';
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904j';
+import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904h';
+import { mountRatingBox, fetchRank } from './ratings.js?v=20260904j';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -320,6 +321,7 @@ export function showModal(cat, cats, relations) {
       ${cat.description ? `<p class="modal-desc">${escapeHtml(cat.description)}</p>` : ''}
       <div class="modal-info">${infoHtml}</div>
       <div class="modal-like" data-like-for="${cat.id}"></div>
+      <div class="rate-host" data-cat-id="${cat.id}"></div>
       <div style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a><button class="btn btn-sm" id="corr-from-modal" data-cat-id="${cat.id}">🐾 信息有误？更正</button></div>
       <h3 class="modal-section-title">关系</h3>
       <div class="modal-relations">${relationHtml}</div>
@@ -340,6 +342,9 @@ export function showModal(cat, cats, relations) {
 
   const likeBox = modal.querySelector('[data-like-for="' + cat.id + '"]');
   if (likeBox) mountLikeButton(likeBox, cat.id);
+
+  const rateHost = modal.querySelector('.rate-host');
+  if (rateHost) mountRatingBox(rateHost, cat.id);
 }
 
 /**
@@ -363,10 +368,18 @@ export function bindTabs(views, opts = {}) {
         el.classList.toggle('active', viewKey === key);
       });
 
+      // 单行横向滚动标签栏：用滚动条自动对齐，让当前标签完整露出来，避免滚动整页
+      try {
+        const bar = tabBar;
+        const w = bar.clientWidth, l = tab.offsetLeft - bar.offsetLeft - (w - tab.clientWidth) / 2;
+        bar.scrollTo({ left: l, behavior: 'smooth' });
+      } catch (e) {}
+
       // 切到关系图时延迟 resize，确保容器尺寸生效
       if (key === 'graph' && typeof opts.onGraphShow === 'function') {
         setTimeout(() => opts.onGraphShow(), 100);
       }
+      if (typeof opts.onTabShow === 'function') opts.onTabShow(key);
     });
   });
 }
@@ -958,3 +971,34 @@ export function renderKnowledgeTimeline(knowledge, cats) {
 
 // 挂到 window，供地图标记等内联 onclick 使用
 window.openLightbox = openLightbox;
+
+// 猫咪评分榜：按平均分降序，前 3 名给奖牌
+export async function renderRankTimeline(cats) {
+  const el = document.getElementById('rank-list');
+  if (!el) return;
+  const catMap = {};
+  (Array.isArray(cats) ? cats : []).forEach((c) => { catMap[c.id] = c; });
+  el.innerHTML = '<p class="hint">正在加载评分榜…</p>';
+  const res = await fetchRank();
+  if (!res || !Array.isArray(res.list) || !res.list.length) {
+    el.innerHTML = '<div class="rank-empty">🏆 还没有猫咪上榜<br>在地图里点开一只猫咪，为它打个分吧～</div>';
+    return;
+  }
+  const rows = res.list.filter((r) => catMap[r.catId]);
+  if (!rows.length) {
+    el.innerHTML = '<div class="rank-empty">🏆 还没有猫咪上榜<br>在地图里点开一只猫咪，为它打个分吧～</div>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  el.innerHTML = '<div class="rank-head">评分榜 · 平均分 / 10 · 按评分热度排序</div>' + rows.map((r, i) => {
+    const cat = catMap[r.catId];
+    const top = i < 3;
+    return '<div class="rank-item' + (top ? ' top' : '') + '">'
+      + '<span class="rank-no">' + (medals[i] || (i + 1)) + '</span>'
+      + '<a class="rank-avatar" href="./profile.html#' + cat.id + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
+      + '<a class="rank-name" href="./profile.html#' + cat.id + '">' + escapeHtml(cat.name) + '</a>'
+      + '<span class="rank-votes">' + r.votes + ' 人评分</span>'
+      + '<span class="rank-avg">' + r.avg + '<em>/10</em></span>'
+      + '</div>';
+  }).join('');
+}

@@ -117,6 +117,62 @@ export default async (req) => {
       return json(200, { ok: true, storyId: story, comments: next });
     }
 
+    // ---- 猫咪评分+评语 GET ?rate=<catId> ----
+    const rateCat = url.searchParams.get('rate');
+    if (rateCat) {
+      const rkey = 'rate_' + rateCat;
+      const r = await read(store, rkey, { total: 0, votes: 0, users: {} });
+      const vk = visitorKey(req);
+      const mine = r.users[vk];
+      const others = Object.keys(r.users || {}).filter((k) => k !== vk).map((k) => r.users[k]);
+      const reviews = (mine ? others.concat([mine]) : others)
+        .sort((a, b) => (b.at || 0) - (a.at || 0))
+        .map((u) => ({ name: u.name || '匿名猫友', score: u.score, content: u.content || '', at: u.at }));
+      return json(200, { ok: true, catId: rateCat, total: r.total, votes: r.votes || 0, avg: r.votes ? +(r.total / r.votes).toFixed(1) : 0, myScore: mine ? mine.score : 0, rated: !!mine, reviews });
+    }
+
+    // ---- 提交评分+评语 POST {action:'rate', catId, score, content, name} ----
+    if (body.action === 'rate') {
+      const cat = String(body.catId || '').trim();
+      const score = Math.round(Number(body.score));
+      if (!cat || !Number.isFinite(score) || score < 1 || score > 10) return json(400, { ok: false, error: '评分为 1-10 的整数' });
+      const content = String(body.content || '').trim().slice(0, 300);
+      const name = String(body.name || '').trim().slice(0, 20) || '匿名猫友';
+      const rkey = 'rate_' + cat;
+      const r = await read(store, rkey, { total: 0, votes: 0, users: {} });
+      const vk = visitorKey(req);
+      const prev = r.users[vk];
+      r.users[vk] = { score, content, name, at: Date.now() };
+      if (prev && typeof prev.score === 'number') { r.total = r.total - prev.score + score; } else { r.total += score; r.votes = (r.votes || 0) + 1; }
+      await store.set(rkey, JSON.stringify(r));
+      const others = Object.keys(r.users).filter((k) => k !== vk).map((k) => r.users[k]);
+      const reviews = others.concat([r.users[vk]]).sort((a, b) => (b.at || 0) - (a.at || 0))
+        .map((u) => ({ name: u.name || '匿名猫友', score: u.score, content: u.content || '', at: u.at }));
+      return json(200, { ok: true, catId: cat, total: r.total, votes: r.votes, avg: r.votes ? +(r.total / r.votes).toFixed(1) : 0, myScore: score, rated: true, reviews });
+    }
+
+    // ---- 猫咪评分榜 GET ?rank=true ----
+    if (url.searchParams.get('rank') === 'true') {
+      const list = [];
+      let cursor;
+      do {
+        const page = { cursor: cursor || undefined };
+        const listing = await store.list(page);
+        for (const item of listing.blobs || []) {
+          if (!item.key.startsWith('rate_')) continue;
+          const s = await store.get(item.key).catch(() => null);
+          if (!s) continue;
+          try {
+            const r = JSON.parse(s);
+            if (r.votes) list.push({ catId: item.key.slice(5), avg: r.total / r.votes, votes: r.votes });
+          } catch (e) {}
+        }
+        cursor = listing.nextCursor;
+      } while (cursor);
+      list.sort((a, b) => b.avg - a.avg || b.votes - a.votes);
+      return json(200, { ok: true, list: list.map((o) => ({ catId: o.catId, avg: +o.avg.toFixed(1), votes: o.votes })) });
+    }
+
     // ---- 点赞 ----
     const rawCat = url.searchParams.get('catId') || body.catId || '';
     const rawStory = url.searchParams.get('storyId') || body.storyId || '';

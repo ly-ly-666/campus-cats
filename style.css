@@ -129,17 +129,34 @@ body { display: flex; flex-direction: column; }
 /* 标语，放在宣传条标题「这里油只喵 · 油喵地图」右侧 */
 .cat-promo-motto { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 8px; }
 
-.tab-bar { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; justify-content: center; }
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* 单行横向滚动：窄屏不再换行占两行，给内容区更多垂直空间 */
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
 
 .tab-btn {
   border: 1px solid transparent;
   background: transparent;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 999px;
   font-size: 14px;
   cursor: pointer;
   color: var(--muted);
   transition: all .15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+  user-select: none;
 }
 .tab-btn:hover { background: #fff; color: var(--text); }
 .tab-btn.active {
@@ -478,7 +495,8 @@ body { display: flex; flex-direction: column; }
 /* ---------- 响应式：<768px 纵向布局 ---------- */
 @media (max-width: 768px) {
   .app-header { flex-direction: column; align-items: stretch; text-align: center; }
-  .tab-bar { justify-content: center; }
+  .tab-bar { justify-content: flex-start; text-align: left; }
+  .tab-btn { padding: 7px 12px; font-size: 13px; }
 
   /* 手机版：地图在上占更大，列表在下 */
   #map-view { flex-direction: column; }
@@ -889,8 +907,8 @@ body { display: flex; flex-direction: column; }
   font-size: 12px; font-weight: 700; padding: 1px 6px; margin-left: 4px;
 }
 @media (max-width: 768px) {
-  /* 5 个标签强制一行：等宽 grid 布局，挤压内边距保证刚好容下 */
-  .tab-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  /* 标签一行 3 个（共 6 个＝2 行），等宽网格 */
+  .tab-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
   .tab-btn { text-align: center; white-space: nowrap; padding: 8px 2px; font-size: 12px; }
   /* 手机端：搜索按钮移到顶部居中，搜索框向下展开；底部留给「猫咪列表」和「反馈」 */
   .map-search { top: 10px; left: 50%; transform: translateX(-50%); bottom: auto; flex-direction: column; align-items: center; gap: 6px; }
@@ -977,3 +995,64 @@ body { display: flex; flex-direction: column; }
 .comment-send:hover { background: #92400e; }
 .comment-send:disabled { opacity: .55; cursor: default; }
 .comment-tip { font-size: 11.5px; color: #b45309; margin-top: 5px; min-height: 16px; }
+
+/* ---------- 猫咪评分 + 评论（暗色卡片） ---------- */
+.rate-host { margin: 10px 0; }
+.rate-box { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 12px; }
+.rate-bar { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.rate-label { font-size: 13px; color: var(--muted, #a9b0c3); }
+.rate-num { font-size: 26px; font-weight: 700; color: #ffb454; line-height: 1; }
+.rate-den { color: #8892a6; font-size: 13px; }
+.rate-meta { color: #8892a6; font-size: 12px; margin-left: auto; }
+.rate-pick { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 6px; }
+.rate-chip {
+  width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.04); color: #d7dae4; font-size: 13.5px; cursor: pointer; line-height: 1;
+}
+.rate-chip:hover { border-color: #ffb454; }
+.rate-chip.on { background: #ffb454; border-color: #ffb454; color: #1a1a1a; font-weight: 700; }
+.rate-mine { font-size: 12px; color: #a9b6ff; }
+.rate-tip { font-size: 11.5px; color: #8892a6; margin: 4px 0 2px; }
+.rate-note { font-size: 11.5px; color: #7fd0a2; margin: 2px 0 8px; }
+.cm-box { margin-top: 14px; border-top: 1px dashed rgba(255,255,255,.14); padding-top: 10px; }
+.cm-title { margin: 0 0 8px; font-size: 13px; color: #eef0f5; }
+.cm-write.cm-ext { flex-direction: column; align-items: stretch; gap: 8px; margin-top: 10px; }
+.cm-name { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: #eef0f5; font-size: 13px; margin-bottom: 0; }
+.cm-write { display: flex; gap: 8px; align-items: flex-end; }
+.cm-text { flex: 1; padding: 8px 9px; border-radius: 8px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: #eef0f5; font-size: 13px; min-height: 54px; resize: vertical; box-sizing: border-box; }
+.cm-ext .cm-send { align-self: flex-end; }
+.cm-send { padding: 8px 15px; border-radius: 8px; border: none; background: #ffb454; color: #1a1a1a; font-weight: 600; cursor: pointer; }
+.cm-send:disabled { opacity: .5; cursor: default; }
+.cm-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.cm-item { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 8px; padding: 8px 10px; }
+.cm-name-x { font-size: 12px; font-weight: 600; color: #ffd9a0; }
+.cm-score { font-size: 11.5px; font-weight: 700; color: #ffb454; background: rgba(255,180,84,.12); padding: 1px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 1px; }
+.cm-time { font-size: 11px; color: #8892a6; margin-left: 8px; }
+.cm-txt { font-size: 13px; color: #edeef3; margin-top: 4px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.cm-empty { font-size: 12px; color: #8892a6; }
+.rate-feedback {
+  font-size: 12.5px; margin: 8px 0 0; padding: 7px 10px; border-radius: 8px;
+  display: none; font-weight: 600;
+}
+.rate-feedback.ok { display: block; color: #7fd0a2; background: rgba(127,208,162,.1); }
+.rate-feedback.err { display: block; color: #ff8f8f; background: rgba(255,143,143,.1); }
+
+/* ---------- 猫咪评分榜 ---------- */
+.rank-list { padding: 8px 14px 24px; max-width: 720px; margin: 0 auto; }
+.rank-head { font-size: 12px; color: #8892a6; margin: 6px 0 10px; }
+.rank-empty { text-align: center; color: #8892a6; font-size: 14px; line-height: 1.8; padding: 40px 0; }
+.rank-item {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 10px;
+}
+.rank-item.top { background: rgba(255,180,84,.08); border-color: rgba(255,180,84,.35); }
+.rank-no { width: 30px; text-align: center; font-size: 18px; font-weight: 700; color: #8892a6; flex-shrink: 0; }
+.rank-item.top .rank-no { color: #ffb454; }
+.rank-avatar { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,.12); }
+.rank-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rank-name { flex: 1; font-size: 15px; font-weight: 600; color: #eef0f5; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-name:hover { color: #ffb454; }
+.rank-votes { font-size: 12px; color: #8892a6; flex-shrink: 0; }
+.rank-avg { font-size: 18px; font-weight: 700; color: #ffb454; flex-shrink: 0; }
+.rank-avg em { font-size: 11px; color: #8892a6; font-style: normal; font-weight: 400; }
