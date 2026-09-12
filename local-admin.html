@@ -229,6 +229,7 @@
       <button type="button" class="wb-nav" data-page="stories">📖 故事集</button>
       <button type="button" class="wb-nav" data-page="knowledge">📚 猫咪小知识</button>
       <button type="button" class="wb-nav" data-page="likes">❤️ 点赞统计</button>
+      <button type="button" class="wb-nav" data-page="ranking">🏆 猫猫排行榜</button>
       <button type="button" class="wb-nav" data-page="deploy">🚀 部署到 GitHub</button>
     </aside>
     <main class="wb-main">
@@ -317,6 +318,15 @@
           </div>
           <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用右侧 ▲▼ 调整先后；想换掉某篇，点「📌 置顶 N」取消后再置顶新的即可。</p>
         </div>
+
+        <div class="card" style="margin-top:14px;">
+          <h2>📤 导出故事集文档</h2>
+          <p class="hint">把全部猫咪的故事按时间整理成一份 Markdown（.md）文档，可导入 Word / 公众号 / 笔记软件。</p>
+          <div class="row" style="margin-top:4px;">
+            <button class="btn btn-primary" type="button" id="btn-export-stories">📥 导出全部故事（Markdown）</button>
+            <span class="hint" id="export-stories-tip" style="align-self:center;">—</span>
+          </div>
+        </div>
       </section>
 
       <!-- 📚 猫咪小知识 -->
@@ -355,6 +365,24 @@
             <span class="hint" id="comments-tip" style="align-self:center;">—</span>
           </div>
           <div id="comments-manage" class="comments-manage" style="margin-top:10px;"></div>
+        </div>
+      </section>
+
+      <!-- 🏆 猫猫排行榜 -->
+      <section class="page" data-page="ranking">
+        <div class="page-head"><h1>🏆 猫猫排行榜</h1></div>
+        <div class="card">
+          <p class="hint">读取 Netlify 后端（melodic-crepe-74a890）里游客给猫咪的评分（1-10 分）与评语。可查看排名、每只猫的评语，并删除不合适的评分（删除需口令）。</p>
+          <div class="row" style="margin-top:0;">
+            <button class="btn btn-green" id="btn-refresh-ranking">🔄 刷新榜单</button>
+            <span class="hint" id="ranking-load-tip" style="align-self:center;">上次刷新：—</span>
+          </div>
+          <div class="rank-admin-control" style="margin-top:10px;display:none;">
+            <div class="field"><label>管理口令（删除评分用）</label><input id="ranking-admin-key" type="password" placeholder="输入删除评论的管理口令" autocomplete="off" style="max-width:280px;"></div>
+          </div>
+          <div id="ranking-summary" class="row" style="margin-top:10px;"></div>
+          <div id="ranking-list" class="likes-list"></div>
+          <div id="ranking-detail" style="margin-top:14px;"></div>
         </div>
       </section>
 

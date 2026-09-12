@@ -2319,6 +2319,194 @@
       loadComments();
     });
 
+    // ---------- 🏆 猫猫排行榜（对接 Netlify 评分+评语数据） ----------
+    var _rankingData = []; // {catId, avg, votes, reviews}
+    var _rankingAdminKey = '';
+    function ratingCatName(catId) {
+      var m = catById(catId);
+      return m ? (m.name || catId) : catId;
+    }
+    function refreshRanking() {
+      var tip = $('ranking-load-tip'), listEl = $('ranking-list'), sumEl = $('ranking-summary');
+      if (!listEl) return;
+      if (tip) tip.textContent = '正在拉取…';
+      // 优先用 ?ratings=true（一次拿全量+评语）；旧后端不支持则回退 ?rank=true + 逐猫 ?rate=
+      fetch(LIKES_API + '?ratings=true', { method: 'GET', cache: 'no-store' })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (data) {
+          if (data && Array.isArray(data.list)) {
+            _rankingData = data.list;
+            renderRanking(listEl, tip, sumEl);
+            return;
+          }
+          return loadRankingFallback(listEl, tip, sumEl);
+        })
+        .catch(function () { loadRankingFallback(listEl, tip, sumEl); });
+    }
+    function loadRankingFallback(listEl, tip, sumEl) {
+      fetch(LIKES_API + '?rank=true', { method: 'GET', cache: 'no-store' })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (rank) {
+          var base = (rank && Array.isArray(rank.list)) ? rank.list : [];
+          var nodes = base.map(function (o) { return { catId: o.catId, avg: o.avg, votes: o.votes, reviews: [] }; });
+          if (!nodes.length) { _rankingData = []; renderRanking(listEl, tip, sumEl); return; }
+          _rankingData = nodes;
+          renderRanking(listEl, tip, sumEl); // 先立即显示榜单，评语随后异步补齐
+          var todo = nodes.length;
+          nodes.forEach(function (n, idx) {
+            fetch(LIKES_API + '?rate=' + encodeURIComponent(n.catId), { method: 'GET', cache: 'no-store' })
+              .then(function (r) { return r.json().catch(function () { return {}; }); })
+              .then(function (d) {
+                if (d && Array.isArray(d.reviews) && d.reviews.length) {
+                  n.reviews = d.reviews;
+                  if (--todo === 0) renderRanking(listEl, tip, sumEl);
+                } else if (--todo === 0) {
+                  renderRanking(listEl, tip, sumEl);
+                }
+              })
+              .catch(function () { if (--todo === 0) renderRanking(listEl, tip, sumEl); });
+          });
+        })
+        .catch(function (e) {
+          _rankingData = [];
+          if (tip) tip.textContent = '拉取失败';
+          listEl.innerHTML = '<p class="hint" style="margin:6px 0;">拉取失败（' + esc(e.message || e) + '）。请确认 Netlify 函数已部署。</p>';
+        });
+    }
+    function renderRanking(listEl, tip, sumEl) {
+      if (tip) tip.textContent = '上次刷新：' + new Date().toLocaleTimeString();
+      if (sumEl) sumEl.innerHTML = '<span class="hint">共 <b>' + _rankingData.length + '</b> 只猫被评分，累计 <b>' + _rankingData.reduce(function (s, r) { return s + (r.votes || 0); }, 0) + '</b> 条评分</span>';
+      if (!_rankingData.length) { listEl.innerHTML = '<p class="hint" style="margin:6px 0;">暂无评分数据，去公开站给猫咪评分后再来看吧～</p>'; $('ranking-detail').innerHTML = ''; return; }
+      listEl.innerHTML = _rankingData.map(function (r, i) {
+        var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : (i + 1)));
+        return '<div class="like-row" style="cursor:pointer;" data-rank-cat="' + esc(r.catId) + '">' +
+          '<span class="like-row-name">' + medal + ' ' + esc(ratingCatName(r.catId)) + '</span>' +
+          '<span class="like-row-count">⭐ ' + r.avg + ' 分（' + r.votes + ' 人）' + (r && r.reviews && r.reviews.length ? '　💬' + r.reviews.length : '') + '</span></div>';
+      }).join('');
+      listEl.querySelectorAll('[data-rank-cat]').forEach(function (row) {
+        row.addEventListener('click', function () { showRankingDetail(row.dataset.rankCat); });
+      });
+      $('ranking-detail').innerHTML = '';
+    }
+    function fmtRankTime(ts) {
+      var d = new Date(ts), p = function (n) { return (n < 10 ? '0' : '') + n; };
+      return (d.getFullYear()) + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+    function showRankingDetail(catId) {
+      var box = $('ranking-detail');
+      var r = _rankingData.filter(function (x) { return x.catId === catId; })[0];
+      if (!r) return;
+      var ctrl = document.querySelector('.rank-admin-control');
+      if (ctrl) ctrl.style.display = 'block';
+      var reviews = (r.reviews || []).map(function (rev, i) {
+        return '<div class="comment-admin-row" data-cat="' + esc(catId) + '" data-at="' + (rev.at || '') + '">' +
+          '<div class="cm-head"><span class="cm-name">' + esc(rev.name) + '</span><span class="cm-time">' + fmtRankTime(rev.at) + '</span></div>' +
+          '<div class="cm-body">⭐ ' + rev.score + ' 分　' + esc(rev.content || '（未写评语）') + '</div>' +
+          '<button type="button" class="btn btn-sm btn-danger cm-del">🗑 删除这条评分</button></div>';
+      }).join('');
+      box.innerHTML = '<hr style="border:none;border-top:1px solid var(--border);margin:6px 0 12px;">' +
+        '<h2 style="font-size:14px;color:var(--primary-dark);margin-bottom:8px;">🐱 ' + esc(ratingCatName(catId)) + '　⭐ ' + r.avg + ' 分（' + r.votes + ' 人）</h2>' +
+        (reviews ? reviews : '<p class="hint" style="margin:4px 0;">该猫暂无评分评语。</p>');
+      box.querySelectorAll('.cm-del').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          delRating(catId, Number(btn.closest('.comment-admin-row').dataset.at));
+        });
+      });
+    }
+    function delRating(catId, at) {
+      var keyEl = $('ranking-admin-key');
+      var key = keyEl ? keyEl.value.trim() : '';
+      if (!key) { log('❌ 请在口令框填写管理口令后再删除', 'err'); return; }
+      if (!at) { log('❌ 该条评语缺少时间戳，无法定位删除', 'err'); return; }
+      if (!confirm('确认删除这条评分？（登录线上后，该评分将无法恢复）')) return;
+      fetch(LIKES_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'del-rating', catId: catId, at: at, adminKey: key }) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.ok) {
+            log('✅ 已删除，正在刷新榜单…', 'ok');
+            refreshRanking();
+          } else {
+            log('❌ 删除失败：' + ((d && d.error) || '口令可能不对'), 'err');
+          }
+        })
+        .catch(function (e) { log('❌ 删除失败：' + (e && e.message), 'err'); });
+    }
+    var refreshRankingBtn = $('btn-refresh-ranking');
+    if (refreshRankingBtn) refreshRankingBtn.addEventListener('click', function () {
+      refreshRanking();
+    });
+    var rankingKeyEl = $('ranking-admin-key');
+    if (rankingKeyEl) rankingKeyEl.addEventListener('input', function () { _rankingAdminKey = rankingKeyEl.value; });
+
+    // ---------- 📤 导出故事集文档（Markdown） ----------
+    function collectAllStories() {
+      var storyMap = {};
+      (cats || []).forEach(function (c) {
+        (Array.isArray(c.stories) ? c.stories : []).forEach(function (s) {
+          if (!s || !s.id) return;
+          if (!storyMap[s.id]) storyMap[s.id] = { id: s.id, date: s.date || '', title: s.title || '', content: s.content || '', cats: [], images: [], catsOnly: [] };
+          if (storyMap[s.id].catsOnly.indexOf(c.id) < 0) storyMap[s.id].catsOnly.push(c.id);
+          if (s.title) storyMap[s.id].title = storyMap[s.id].title || s.title;
+          if (s.content) storyMap[s.id].content = storyMap[s.id].content || s.content;
+          if (s.date) storyMap[s.id].date = storyMap[s.id].date || s.date;
+          (Array.isArray(s.images) ? s.images : []).forEach(function (p) { if (storyMap[s.id].images.indexOf(p) < 0) storyMap[s.id].images.push(p); });
+        });
+        var lid = (c.id || '') + '_legacy';
+        if ((!Array.isArray(c.stories) || !c.stories.length) && c.story && String(c.story).trim()) {
+          storyMap[lid] = { id: lid, date: '', title: '', content: String(c.story), cats: [c.id], images: [], catsOnly: [c.id] };
+        }
+      });
+      Object.keys(storyMap).forEach(function (id) {
+        var s = storyMap[id];
+        s.cats = s.catsOnly.map(function (cid) { return catById(cid) ? catById(cid).name : cid; });
+        delete s.catsOnly;
+      });
+      return Object.keys(storyMap).map(function (id) { return storyMap[id]; })
+        .sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
+    }
+    function exportStories() {
+      var stories = collectAllStories();
+      var tip = $('export-stories-tip');
+      if (!stories.length) { if (tip) tip.textContent = '没有可导出的故事'; log('⚠️ 数据里还没有故事', 'err'); return; }
+      var title = '校园猫咪故事集';
+      var created = new Date();
+      var md = '# ' + title + '\n\n';
+      md += '> 共 ' + stories.length + ' 篇 · 整理日期 ' + 'YYYY年M月D日'.replace('YYYY', created.getFullYear()).replace('M月', (created.getMonth() + 1) + '月').replace('D日', created.getDate() + '日') + '\n\n';
+      md += '---\n\n';
+      stories.forEach(function (s, i) {
+        md += '## ' + (i + 1) + '. ' + (s.title ? s.title : '无题故事') + '\n\n';
+        if (s.date) md += '- 📅 日期：' + s.date + '\n';
+        if (s.cats && s.cats.length) md += '- 🐱 主角：' + s.cats.join('、') + '\n';
+        md += '\n' + (s.content && s.content.trim() ? s.content : '（本故事暂无正文内容）') + '\n\n';
+        if (s.images && s.images.length) {
+          md += '**配图（' + s.images.length + ' 张）：**\n';
+          s.images.forEach(function (p) { md += '- ' + p + '\n'; });
+          md += '\n';
+        }
+        md += '---\n\n';
+      });
+      var created = new Date();
+      var filename = '猫咪故事集_' + (created.getFullYear()) + '-' + (created.getMonth() < 9 ? '0' + (created.getMonth() + 1) : (created.getMonth() + 1)) + '-' + (created.getDate() < 10 ? '0' + created.getDate() : created.getDate()) + '.md';
+      downloadTextFile(filename, md, 'text/markdown;charset=utf-8');
+      if (tip) tip.textContent = '已导出 ' + stories.length + ' 篇（' + filename + '）';
+      log('📤 已导出故事集文档：' + filename, 'ok');
+    }
+    function downloadTextFile(filename, text, mime) {
+      var blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    var exportStoriesBtn = $('btn-export-stories');
+    if (exportStoriesBtn) exportStoriesBtn.addEventListener('click', function () {
+      if (!cats || !cats.length) { log('❌ 请先选择项目文件夹加载数据', 'err'); return; }
+      exportStories();
+    });
+
     // 粘贴截图按钮：循环 0→头像→相册→0
     $('btn-paste').addEventListener('click', function () {
       if (!$('cat-modal').classList.contains('open')) {
@@ -2370,6 +2558,7 @@
         if (pg === 'relations') renderRelList();
         if (pg === 'stories') renderStoryOrder();
         if (pg === 'knowledge') renderKnowledgeList();
+        if (pg === 'ranking' && typeof refreshRanking === 'function') refreshRanking();
       });
     });
     if (consoleHead) consoleHead.addEventListener('click', function () {
