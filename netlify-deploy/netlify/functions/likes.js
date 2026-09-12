@@ -66,7 +66,7 @@ export default async (req) => {
         const page = { cursor: cursor || undefined };
         const listing = await store.list(page);
         for (const item of listing.blobs || []) {
-          if (item.key.startsWith('comment_')) continue; // 评论不计入点赞统计
+          if (item.key.startsWith('comment_') || item.key.startsWith('rate_')) continue; // 评论/评语不计入点赞统计
           const s = await store.get(item.key).catch(() => null);
           if (!s) continue;
           let count = 0;
@@ -149,6 +149,58 @@ export default async (req) => {
       const reviews = others.concat([r.users[vk]]).sort((a, b) => (b.at || 0) - (a.at || 0))
         .map((u) => ({ name: u.name || '匿名猫友', score: u.score, content: u.content || '', at: u.at }));
       return json(200, { ok: true, catId: cat, total: r.total, votes: r.votes, avg: r.votes ? +(r.total / r.votes).toFixed(1) : 0, myScore: score, rated: true, reviews });
+    }
+
+    // ---- 全部评分+评语明细 GET ?ratings=true（供管理端排行榜查看/管理）----
+    if (url.searchParams.get('ratings') === 'true') {
+      const map = {};
+      let cursor;
+      do {
+        const page = { cursor: cursor || undefined };
+        const listing = await store.list(page);
+        for (const item of listing.blobs || []) {
+          if (!item.key.startsWith('rate_')) continue;
+          const s = await store.get(item.key).catch(() => null);
+          if (!s) continue;
+          try {
+            const r = JSON.parse(s);
+            if (r.votes) {
+              const catId = item.key.slice(5);
+              map[catId] = {
+                catId,
+                avg: +(r.total / r.votes).toFixed(1),
+                votes: r.votes,
+                reviews: Object.keys(r.users || {}).map((k) => r.users[k])
+                  .sort((a, b) => (b.at || 0) - (a.at || 0))
+                  .map((u) => ({ name: u.name || '匿名猫友', score: u.score, content: u.content || '', at: u.at }))
+              };
+            }
+          } catch (e) {}
+        }
+        cursor = listing.nextCursor;
+      } while (cursor);
+      const list = Object.values(map).sort((a, b) => b.avg - a.avg || b.votes - a.votes);
+      return json(200, { ok: true, list });
+    }
+
+    // ---- 删除某条评分评语 POST {action:'del-rating', catId, at, adminKey} ----
+    if (body.action === 'del-rating') {
+      const cat = String(body.catId || '');
+      const at = Number(body.at);
+      if (String(body.adminKey || '') !== ADMIN_KEY) return json(403, { ok: false, error: '口令不对，无法删除' });
+      const rkey = 'rate_' + cat;
+      const r = await read(store, rkey, { total: 0, votes: 0, users: {} });
+      const users = r.users || {};
+      const delVk = Object.keys(users).find((k) => users[k] && Number(users[k].at) === at);
+      if (!delVk) return json(404, { ok: false, error: '未找到对应评分（可能已被删除）' });
+      const rec = users[delVk];
+      if (rec && typeof rec.score === 'number') {
+        r.total -= rec.score;
+        r.votes = Math.max(0, (r.votes || 0) - 1);
+      }
+      delete users[delVk];
+      await store.set(rkey, JSON.stringify(r));
+      return json(200, { ok: true, catId: cat, total: r.total, votes: r.votes, avg: r.votes ? +(r.total / r.votes).toFixed(1) : 0 });
     }
 
     // ---- 猫咪评分榜 GET ?rank=true ----
