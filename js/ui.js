@@ -1,7 +1,7 @@
-// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904j';
+﻿// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904k';
 import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904h';
-import { mountRatingBox, fetchRank } from './ratings.js?v=20260904j';
+import { mountRatingBox, fetchRank, cachedRank } from './ratings.js?v=20260904k';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -978,27 +978,34 @@ export async function renderRankTimeline(cats) {
   if (!el) return;
   const catMap = {};
   (Array.isArray(cats) ? cats : []).forEach((c) => { catMap[c.id] = c; });
-  el.innerHTML = '<p class="hint">正在加载评分榜…</p>';
-  const res = await fetchRank();
-  if (!res || !Array.isArray(res.list) || !res.list.length) {
-    el.innerHTML = '<div class="rank-empty">🏆 还没有猫咪上榜<br>在地图里点开一只猫咪，为它打个分吧～</div>';
-    return;
+  const paint = (list, isFresh) => {
+    const rows = (list || []).filter((r) => catMap[r.catId]);
+    if (!rows.length) {
+      el.innerHTML = '<div class="rank-empty">🏆 还没有猫咪上榜<br>在地图里点开一只猫咪，为它打个分吧～</div>';
+      return;
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    el.innerHTML = '<div class="rank-head">评分榜 · 平均分 / 10 · 按评分热度排序' + (isFresh ? '' : ' · 缓存数据') + '</div>' + rows.map((r, i) => {
+      const cat = catMap[r.catId];
+      const top = i < 3;
+      return '<div class="rank-item' + (top ? ' top' : '') + '">'
+        + '<span class="rank-no">' + (medals[i] || (i + 1)) + '</span>'
+        + '<a class="rank-avatar" href="./profile.html#' + cat.id + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
+        + '<a class="rank-name" href="./profile.html#' + cat.id + '">' + escapeHtml(cat.name) + '</a>'
+        + '<span class="rank-votes">' + r.votes + ' 人评分</span>'
+        + '<span class="rank-avg">' + r.avg + '<em>/10</em></span>'
+        + '</div>';
+    }).join('');
+  };
+  // 1) 先画本地缓存（若有过一次访问），秒出不空等
+  const cached = cachedRank();
+  if (cached && Array.isArray(cached.list) && cached.list.length) {
+    el.innerHTML = '<p class="hint">正在刷新最新评分…</p>';
+    paint(cached.list, false);
+  } else {
+    el.innerHTML = '<p class="hint">正在加载评分榜…</p>';
   }
-  const rows = res.list.filter((r) => catMap[r.catId]);
-  if (!rows.length) {
-    el.innerHTML = '<div class="rank-empty">🏆 还没有猫咪上榜<br>在地图里点开一只猫咪，为它打个分吧～</div>';
-    return;
-  }
-  const medals = ['🥇', '🥈', '🥉'];
-  el.innerHTML = '<div class="rank-head">评分榜 · 平均分 / 10 · 按评分热度排序</div>' + rows.map((r, i) => {
-    const cat = catMap[r.catId];
-    const top = i < 3;
-    return '<div class="rank-item' + (top ? ' top' : '') + '">'
-      + '<span class="rank-no">' + (medals[i] || (i + 1)) + '</span>'
-      + '<a class="rank-avatar" href="./profile.html#' + cat.id + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
-      + '<a class="rank-name" href="./profile.html#' + cat.id + '">' + escapeHtml(cat.name) + '</a>'
-      + '<span class="rank-votes">' + r.votes + ' 人评分</span>'
-      + '<span class="rank-avg">' + r.avg + '<em>/10</em></span>'
-      + '</div>';
-  }).join('');
+  // 2) 后台拉最新，拿到后重绘（TTL 内走内存缓存，冷启动的等待被上一步的缓存盖住）
+  const res = await fetchRank(true);
+  if (res && Array.isArray(res.list) && res.list.length) paint(res.list, true);
 }

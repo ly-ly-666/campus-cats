@@ -1,7 +1,7 @@
-// profile.js — 猫咪独立档案页
-import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox } from './config.js?v=20260904j';
+﻿// profile.js — 猫咪独立档案页
+import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox } from './config.js?v=20260904k';
 import { mountLikeButton } from './likes.js?v=20260904h';
-import { mountRatingBox } from './ratings.js?v=20260904j';
+import { mountRatingBox } from './ratings.js?v=20260904k';
 window.openLightbox = openLightbox;
 
 const GENDER_LABEL = { male: '公', female: '母', unknown: '未知' };

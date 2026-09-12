@@ -20,11 +20,32 @@ export async function submitRating(catId, score, content, name) {
   } catch (e) { return { ok: false, error: '网络异常，请稍后再试' }; }
 }
 
-export async function fetchRank() {
+// 排行榜内存缓存：TTL 内直接返回，避免频繁触发 Netlify 冷启动、切页秒开
+const _rankCache = { data: null, ts: 0 };
+const RANK_TTL = 60 * 1000; // 60 秒内走缓存；后续进页显示缓存的同时后台刷新
+const RANK_KEY = 'ymcao_rank_cache_v1';
+export function cachedRank() {
   try {
-    const r = await fetch(RATE_API + '?rank=true', { method: 'GET', cache: 'no-store' });
+    const raw = localStorage.getItem(RANK_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && Array.isArray(o.list) && o.list.length) return o; }
+  } catch (e) {}
+  return null;
+}
+export async function fetchRank(force) {
+  try {
+    if (force !== true && _rankCache.data && (Date.now() - _rankCache.ts) < RANK_TTL) return _rankCache.data;
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
+    const r = await fetch(RATE_API + '?rank=true', { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+    if (timer) clearTimeout(timer);
     if (!r.ok) return null;
-    return await r.json();
+    const data = await r.json();
+    if (data && Array.isArray(data.list)) {
+      _rankCache.data = data;
+      _rankCache.ts = Date.now();
+      try { localStorage.setItem(RANK_KEY, JSON.stringify({ list: data.list, t: Date.now() })); } catch (e) {}
+    }
+    return data;
   } catch (e) { return null; }
 }
 
