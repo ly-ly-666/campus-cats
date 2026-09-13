@@ -3,12 +3,28 @@ const RATE_API = (typeof window !== 'undefined' && window.YMCAO_LIKES_API)
   ? window.YMCAO_LIKES_API + '/.netlify/functions/likes'
   : 'https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes';
 
-// 读取某猫的评分：{ avg, votes, myScore, rated, reviews:[{name,score,content,at}] }
+const RATE_KEY = 'ymcao_rate_cache_v1';
+// 读取某猫评分评语的缓存（localStorage），避免每次都等 Netlify 冷启动
+export function cachedRating(catId) {
+  try {
+    const raw = localStorage.getItem(RATE_KEY + '_' + catId);
+    if (raw) { const o = JSON.parse(raw); if (o && o.avg != null) return o; }
+  } catch (e) {}
+  return null;
+}
+// 读取某猫的评分：{ avg, votes, myScore, rated, reviews:[{name,score,content,at}] }；带超时防卡死
 export async function fetchRating(catId) {
   try {
-    const r = await fetch(RATE_API + '?rate=' + encodeURIComponent(catId), { method: 'GET', cache: 'no-store' });
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
+    const r = await fetch(RATE_API + '?rate=' + encodeURIComponent(catId), { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+    if (timer) clearTimeout(timer);
     if (!r.ok) return null;
-    return await r.json();
+    const data = await r.json();
+    if (data) {
+      try { localStorage.setItem(RATE_KEY + '_' + catId, JSON.stringify(data)); } catch (e) {}
+    }
+    return data;
   } catch (e) { return null; }
 }
 
@@ -122,13 +138,19 @@ export async function mountRatingBox(host, catId) {
       : '<div class="cm-empty">还没有人评分，来打第一个分吧～</div>';
   };
 
-  const rate = await fetchRating(id);
-  paintPick(rate && rate.myScore ? rate.myScore : 0);
-  if (rate && rate.votes) { avgEl.textContent = rate.avg; votesEl.textContent = rate.votes + ' 人评分'; }
-  mineEl.innerHTML = rate && rate.rated
-    ? '我的评分：<b>' + rate.myScore + '</b> 分'
-    : '点击上方数字为它打分吧～';
-  paintReviews(rate ? rate.reviews : []);
+  // 先显示缓存（秒开），保证微信等慢网络也能立刻看到评论，不白屏
+  const cached = cachedRating(id);
+  const paint = (d, my) => {
+    if (d && d.votes) { avgEl.textContent = d.avg; votesEl.textContent = d.votes + ' 人评分'; }
+    mineEl.innerHTML = d && d.rated
+      ? '我的评分：<b>' + d.myScore + '</b> 分'
+      : '点击上方数字为它打分吧～';
+    paintReviews(d && d.reviews && d.reviews.length ? d.reviews : (my && my.reviews) || []);
+  };
+  paint(cached, null);                       // 先用缓存渲染（秒出）
+  const rate = await fetchRating(id);        // 后台等最新
+  if (rate) { paintPick(rate.myScore || 0); paint(rate, null); }  // 有实时则覆盖
+  else { paintPick(cached ? cached.myScore || 0 : 0); }
 
   sendBtn.addEventListener('click', async () => {
     if (!myScore) { feedback('请先点一个分数（1-10）再提交～', false); return; }
@@ -145,6 +167,7 @@ export async function mountRatingBox(host, catId) {
       avgEl.textContent = r.votes ? r.avg : '–';
       mineEl.innerHTML = '我的评分：<b>' + r.myScore + '</b> 分';
       paintReviews(r.reviews);
+      try { localStorage.setItem(RATE_KEY + '_' + id, JSON.stringify(r)); } catch (e2) {}
       feedback('✓ 评分已提交，感谢你的反馈', true);
     } else {
       const err = (r && r.error) || '提交失败，请稍后再试';
