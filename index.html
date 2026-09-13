@@ -17,20 +17,19 @@
   <meta property="og:site_name" content="广油猫咪地图">
   <meta name="twitter:card" content="summary">
 
-  <!-- Leaflet CSS（多 CDN 回退：jsdelivr → unpkg → cdnjs） -->
-  <link rel="stylesheet" id="leaflet-css" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <!-- Leaflet CSS（本地优先：先加载本地 vendor，失败再走 CDN 回退） -->
+  <link rel="stylesheet" id="leaflet-css" href="./vendor/leaflet.min.css">
   <script>
     (function () {
-      var cssIdx = 0;
       var urls = [
         'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
         'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
       ];
       var link = document.getElementById('leaflet-css');
+      var idx = 0;
       if (link) link.onerror = function () {
-        cssIdx++;
-        if (cssIdx < urls.length) link.href = urls[cssIdx];
+        if (idx < urls.length) { link.href = urls[idx++]; }
       };
     })();
   </script>
@@ -229,9 +228,27 @@
   <!-- 消息提示 -->
   <div id="toast" class="toast" role="status"></div>
 
-  <!-- Leaflet JS（多 CDN 回退，document.write 同步加载，保证入口模块执行前已就绪） -->
-  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
-          onerror="window.__leafletIdx=(window.__leafletIdx||0)+1;if(window.__leafletIdx===1){document.write('<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'><\/script>')}else if(window.__leafletIdx===2){document.write('<script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'><\/script>')}"></script>
+  <!-- Leaflet JS（本地优先：加载 vendor，失败才走 CDN 回退，保证无外网也能打开地图） -->
+  <script src="./vendor/leaflet.min.js" onerror="window.__leafletFailed=true"></script>
+  <script>
+    // 若本地 vendor 加载失败，依次尝试 CDN；成功即停
+    (function () {
+      if (!window.__leafletFailed && typeof window.L !== 'undefined') return;
+      var urls = [
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
+      ];
+      (function load(idx) {
+        if (idx >= urls.length) { window.__leafletFailed = true; return; }
+        var s = document.createElement('script');
+        s.src = urls[idx];
+        s.onload = function () { window.__leafletFailed = false; };
+        s.onerror = function () { load(idx + 1); };
+        document.head.appendChild(s);
+      })(0);
+    })();
+  </script>
 
   <!-- ECharts：延迟加载（requestIdleCallback预取，tab点击时秒开） -->
   <script>

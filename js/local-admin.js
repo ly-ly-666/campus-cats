@@ -2467,29 +2467,63 @@
     function exportStories() {
       var stories = collectAllStories();
       var tip = $('export-stories-tip');
+      var btn = $('btn-export-stories');
       if (!stories.length) { if (tip) tip.textContent = '没有可导出的故事'; log('⚠️ 数据里还没有故事', 'err'); return; }
+      log('📤 正在导出含图片的故事集（' + stories.length + ' 篇），图片越多越久…', 'info');
+      if (tip) tip.textContent = '正在处理图片…';
+      if (btn) btn.disabled = true;
+      exportStoriesAsync(stories).then(function (md) {
+        if (btn) btn.disabled = false;
+        var title = '校园猫咪故事集';
+        var created = new Date();
+        var filename = '猫咪故事集_' + (created.getFullYear()) + '-' + (created.getMonth() < 9 ? '0' + (created.getMonth() + 1) : (created.getMonth() + 1)) + '-' + (created.getDate() < 10 ? '0' + created.getDate() : created.getDate()) + '.md';
+        downloadTextFile(filename, md, 'text/markdown;charset=utf-8');
+        if (tip) tip.textContent = '已导出 ' + stories.length + ' 篇（' + filename + '），含内嵌图片';
+        log('📤 已导出故事集文档：' + filename + '（含图片）', 'ok');
+      }).catch(function (e) {
+        if (btn) btn.disabled = false;
+        if (tip) tip.textContent = '导出失败：' + (e && e.message ? e.message : e);
+        log('❌ 导出失败：' + (e && e.message ? e.message : e), 'err');
+      });
+    }
+    // 把每篇故事的图片读成 dataURL 内嵌进 Markdown，打开文档即可直接看到图片
+    async function exportStoriesAsync(stories) {
       var title = '校园猫咪故事集';
       var created = new Date();
       var md = '# ' + title + '\n\n';
       md += '> 共 ' + stories.length + ' 篇 · 整理日期 ' + 'YYYY年M月D日'.replace('YYYY', created.getFullYear()).replace('M月', (created.getMonth() + 1) + '月').replace('D日', created.getDate() + '日') + '\n\n';
       md += '---\n\n';
-      stories.forEach(function (s, i) {
-        md += '## ' + (i + 1) + '. ' + (s.title ? s.title : '无题故事') + '\n\n';
+      var total = stories.length;
+      for (var si = 0; si < total; si++) {
+        var s = stories[si];
+        md += '## ' + (si + 1) + '. ' + (s.title ? s.title : '无题故事') + '\n\n';
         if (s.date) md += '- 📅 日期：' + s.date + '\n';
         if (s.cats && s.cats.length) md += '- 🐱 主角：' + s.cats.join('、') + '\n';
         md += '\n' + (s.content && s.content.trim() ? s.content : '（本故事暂无正文内容）') + '\n\n';
         if (s.images && s.images.length) {
-          md += '**配图（' + s.images.length + ' 张）：**\n';
-          s.images.forEach(function (p) { md += '- ' + p + '\n'; });
-          md += '\n';
+          md += '**配图（' + s.images.length + ' 张）：**\n\n';
+          for (var j = 0; j < s.images.length; j++) {
+            var p = s.images[j];
+            var dataUrl = '';
+            try {
+              if (p && /^data:/.test(String(p).trim())) {
+                dataUrl = String(p).trim();
+              } else if (dirHandle && p && typeof readImageAsDataURL === 'function') {
+                dataUrl = await readImageAsDataURL(String(p).split('?')[0]);
+              }
+            } catch (e) {}
+            if (dataUrl && /^data:image\//.test(dataUrl)) {
+              md += '![配图' + (j + 1) + '](' + dataUrl + ')\n\n';
+            } else {
+              md += '- 图片（' + p + '）\n';
+            }
+          }
         }
         md += '---\n\n';
-      });
-      var created = new Date();
-      var filename = '猫咪故事集_' + (created.getFullYear()) + '-' + (created.getMonth() < 9 ? '0' + (created.getMonth() + 1) : (created.getMonth() + 1)) + '-' + (created.getDate() < 10 ? '0' + created.getDate() : created.getDate()) + '.md';
-      downloadTextFile(filename, md, 'text/markdown;charset=utf-8');
-      if (tip) tip.textContent = '已导出 ' + stories.length + ' 篇（' + filename + '）';
-      log('📤 已导出故事集文档：' + filename, 'ok');
+        var tip = $('export-stories-tip');
+        if (tip && ((si + 1) % 5 === 0 || si === total - 1)) tip.textContent = '正在处理图片… ' + (si + 1) + '/' + total;
+      }
+      return md;
     }
     function downloadTextFile(filename, text, mime) {
       var blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
