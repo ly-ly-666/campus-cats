@@ -1,7 +1,7 @@
 ﻿// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904m';
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904n';
 import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260904h';
-import { mountRatingBox, fetchRank, cachedRank } from './ratings.js?v=20260904m';
+import { mountRatingBox, fetchRank, cachedRank } from './ratings.js?v=20260904n';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用

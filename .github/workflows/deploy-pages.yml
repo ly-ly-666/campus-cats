@@ -35,6 +35,9 @@ jobs:
       - name: 校验数据
         run: node scripts/validate.mjs
 
+      - name: 生成评分/评语快照(Netlify兜底)
+        run: node scripts/gen-ratings-snapshot.mjs
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

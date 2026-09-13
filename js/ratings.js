@@ -4,7 +4,21 @@ const RATE_API = (typeof window !== 'undefined' && window.YMCAO_LIKES_API)
   : 'https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes';
 
 const RATE_KEY = 'ymcao_rate_cache_v1';
-// 读取某猫评分评语的缓存（localStorage），避免每次都等 Netlify 冷启动
+const SNAP_URL = 'data/ratings-snapshot.json';
+let _snapCache = null;
+// 读取站点同源发布的评分快照（GitHub Pages），Netlify 在微信里拉不到时兜底，秒开
+async function readSnapshot() {
+  try {
+    if (_snapCache && _snapCache.t === 'snap' && _snapCache.list) return _snapCache.list;
+    const r = await fetch(SNAP_URL + '?v=' + Date.now(), { method: 'GET', cache: 'no-store' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j && Array.isArray(j)) { _snapCache = { t: 'snap', list: j }; return j; }
+  } catch (e) {}
+  return null;
+}
+function snapByCat(list, catId) { return list ? list.find(x => x && x.catId === String(catId)) || null : null; }
+// 读取某猫的评分评语缓存（localStorage）
 export function cachedRating(catId) {
   try {
     const raw = localStorage.getItem(RATE_KEY + '_' + catId);
@@ -12,20 +26,27 @@ export function cachedRating(catId) {
   } catch (e) {}
   return null;
 }
-// 读取某猫的评分：{ avg, votes, myScore, rated, reviews:[{name,score,content,at}] }；带超时防卡死
+// 读取某猫的评分：{ avg, votes, myScore, rated, reviews:[{name,score,content,at}] }；带超时防卡死；Netlify 失败则回退站点快照
 export async function fetchRating(catId) {
   try {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
     const r = await fetch(RATE_API + '?rate=' + encodeURIComponent(catId), { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
     if (timer) clearTimeout(timer);
-    if (!r.ok) return null;
+    if (!r.ok) throw new Error('rate http ' + r.status);
     const data = await r.json();
-    if (data) {
+    if (data && data.avg != null) {
       try { localStorage.setItem(RATE_KEY + '_' + catId, JSON.stringify(data)); } catch (e) {}
+      return data;
     }
-    return data;
-  } catch (e) { return null; }
+  } catch (e) {}
+  // 实时接口失败/超时 → 回退站点快照（微信里 Netlify 不通也能显示评论）
+  try {
+    const list = await readSnapshot();
+    const s = snapByCat(list, catId);
+    if (s) { const data = { avg: s.avg, votes: s.votes, reviews: s.reviews || [], rated: false, myScore: 0, snap: true }; return data; }
+  } catch (e2) {}
+  return null;
 }
 
 // 提交评分+评语：后端的 rate 动作，评语随评分一起打（不用再单独发评论）
