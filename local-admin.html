@@ -322,7 +322,17 @@
         <div class="card" style="margin-top:14px;">
           <h2>📤 导出故事集文档</h2>
           <p class="hint">把全部猫咪的故事按时间整理成一份 Markdown（.md）文档，可导入 Word / 公众号 / 笔记软件。</p>
-          <div class="row" style="margin-top:4px;">
+          <div class="row" style="margin-top:4px;flex-wrap:wrap;gap:6px 14px;">
+            <label class="hint" style="display:flex;align-items:center;gap:5px;cursor:pointer;margin:0;">
+              <input type="radio" name="exportStMode" id="exp-mode-text" value="text">
+              仅文字（快，几 KB，适合快速整理 / 公众号粘贴）
+            </label>
+            <label class="hint" style="display:flex;align-items:center;gap:5px;cursor:pointer;margin:0;">
+              <input type="radio" name="exportStMode" id="exp-mode-img" value="img" checked>
+              文字+图片（体积较大，图片直接内嵌，文档可看图）
+            </label>
+          </div>
+          <div class="row" style="margin-top:8px;">
             <button class="btn btn-primary" type="button" id="btn-export-stories">📥 导出全部故事（Markdown）</button>
             <span class="hint" id="export-stories-tip" style="align-self:center;">—</span>
           </div>

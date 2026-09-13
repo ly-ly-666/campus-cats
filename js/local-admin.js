@@ -2469,25 +2469,28 @@
       var tip = $('export-stories-tip');
       var btn = $('btn-export-stories');
       if (!stories.length) { if (tip) tip.textContent = '没有可导出的故事'; log('⚠️ 数据里还没有故事', 'err'); return; }
-      log('📤 正在导出含图片的故事集（' + stories.length + ' 篇），图片越多越久…', 'info');
-      if (tip) tip.textContent = '正在处理图片…';
+      // 读取导出模式：仅文字 / 文字+图片
+      var mode = 'img';
+      if ($('exp-mode-text')) mode = $('exp-mode-text').checked ? 'text' : 'img';
+      log('📤 正在导出故事集（' + stories.length + ' 篇，模式：' + (mode === 'text' ? '仅文字' : '文字+图片') + '）…', 'info');
+      if (tip) tip.textContent = mode === 'text' ? '正在整理文字…' : '正在处理图片…';
       if (btn) btn.disabled = true;
-      exportStoriesAsync(stories).then(function (md) {
+      exportStoriesAsync(stories, mode).then(function (md) {
         if (btn) btn.disabled = false;
         var title = '校园猫咪故事集';
         var created = new Date();
-        var filename = '猫咪故事集_' + (created.getFullYear()) + '-' + (created.getMonth() < 9 ? '0' + (created.getMonth() + 1) : (created.getMonth() + 1)) + '-' + (created.getDate() < 10 ? '0' + created.getDate() : created.getDate()) + '.md';
+        var filename = '猫咪故事集_' + (created.getFullYear()) + '-' + (created.getMonth() < 9 ? '0' + (created.getMonth() + 1) : (created.getMonth() + 1)) + '-' + (created.getDate() < 10 ? '0' + created.getDate() : created.getDate()) + (mode === 'text' ? '_仅文字' : '') + '.md';
         downloadTextFile(filename, md, 'text/markdown;charset=utf-8');
-        if (tip) tip.textContent = '已导出 ' + stories.length + ' 篇（' + filename + '），含内嵌图片';
-        log('📤 已导出故事集文档：' + filename + '（含图片）', 'ok');
+        if (tip) tip.textContent = '已导出 ' + stories.length + ' 篇（' + filename + '）' + (mode === 'text' ? '' : '，含内嵌图片');
+        log('📤 已导出故事集文档：' + filename + (mode === 'text' ? '（仅文字）' : '（含图片）'), 'ok');
       }).catch(function (e) {
         if (btn) btn.disabled = false;
         if (tip) tip.textContent = '导出失败：' + (e && e.message ? e.message : e);
         log('❌ 导出失败：' + (e && e.message ? e.message : e), 'err');
       });
     }
-    // 把每篇故事的图片读成 dataURL 内嵌进 Markdown，打开文档即可直接看到图片
-    async function exportStoriesAsync(stories) {
+    // 把每篇故事的图片读成 dataURL 内嵌进 Markdown，打开文档即可直接看到图片；mode='text' 时只导文字
+    async function exportStoriesAsync(stories, mode) {
       var title = '校园猫咪故事集';
       var created = new Date();
       var md = '# ' + title + '\n\n';
@@ -2501,6 +2504,10 @@
         if (s.cats && s.cats.length) md += '- 🐱 主角：' + s.cats.join('、') + '\n';
         md += '\n' + (s.content && s.content.trim() ? s.content : '（本故事暂无正文内容）') + '\n\n';
         if (s.images && s.images.length) {
+          if (mode === 'text') {
+            // 仅文字：只列配图数量与文件名，不内嵌图片
+            md += '**配图（' + s.images.length + ' 张）：**\n\n';
+          } else {
           md += '**配图（' + s.images.length + ' 张）：**\n\n';
           for (var j = 0; j < s.images.length; j++) {
             var p = s.images[j];
@@ -2522,6 +2529,7 @@
             } else {
               md += '- 图片（' + p + '）\n';
             }
+          }
           }
         }
         md += '---\n\n';
