@@ -2513,7 +2513,12 @@
               }
             } catch (e) {}
             if (dataUrl && /^data:image\//.test(dataUrl)) {
-              md += '![配图' + (j + 1) + '](' + dataUrl + ')\n\n';
+              // 压缩图片再内嵌（最长边1200/JPEG 0.75），避免导出文档过大打不开
+              var compressed = dataUrl;
+              if (dataUrl.indexOf('data:image/gif') !== 0 && typeof compressImage === 'function') {
+                try { compressed = await compressImage(dataUrl, 1200, 0.75); } catch (e2) { compressed = dataUrl; }
+              }
+              md += '![配图' + (j + 1) + '](' + compressed + ')\n\n';
             } else {
               md += '- 图片（' + p + '）\n';
             }
