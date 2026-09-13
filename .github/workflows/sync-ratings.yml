@@ -1,0 +1,46 @@
+# 每日自动同步评分/评语快照
+# 定时从 Netlify 拉最新评论 → 更新 data/ratings-snapshot.json → push，
+# push 会触发 deploy-pages.yml 重新部署，让微信端(读快照)评论保持最新。
+
+name: Sync Ratings Snapshot
+
+on:
+  schedule:
+    # 每天 02:07 UTC = 北京时间 10:07（避开高峰期，错峰跑）
+    - cron: "7 2 * * *"
+  workflow_dispatch: {} # 支持手动触发
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 拉取最新评分快照
+        run: node scripts/gen-ratings-snapshot.mjs
+
+      - name: 有变化则提交并推送（触发重新部署）
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/ratings-snapshot.json
+          if [ -n "$(git diff --cached --name-only)" ]; then
+            git commit -m "chore: 每日同步评分/评语快照"
+            git push origin main
+            echo "已更新快照并推送"
+          else
+            echo "快照无变化，跳过提交"
+          fi
