@@ -1040,6 +1040,7 @@ body { display: flex; flex-direction: column; }
 /* ---------- 猫咪评分榜 ---------- */
 #rank-view { overflow-y: auto; flex-direction: column; }
 .rank-list { padding: 8px 14px 24px; max-width: 720px; margin: 0 auto; }
+.rank-tip { max-width: 720px; margin: 10px auto 0; padding: 8px 12px; font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; line-height: 1.5; }
 .rank-head { font-size: 12px; color: var(--muted, #8a857d); margin: 6px 0 10px; }
 .rank-empty { text-align: center; color: var(--muted, #8a857d); font-size: 14px; line-height: 1.8; padding: 40px 0; }
 .rank-item {
