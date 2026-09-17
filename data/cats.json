@@ -233,7 +233,7 @@
       {
         "id": "s_1788364300362_sbv36f",
         "date": "2026-09-02",
-        "title": "馆长的温馨提示 : 校园网可能打开图片比较卡 , 建议使用流量打开哦~",
+        "title": "馆长的温馨提示 : 建议跳转浏览器打开哦~校园网可能打开图片比较卡 , 建议使用流量打开哦~",
         "content": "",
         "cats": [
           "cat001"
@@ -320,6 +320,26 @@
           "images/cat001_story_1789221588634.jpg",
           "images/cat001_story_1789221596878.jpg",
           "images/cat001_story_1789221603950.jpg"
+        ]
+      },
+      {
+        "id": "s_1789658931524_isefzl",
+        "date": "2026-09-17",
+        "title": "大家好! 我是哈吉米·瓦德",
+        "content": "大家好!我是哈吉米·瓦德，生物学家兼极限钓鱼迷，水生生物侦探，出色的垂钓者。我已经在世界各地垂钓几十年，我一生都在追踪淡水中的巨怪，调查一些无法解释的攻击事件。凶手被怀疑是潜伏在水下的河怪。",
+        "cats": [
+          "cat001",
+          "cat002",
+          "cat033",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1789658981407.jpg",
+          "images/cat001_story_1789658993644.jpg",
+          "images/cat001_story_1789659006768.jpg",
+          "images/cat001_story_1789659022926.jpg",
+          "images/cat001_story_1789659062872.jpg"
         ]
       }
     ]
@@ -472,6 +492,39 @@
           "images/cat002_story_1789221389891.jpg",
           "images/cat002_story_1789221457518.jpg",
           "images/cat002_story_1789221464846.jpg"
+        ]
+      },
+      {
+        "id": "s_1789658931524_isefzl",
+        "date": "2026-09-17",
+        "title": "大家好! 我是哈吉米·瓦德",
+        "content": "大家好!我是哈吉米·瓦德，生物学家兼极限钓鱼迷，水生生物侦探，出色的垂钓者。我已经在世界各地垂钓几十年，我一生都在追踪淡水中的巨怪，调查一些无法解释的攻击事件。凶手被怀疑是潜伏在水下的河怪。",
+        "cats": [
+          "cat001",
+          "cat002",
+          "cat033",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1789658981407.jpg",
+          "images/cat001_story_1789658993644.jpg",
+          "images/cat001_story_1789659006768.jpg",
+          "images/cat001_story_1789659022926.jpg",
+          "images/cat001_story_1789659062872.jpg"
+        ]
+      },
+      {
+        "id": "s_1789659134359_6i0ly2",
+        "date": "2026-09-17",
+        "title": "花饼 ",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1789659151946.jpg",
+          "images/cat002_story_1789659160111.jpg"
         ]
       }
     ]
@@ -1737,6 +1790,26 @@
         "images": [
           "images/cat001_story_1788502427371.jpg"
         ]
+      },
+      {
+        "id": "s_1789658931524_isefzl",
+        "date": "2026-09-17",
+        "title": "大家好! 我是哈吉米·瓦德",
+        "content": "大家好!我是哈吉米·瓦德，生物学家兼极限钓鱼迷，水生生物侦探，出色的垂钓者。我已经在世界各地垂钓几十年，我一生都在追踪淡水中的巨怪，调查一些无法解释的攻击事件。凶手被怀疑是潜伏在水下的河怪。",
+        "cats": [
+          "cat001",
+          "cat002",
+          "cat033",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1789658981407.jpg",
+          "images/cat001_story_1789658993644.jpg",
+          "images/cat001_story_1789659006768.jpg",
+          "images/cat001_story_1789659022926.jpg",
+          "images/cat001_story_1789659062872.jpg"
+        ]
       }
     ]
   },
@@ -1807,7 +1880,7 @@
   },
   {
     "id": "cat021",
-    "name": "无名无姓",
+    "name": "笨笨",
     "nickname": "",
     "gender": "unknown",
     "color": "",
@@ -1825,7 +1898,13 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-09-15",
+        "text": "大家好!我是笨笨 ,我有名字啦 , 我住在水电站附近哦~",
+        "images": []
+      }
+    ],
     "stories": [
       {
         "id": "s_1788747723289_y5gxfc",
@@ -1839,6 +1918,23 @@
           "images/cat021_story_1788747758397.jpg",
           "images/cat021_story_1788747765697.jpg",
           "images/cat021_story_1788747773528.jpg"
+        ]
+      },
+      {
+        "id": "s_1789658584218_s9oogt",
+        "date": "2026-09-17",
+        "title": "喔似笨笨~",
+        "content": "",
+        "cats": [
+          "cat021"
+        ],
+        "images": [
+          "images/cat021_story_1789658594790.jpg",
+          "images/cat021_story_1789658683558.jpg",
+          "images/cat021_story_1789658692470.jpg",
+          "images/cat021_story_1789658702068.jpg",
+          "images/cat021_story_1789658710035.jpg",
+          "images/cat021_story_1789658741192.jpg"
         ]
       }
     ]
@@ -2191,6 +2287,26 @@
           "images/cat033_story_1789311820626.jpg",
           "images/cat033_story_1789311827049.jpg",
           "images/cat033_story_1789311838140.jpg"
+        ]
+      },
+      {
+        "id": "s_1789658931524_isefzl",
+        "date": "2026-09-17",
+        "title": "大家好! 我是哈吉米·瓦德",
+        "content": "大家好!我是哈吉米·瓦德，生物学家兼极限钓鱼迷，水生生物侦探，出色的垂钓者。我已经在世界各地垂钓几十年，我一生都在追踪淡水中的巨怪，调查一些无法解释的攻击事件。凶手被怀疑是潜伏在水下的河怪。",
+        "cats": [
+          "cat001",
+          "cat002",
+          "cat033",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1789658981407.jpg",
+          "images/cat001_story_1789658993644.jpg",
+          "images/cat001_story_1789659006768.jpg",
+          "images/cat001_story_1789659022926.jpg",
+          "images/cat001_story_1789659062872.jpg"
         ]
       }
     ]
@@ -2659,6 +2775,26 @@
           "images/cat016_story_1788497260479.jpg",
           "images/cat016_story_1788497292358.jpg",
           "images/cat016_story_1788497310216.jpg"
+        ]
+      },
+      {
+        "id": "s_1789658931524_isefzl",
+        "date": "2026-09-17",
+        "title": "大家好! 我是哈吉米·瓦德",
+        "content": "大家好!我是哈吉米·瓦德，生物学家兼极限钓鱼迷，水生生物侦探，出色的垂钓者。我已经在世界各地垂钓几十年，我一生都在追踪淡水中的巨怪，调查一些无法解释的攻击事件。凶手被怀疑是潜伏在水下的河怪。",
+        "cats": [
+          "cat001",
+          "cat002",
+          "cat033",
+          "cat038",
+          "cat019"
+        ],
+        "images": [
+          "images/cat001_story_1789658981407.jpg",
+          "images/cat001_story_1789658993644.jpg",
+          "images/cat001_story_1789659006768.jpg",
+          "images/cat001_story_1789659022926.jpg",
+          "images/cat001_story_1789659062872.jpg"
         ]
       }
     ]
