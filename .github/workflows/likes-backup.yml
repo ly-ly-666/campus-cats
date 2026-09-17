@@ -1,4 +1,4 @@
-# 每日自动备份点赞数据：把 Netlify 后端的点赞数拉下来存进仓库，
+# 每日自动备份：把 Netlify 后端的点赞汇总 + 评分逐条记录拉下来存进仓库，
 # 与猫咪/故事数据一起由 Git 历史永久保留，防止 Netlify 侧数据丢失。
 name: Likes daily backup
 
@@ -26,11 +26,18 @@ jobs:
           mkdir -p data
           cp /tmp/likes.json data/likes-backup.json
 
+      - name: 拉取评分逐条明细（含每条评语/分数/时间）
+        run: |
+          curl -sf "https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes?ratings=true" > /tmp/ratings.json \
+            || { echo "评分拉取失败，跳过该备份"; exit 0; }
+          node -e "const d=require('/tmp/ratings.json'); if(!d||!Array.isArray(d.list)){console.error('非法响应');process.exit(1)}"
+          cp /tmp/ratings.json data/ratings-backup.json
+
       - name: 有变化才提交
         run: |
           git config user.name "likes-backup[bot]"
           git config user.email "likes-backup@users.noreply.github.com"
-          git add data/likes-backup.json
-          if git diff --cached --quiet; then echo "点赞数据无变化，跳过提交"; exit 0; fi
-          git commit -m "data: 自动备份点赞数据 $(date -u +%Y%m%d-%H%M)"
+          git add data/likes-backup.json data/ratings-backup.json
+          if git diff --cached --quiet; then echo "备份无变化，跳过提交"; exit 0; fi
+          git commit -m "data: 自动备份点赞+评分逐条 $(date -u +%Y%m%d-%H%M)"
           git push origin HEAD:main
