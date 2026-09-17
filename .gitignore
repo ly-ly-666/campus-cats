@@ -31,3 +31,6 @@ netlify-deploy.zip
 
 # Netlify CLI 本地状态目录
 netlify-deploy/.netlify/
+
+# TRAE HTML 分享临时包（不入库）
+.trae-html-share-packages/
