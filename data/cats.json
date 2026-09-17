@@ -70,6 +70,15 @@
         "date": "2026-09-13",
         "text": "馆长温馨提示 : 请勿给猫咪投喂猫条！ 流浪猫口炎高发，主要与两类投喂习惯有关：一是频繁喂食猫条等加工零食，其高盐高糖及诱食剂会持续刺激口腔黏膜，诱发牙龈红肿、反复发炎乃至溃烂；二是将猫粮直接撒在地面，猫粮易被灰尘细菌污染，沙石还会磨损牙龈，残渣又招虫生菌，进一步加重口腔和肠胃负担。因此科学投喂只需做到两点——只喂正规平价猫粮、用纸巾纸壳或餐盘垫着喂，喂完及时清理，既护猫也护环境。 （小提示：猫慢性口炎的确切成因较复杂，除食物刺激外还与免疫反应、杯状病毒等有关，但减少高盐高糖零食和保持进食卫生，确实是能由我们主动控制的有效环节。）",
         "images": []
+      },
+      {
+        "date": "2026-09-14",
+        "text": "@所有人 📢号外号外 关于小白饮食的提醒 小白目前❗️过胖❗️心脏、关节负担大，代谢疾病风险较高。 ‼️后续小白饮食会由专人负责，请不要自行投喂任何食物。 ‼️如看到他人投喂小白，辛苦大家主动告知对方小白的身体状况。 🟡感谢大家理解，一起守护校园猫咪健康。",
+        "images": [
+          "images/cat001_event_1789661532389.jpg",
+          "images/cat001_event_1789661546459.jpg",
+          "images/cat001_event_1789661579630.jpg"
+        ]
       }
     ],
     "stories": [
@@ -340,6 +349,19 @@
           "images/cat001_story_1789659006768.jpg",
           "images/cat001_story_1789659022926.jpg",
           "images/cat001_story_1789659062872.jpg"
+        ]
+      },
+      {
+        "id": "s_1789661400612_07wh00",
+        "date": "2026-09-17",
+        "title": "肥猪走钢丝",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1789661426362.jpg",
+          "images/cat001_story_1789661434364.jpg"
         ]
       }
     ]
@@ -751,6 +773,33 @@
           "images/cat004_story_1789221035505.jpg",
           "images/cat004_story_1789221046157.jpg"
         ]
+      },
+      {
+        "id": "s_1789661104027_zxmyru",
+        "date": "2026-09-17",
+        "title": "年年的写真一组",
+        "content": "年年~我们喜欢你!",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1789661117712.jpg",
+          "images/cat004_story_1789661131789.jpg",
+          "images/cat004_story_1789661146308.jpg",
+          "images/cat004_story_1789661161780.jpg",
+          "images/cat004_story_1789661170999.jpg",
+          "images/cat004_story_1789661183937.jpg",
+          "images/cat004_story_1789661193564.jpg",
+          "images/cat004_story_1789661200328.jpg",
+          "images/cat004_story_1789661216539.jpg",
+          "images/cat004_story_1789661223545.jpg",
+          "images/cat004_story_1789661233015.jpg",
+          "images/cat004_story_1789661241546.jpg",
+          "images/cat004_story_1789661251983.jpg",
+          "images/cat004_story_1789661258688.jpg",
+          "images/cat004_story_1789661275723.jpg",
+          "images/cat004_story_1789661293283.jpg"
+        ]
       }
     ]
   },
@@ -785,6 +834,14 @@
         "text": "卷卷似乎定居图书馆,貌似跟白猪争霸图书馆馆长之位,不过两者之相像,安能辨我是白猪?",
         "images": [
           "images/cat005_event_1787836943274_0.jpg"
+        ]
+      },
+      {
+        "date": "2026-09-17",
+        "text": "@所有人 目前卷卷确诊杯状病毒阳性❗❗口腔内部有糜烂，请大家不要让其他小猫与其共用食盆水盆，卷卷吃过的碗及时丢掉不要给别的小猫吃，避免传染校内其他猫咪❗❗ 同时最近卷卷不太舒服，可能有点暴躁，大家不要频繁挑逗，避免受伤❗❗ 麻烦大家相互留意，谢谢大家！",
+        "images": [
+          "images/cat005_event_1789661361214.jpg",
+          "images/cat005_event_1789661382136.jpg"
         ]
       }
     ],
@@ -1357,7 +1414,23 @@
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "stories": []
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1789660893886_djzign",
+        "date": "2026-09-18",
+        "title": "罕见! 地中海! ",
+        "content": "也是很少见到地中海的照片哈~记录一下",
+        "cats": [
+          "cat014"
+        ],
+        "images": [
+          "images/cat014_story_1789660896328.jpg",
+          "images/cat014_story_1789660920298.jpg",
+          "images/cat014_story_1789660964311.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat015",
@@ -2231,6 +2304,21 @@
           "images/cat032_story_1789221720411.jpg",
           "images/cat032_story_1789221728180.jpg",
           "images/cat032_story_1789221735583.jpg"
+        ]
+      },
+      {
+        "id": "s_1789661050377_qq9xkn",
+        "date": "2026-09-17",
+        "title": "乔总! ",
+        "content": "",
+        "cats": [
+          "cat032"
+        ],
+        "images": [
+          "images/cat032_story_1789661055069.jpg",
+          "images/cat032_story_1789661070435.jpg",
+          "images/cat032_story_1789661078096.jpg",
+          "images/cat032_story_1789661084612.jpg"
         ]
       }
     ]
