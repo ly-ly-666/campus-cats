@@ -363,6 +363,22 @@
           "images/cat001_story_1789661426362.jpg",
           "images/cat001_story_1789661434364.jpg"
         ]
+      },
+      {
+        "id": "s_1790006220396_f658xb",
+        "date": "2026-09-21",
+        "title": "小白正在锻炼跳水",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1790006227144.jpg",
+          "images/cat001_story_1790006251551.jpg",
+          "images/cat001_story_1790006268861.jpg",
+          "images/cat001_story_1790006330513.jpg",
+          "images/cat001_story_1790006345619.jpg"
+        ]
       }
     ]
   },
@@ -1883,6 +1899,22 @@
           "images/cat001_story_1789659022926.jpg",
           "images/cat001_story_1789659062872.jpg"
         ]
+      },
+      {
+        "id": "s_1790005976869_mvh5m0",
+        "date": "2026-09-21",
+        "title": "哈哈的丑照",
+        "content": "",
+        "cats": [
+          "cat019"
+        ],
+        "images": [
+          "images/cat019_story_1790005998099.jpg",
+          "images/cat019_story_1790006006700.jpg",
+          "images/cat019_story_1790006172799.jpg",
+          "images/cat019_story_1790006295915.jpg",
+          "images/cat019_story_1790006305654.jpg"
+        ]
       }
     ]
   },
@@ -2008,6 +2040,23 @@
           "images/cat021_story_1789658702068.jpg",
           "images/cat021_story_1789658710035.jpg",
           "images/cat021_story_1789658741192.jpg"
+        ]
+      },
+      {
+        "id": "s_1790006735268_miwf75",
+        "date": "2026-09-21",
+        "title": "",
+        "content": "",
+        "cats": [
+          "cat021"
+        ],
+        "images": [
+          "images/cat021_story_1790006750060.jpg",
+          "images/cat021_story_1790006757297.jpg",
+          "images/cat021_story_1790006765751.jpg",
+          "images/cat021_story_1790006773738.jpg",
+          "images/cat021_story_1790006782639.jpg",
+          "images/cat021_story_1790006789844.jpg"
         ]
       }
     ]
@@ -3851,13 +3900,13 @@
   },
   {
     "id": "cat067",
-    "name": "暂时没有名字",
-    "nickname": "",
+    "name": "史迪仔",
+    "nickname": "小鸡毛",
     "gender": "unknown",
     "color": "",
     "area": "",
-    "lat": 21.678961,
-    "lng": 110.921252,
+    "lat": 21.678941,
+    "lng": 110.921807,
     "photo": "images/cat067.jpg",
     "album": [
       "images/cat067_album_1788275796768.jpg",
@@ -3880,6 +3929,27 @@
           "images/cat067_event_1788275822172.jpg",
           "images/cat067_event_1788275829840.jpg"
         ]
+      },
+      {
+        "date": "2026-09-18",
+        "text": "大家好,我是史迪仔,我放归到花坛啦 ,开始适应校园生活,目前比较社恐 ,见到我请不要惊讶喔",
+        "images": [
+          "images/cat067_event_1790005422560.jpg",
+          "images/cat067_event_1790005446433.jpg",
+          "images/cat067_event_1790005473763.jpg",
+          "images/cat067_event_1790005493036.jpg",
+          "images/cat067_event_1790005502900.jpg",
+          "images/cat067_event_1790005512675.jpg",
+          "images/cat067_event_1790005579875.jpg",
+          "images/cat067_event_1790005594598.jpg",
+          "images/cat067_event_1790005605530.jpg",
+          "images/cat067_event_1790005626044.jpg"
+        ]
+      },
+      {
+        "date": "2026-09-21",
+        "text": "@所有人 史迪仔（小鸡毛）年纪尚小，对饱腹没有感觉，过度喂食会让小猫肠胃受损，为了小猫身体健康考虑，请不要连续喂食，谢谢配合",
+        "images": []
       }
     ],
     "stories": [
@@ -3894,6 +3964,20 @@
         "images": [
           "images/cat067_story_1788364226006.jpg",
           "images/cat067_story_1788364240093.jpg"
+        ]
+      },
+      {
+        "id": "s_1790005859437_rbxnbe",
+        "date": "2026-09-21",
+        "title": "我是史迪仔 , 是不是很像",
+        "content": "",
+        "cats": [
+          "cat067"
+        ],
+        "images": [
+          "images/cat067_story_1790005872894.jpg",
+          "images/cat067_story_1790005880001.jpg",
+          "images/cat067_story_1790005887572.jpg"
         ]
       }
     ]
