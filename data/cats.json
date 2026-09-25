@@ -79,6 +79,14 @@
           "images/cat001_event_1789661546459.jpg",
           "images/cat001_event_1789661579630.jpg"
         ]
+      },
+      {
+        "date": "2026-09-23",
+        "text": "小白减肥中! 猫协给小白带上了项圈, 防止更多人投喂小白(谁叫小白那么受宠又可爱呢~)",
+        "images": [
+          "images/cat001_event_1790351897172.jpg",
+          "images/cat001_event_1790351911569.jpg"
+        ]
       }
     ],
     "stories": [
@@ -380,6 +388,26 @@
           "images/cat001_story_1790006345619.jpg",
           "images/cat001_story_1790007074395.jpg",
           "images/cat001_story_1790007131221.jpg"
+        ]
+      },
+      {
+        "id": "s_1790352605786_vx8qvv",
+        "date": "2026-09-26",
+        "title": "小白减肥日记!",
+        "content": "小白的下颚线都要瘦出来了\n有没有人觉得第四张,小白很像丑橘",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1790352622329.jpg",
+          "images/cat001_story_1790352693186.jpg",
+          "images/cat001_story_1790352700216.jpg",
+          "images/cat001_story_1790352706493.jpg",
+          "images/cat001_story_1790352765737.jpg",
+          "images/cat001_story_1790352773094.jpg",
+          "images/cat001_story_1790352780893.jpg",
+          "images/cat001_story_1790352788031.jpg",
+          "images/cat001_story_1790353403725.jpg"
         ]
       }
     ]
@@ -818,6 +846,24 @@
           "images/cat004_story_1789661275723.jpg",
           "images/cat004_story_1789661293283.jpg"
         ]
+      },
+      {
+        "id": "s_1790352556919_g06w83",
+        "date": "2026-09-26",
+        "title": "年年吃播 ~ 开播啦!",
+        "content": "",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1790352825214.jpg",
+          "images/cat004_story_1790352846687.jpg",
+          "images/cat004_story_1790352853646.jpg",
+          "images/cat004_story_1790352860290.jpg",
+          "images/cat004_story_1790352866305.jpg",
+          "images/cat004_story_1790352881084.jpg",
+          "images/cat004_story_1790352890538.jpg"
+        ]
       }
     ]
   },
@@ -1020,7 +1066,23 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1790352932754_3kv2gz",
+        "date": "2026-09-26",
+        "title": "来一点十一以前的照片~",
+        "content": "站长实在翻不到十一的美照,如果你有 ,记得给站长投稿哦~",
+        "cats": [
+          "cat006"
+        ],
+        "images": [
+          "images/cat006_story_1790352935464.jpg",
+          "images/cat006_story_1790353167249.jpg",
+          "images/cat006_story_1790353184085.jpg",
+          "images/cat006_story_1790353214678.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat007",
@@ -1497,6 +1559,18 @@
         "images": [
           "images/cat015_story_1788748701039.jpg"
         ]
+      },
+      {
+        "id": "s_1790353043160_dhl4lt",
+        "date": "2026-09-26",
+        "title": "给开心来张正脸照",
+        "content": "",
+        "cats": [
+          "cat015"
+        ],
+        "images": [
+          "images/cat015_story_1790353046553.jpg"
+        ]
       }
     ]
   },
@@ -1561,6 +1635,22 @@
         ],
         "images": [
           "images/cat016_story_1788502672625.jpg"
+        ]
+      },
+      {
+        "id": "s_1790353292549_vkpx60",
+        "date": "2026-09-26",
+        "title": "蛋蛋~(怎么区分蛋蛋和笨笨呢?)(笨笨有白手套,蛋蛋没有)",
+        "content": "怎么区分蛋蛋和笨笨呢?\n笨笨有白手套,蛋蛋没有",
+        "cats": [
+          "cat016"
+        ],
+        "images": [
+          "images/cat016_story_1790353345792.jpg",
+          "images/cat016_story_1790353352670.jpg",
+          "images/cat016_story_1790353362705.jpg",
+          "images/cat016_story_1790353370543.jpg",
+          "images/cat016_story_1790353382236.jpg"
         ]
       }
     ]
@@ -1989,7 +2079,7 @@
     "id": "cat021",
     "name": "笨笨",
     "nickname": "",
-    "gender": "unknown",
+    "gender": "male",
     "color": "",
     "area": "水电站",
     "lat": 21.677568,
@@ -1999,7 +2089,7 @@
     "description": "",
     "story": "",
     "tags": [],
-    "status": "未知",
+    "status": "已绝育",
     "life": "在校",
     "firstSeen": "",
     "leftAt": "",
@@ -2010,6 +2100,13 @@
         "date": "2026-09-15",
         "text": "大家好!我是笨笨 ,我有名字啦 , 我住在水电站附近哦~",
         "images": []
+      },
+      {
+        "date": "2026-09-25",
+        "text": "笨笨绝育啦!",
+        "images": [
+          "images/cat021_event_1790353519238.jpg"
+        ]
       }
     ],
     "stories": [
@@ -2464,7 +2561,7 @@
     "description": "新来的",
     "story": "",
     "tags": [],
-    "status": "未绝育",
+    "status": "已绝育",
     "life": "在校",
     "firstSeen": "",
     "leftAt": "",
@@ -2475,6 +2572,13 @@
         "date": "2026-09-10",
         "text": "大家好,我是妮妮 ,我有名字啦",
         "images": []
+      },
+      {
+        "date": "2026-09-25",
+        "text": "妮妮也绝育啦!",
+        "images": [
+          "images/cat034_event_1790353646121.jpg"
+        ]
       }
     ],
     "stories": [
@@ -2757,6 +2861,20 @@
         ],
         "images": [
           "images/cat037_story_1788189121513.jpg"
+        ]
+      },
+      {
+        "id": "s_1790352972267_an3uqj",
+        "date": "2026-09-26",
+        "title": "包包专辑",
+        "content": "",
+        "cats": [
+          "cat037"
+        ],
+        "images": [
+          "images/cat037_story_1790352985263.jpg",
+          "images/cat037_story_1790352992463.jpg",
+          "images/cat037_story_1790352999690.jpg"
         ]
       }
     ]
@@ -3994,6 +4112,23 @@
           "images/cat067_story_1790338857842.jpg",
           "images/cat067_story_1790338915975.jpg"
         ]
+      },
+      {
+        "id": "s_1790352429251_l9vgd2",
+        "date": "2026-09-26",
+        "title": "小鸡毛对于猫粮的喜爱,接近疯狂",
+        "content": "",
+        "cats": [
+          "cat067"
+        ],
+        "images": [
+          "images/cat067_story_1790352456626.jpg",
+          "images/cat067_story_1790352464567.jpg",
+          "images/cat067_story_1790352478659.jpg",
+          "images/cat067_story_1790352489478.jpg",
+          "images/cat067_story_1790352513087.jpg",
+          "images/cat067_story_1790352670723.jpg"
+        ]
       }
     ]
   },
@@ -4054,5 +4189,42 @@
     "age": "",
     "events": [],
     "stories": []
+  },
+  {
+    "id": "cat070",
+    "name": "加菲",
+    "nickname": "",
+    "gender": "unknown",
+    "color": "",
+    "area": "五区",
+    "lat": 21.678926,
+    "lng": 110.923786,
+    "photo": "images/cat070.jpg",
+    "album": [],
+    "description": "",
+    "story": "",
+    "tags": [],
+    "status": "未知",
+    "life": "在校",
+    "firstSeen": "",
+    "leftAt": "",
+    "caretaker": "",
+    "age": "",
+    "events": [],
+    "stories": [
+      {
+        "id": "s_1790352336784_2tkfzs",
+        "date": "2026-09-26",
+        "title": "加菲吃饭",
+        "content": "今天才发现还有这样一只小猫",
+        "cats": [
+          "cat070"
+        ],
+        "images": [
+          "images/cat070_story_1790352392711.jpg",
+          "images/cat070_story_1790352415686.jpg"
+        ]
+      }
+    ]
   }
 ]
