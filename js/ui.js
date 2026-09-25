@@ -1,7 +1,7 @@
 ﻿// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904o';
 import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260925b';
-import { mountRatingBox, fetchRank, cachedRank } from './ratings.js?v=20260925b';
+import { mountRatingBox, fetchRank, cachedRank, fetchAllReviews, submitRating } from './ratings.js?v=20260925d';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -147,7 +147,7 @@ export function renderCatList(cats, onSelect) {
       const photo = thumbUrl(cat.photo); // 列表预览用缩略图，点开详情才看原图
       return `
       <div class="cat-item" data-cat-id="${cat.id}" tabindex="0" role="button" aria-label="查看 ${escapeHtml(cat.name)}">
-        <div class="cat-item-photo${cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''))}">
+        <div class="cat-item-photo${cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : (cat.life === '在校' && !cat.leftAt ? ' ring-present' : '')))}">
           <img src="${initialsPlaceholder(cat.name)}" data-real-src="${photo}" alt=""
                onerror="this.style.display='none';this.parentElement.classList.add('cat-item-fallback');">
           <span class="cat-item-fallback-icon">🐱</span>
@@ -653,6 +653,71 @@ window.__storyGallery = function (img) {
   try { return JSON.parse(box.dataset.gallery); } catch (e) { return null; }
 };
 
+// 复制文本：必须同步优先用 execCommand —— 微信等 WebView 里 clipboard API 常被拒，
+// 若先 await 它再回退，用户手势已失效，execCommand 也会失败。
+function copyTextSync(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    ta.style.left = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+
+// 故事集顶部「欢迎投稿」标语：邮箱可一键复制（联系方式取自 data/site-config.json）
+export function renderSubmitBanner(siteConfig) {
+  const box = document.getElementById('submit-banner');
+  if (!box) return;
+  const email = String((siteConfig || {}).feedbackEmail || '').trim();
+  if (!email) return; // 没配邮箱就不显示，避免出现空标语
+
+  box.innerHTML =
+    '<div class="sb-title">📮 欢迎大家投稿猫咪故事！</div>'
+    + '<div class="sb-desc">在校园里遇到的有趣猫咪、它们的故事、你拍下的照片，都欢迎分享给我们，让更多人看见这些小家伙～</div>'
+    + '<div class="sb-rows">'
+    + '<div class="sb-row">'
+    + '<span class="sb-label">邮箱</span>'
+    + '<a class="sb-val" href="mailto:' + escapeHtml(email) + '?subject=' + encodeURIComponent('油喵地图投稿') + '">' + escapeHtml(email) + '</a>'
+    + '<button class="sb-copy" type="button" data-copy="' + escapeHtml(email) + '">复制邮箱</button>'
+    + '</div>'
+    + '</div>'
+    + '<div class="sb-note">把想说的话和照片发到这个邮箱就行，简单说明是哪只猫、想分享什么～</div>';
+  box.hidden = false;
+
+  if (!box.__sbBound) {
+    box.addEventListener('click', (e) => {
+      const btn = e.target.closest ? e.target.closest('.sb-copy') : null;
+      if (!btn) return;
+      const text = btn.dataset.copy || '';
+      if (!text) return;
+      const old = btn.textContent;
+      const done = (ok) => {
+        btn.textContent = ok ? '✓ 已复制' : '复制失败，请长按选择';
+        setTimeout(() => { btn.textContent = old; }, 1800);
+      };
+      // 1) 同步 execCommand（保住用户手势，微信里最可靠）
+      if (copyTextSync(text)) { done(true); return; }
+      // 2) 退回异步 clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => done(true)).catch(() => done(false));
+        return;
+      }
+      done(false);
+    });
+    box.__sbBound = true;
+  }
+}
+
 export function renderStoriesTimeline(cats, siteConfig) {
   const box = document.getElementById('stories-timeline');
   if (!box) return;
@@ -972,12 +1037,84 @@ export function renderKnowledgeTimeline(knowledge, cats) {
 // 挂到 window，供地图标记等内联 onclick 使用
 window.openLightbox = openLightbox;
 
-// 猫咪评分榜：按平均分降序，前 3 名给奖牌
+// 排行榜就地打分表单：只有点「提交评分」时才请求后端，平时不发 GET（省 Netlify 函数预算）
+function mountRankRateForm(host, catId, onSubmitted) {
+  if (!host) return;
+  const pickEl = host.querySelector('[data-rp]');
+  const nameEl = host.querySelector('[data-rn]');
+  const textEl = host.querySelector('[data-rt]');
+  const sendBtn = host.querySelector('[data-rs]');
+  const mineEl = host.querySelector('[data-rm]');
+  const fbEl = host.querySelector('[data-rf]');
+  let score = 0;
+  let fbTimer = null;
+  const feedback = (msg, ok) => {
+    fbEl.textContent = msg;
+    fbEl.className = 'rate-feedback ' + (ok ? 'ok' : 'err') + ' show';
+    clearTimeout(fbTimer);
+    fbTimer = setTimeout(() => { fbEl.className = 'rate-feedback'; }, 2600);
+  };
+  for (let i = 1; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rate-chip';
+    b.textContent = i;
+    b.setAttribute('aria-label', '打 ' + i + ' 分');
+    b.addEventListener('click', () => {
+      score = i;
+      pickEl.querySelectorAll('.rate-chip').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+      mineEl.innerHTML = '我的评分：<b>' + i + '</b> 分';
+    });
+    pickEl.appendChild(b);
+  }
+  sendBtn.addEventListener('click', async () => {
+    if (!score) { feedback('请先点一个分数（1-10）～', false); return; }
+    sendBtn.disabled = true;
+    sendBtn.textContent = '提交中…';
+    const r = await submitRating(catId, score, textEl.value.trim(), nameEl.value.trim());
+    sendBtn.disabled = false;
+    sendBtn.textContent = '提交评分';
+    if (r && r.ok) {
+      textEl.value = '';
+      feedback('✓ 评分已提交，感谢你的反馈', true);
+      if (onSubmitted) onSubmitted(r);
+    } else {
+      feedback('✕ ' + ((r && r.error) || '提交失败，请稍后再试'), false);
+    }
+  });
+}
+
+// 猫咪评分榜：按平均分降序，前 3 名给奖牌；点行可就地展开该猫的全部评语
 export async function renderRankTimeline(cats) {
   const el = document.getElementById('rank-list');
   if (!el) return;
   const catMap = {};
   (Array.isArray(cats) ? cats : []).forEach((c) => { catMap[c.id] = c; });
+  const openSet = new Set();   // 已展开的猫，重绘后保持展开
+  let reviewMap = null;        // catId -> 快照记录，首次展开时才拉（走免费静态快照）
+
+  const fmtAt = (t) => {
+    if (!t) return '';
+    const d = new Date(t); const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  };
+
+  const reviewsHtml = (rec) => {
+    if (!rec) return '<div class="cm-empty">评语数据暂未同步（快照每日更新），可点下方进档案看最新的～</div>';
+    const arr = Array.isArray(rec.reviews) ? rec.reviews : [];
+    if (!arr.length) return '<div class="cm-empty">这只猫还没有评语，来写第一条吧～</div>';
+    return arr.map((c) => {
+      const nm = String(c.name || '匿名猫友').trim() || '匿名猫友';
+      return '<div class="cm-item"><div class="cm-head">'
+        + '<span class="cm-avatar">' + escapeHtml(nm.slice(0, 1)) + '</span>'
+        + '<span class="cm-name-x">' + escapeHtml(nm) + '</span>'
+        + '<span class="cm-score">' + (Number(c.score) || 0) + ' 分</span>'
+        + '<span class="cm-time">' + fmtAt(c.at) + '</span>'
+        + '</div><div class="cm-txt">' + escapeHtml(c.content || '（只打了分，没写评语）') + '</div></div>';
+    }).join('');
+  };
+
   const paint = (list, isFresh) => {
     const rows = (list || []).filter((r) => catMap[r.catId]);
     if (!rows.length) {
@@ -985,18 +1122,89 @@ export async function renderRankTimeline(cats) {
       return;
     }
     const medals = ['🥇', '🥈', '🥉'];
-    el.innerHTML = '<div class="rank-head">评分榜 · 平均分 / 10 · 按评分热度排序' + (isFresh ? '' : ' · 缓存数据') + '</div>' + rows.map((r, i) => {
-      const cat = catMap[r.catId];
-      const top = i < 3;
-      return '<div class="rank-item' + (top ? ' top' : '') + '">'
-        + '<span class="rank-no">' + (medals[i] || (i + 1)) + '</span>'
-        + '<a class="rank-avatar" href="./profile.html#' + cat.id + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
-        + '<a class="rank-name" href="./profile.html#' + cat.id + '">' + escapeHtml(cat.name) + '</a>'
-        + '<span class="rank-votes">' + r.votes + ' 人评分</span>'
-        + '<span class="rank-avg">' + r.avg + '<em>/10</em></span>'
-        + '</div>';
-    }).join('');
+    el.innerHTML = '<div class="rank-head">评分榜 · 平均分 / 10 · 按评分热度排序' + (isFresh ? '' : ' · 缓存数据') + '</div>'
+      + rows.map((r, i) => {
+        const cat = catMap[r.catId];
+        const href = './profile.html?from=rank#' + cat.id;
+        // 状态环与地图/列表保持一致：在校=橙、失踪=红、失踪已久=深红、已领养=绿
+        const past = cat.life === '去喵星了' || !!cat.leftAt;
+        const lifeRing = cat.life === '失踪' ? ' ring-missing'
+          : cat.life === '失踪已久' ? ' ring-missing-old'
+          : cat.life === '已领养' ? ' ring-adopted'
+          : (cat.life === '在校' && !past) ? ' ring-present'
+          : '';
+        return '<div class="rank-item' + (i < 3 ? ' top' : '') + '" data-cat="' + cat.id + '">'
+          + '<div class="rank-row">'
+          + '<span class="rank-no">' + (medals[i] || (i + 1)) + '</span>'
+          + '<a class="rank-avatar' + lifeRing + '" href="' + href + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
+          + '<a class="rank-name" href="' + href + '">' + escapeHtml(cat.name) + '</a>'
+          + '<span class="rank-votes">' + r.votes + ' 人评分</span>'
+          + '<span class="rank-avg">' + r.avg + '<em>/10</em></span>'
+          + '<button class="rank-toggle" type="button" aria-expanded="false">评语·打分 ▾</button>'
+          + '</div>'
+          + '<div class="rank-reviews" hidden></div>'
+          + '</div>';
+      }).join('');
+
+    const openers = {};
+    el.querySelectorAll('.rank-item').forEach((item) => {
+      const rowEl = item.querySelector('.rank-row');
+      const panel = item.querySelector('.rank-reviews');
+      const toggle = item.querySelector('.rank-toggle');
+      const catId = String(item.dataset.cat);
+      const setOpen = (open) => {
+        item.classList.toggle('open', open);
+        if (open) openSet.add(catId); else openSet.delete(catId);
+        if (toggle) {
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.textContent = open ? '收起 ▴' : '评语·打分 ▾';
+        }
+        panel.hidden = !open;
+        if (!open || panel.dataset.loaded === '1') return;
+        panel.innerHTML = '<div class="cm-empty">正在加载评语…</div>';
+        const paintPanel = (rec) => {
+          let current = rec;
+          panel.innerHTML = '<div data-rl>' + reviewsHtml(current) + '</div>'
+            + '<div class="rank-rate">'
+            + '<div class="rank-rate-title">✍️ 为它打分</div>'
+            + '<div class="rank-rate-pick" data-rp></div>'
+            + '<input class="cm-name" data-rn placeholder="昵称（可留空=匿名）" maxlength="20">'
+            + '<textarea class="cm-text" data-rt placeholder="评语（选填，例如：性格好亲人、超粘人～）" maxlength="300"></textarea>'
+            + '<div class="rank-rate-foot"><span class="rate-mine" data-rm>点数字为它打分吧～</span><button class="cm-send" data-rs type="button">提交评分</button></div>'
+            + '<div class="rate-feedback" data-rf></div>'
+            + '</div>'
+            + '<a class="rank-more" href="./profile.html?from=rank#' + catId + '">查看完整档案 →</a>';
+          mountRankRateForm(panel.querySelector('.rank-rate'), catId, (r) => {
+            // 提交成功：只重绘评语列表 + 更新该行的人数/平均分，不动表单
+            current = { catId: catId, avg: r.avg, votes: r.votes, reviews: r.reviews || [] };
+            const listEl = panel.querySelector('[data-rl]');
+            if (listEl) listEl.innerHTML = reviewsHtml(current);
+            const vEl = item.querySelector('.rank-votes');
+            const aEl = item.querySelector('.rank-avg');
+            if (vEl && r.votes) vEl.textContent = r.votes + ' 人评分';
+            if (aEl && r.avg != null) aEl.innerHTML = r.avg + '<em>/10</em>';
+          });
+          panel.dataset.loaded = '1';
+        };
+        if (reviewMap) { paintPanel(reviewMap[catId]); return; }
+        fetchAllReviews().then((all) => {
+          reviewMap = {};
+          (all || []).forEach((x) => { if (x && x.catId) reviewMap[String(x.catId)] = x; });
+          paintPanel(reviewMap[catId]);
+        }).catch(() => { panel.innerHTML = '<div class="cm-empty">评语加载失败，请稍后再试</div>'; });
+      };
+      openers[catId] = setOpen;
+      if (rowEl) {
+        rowEl.addEventListener('click', (e) => {
+          if (e.target.closest('a')) return; // 头像 / 名字仍然进档案页
+          setOpen(!item.classList.contains('open'));
+        });
+      }
+    });
+    // 重绘后恢复之前展开的行
+    openSet.forEach((id) => { if (openers[id]) openers[id](true); });
   };
+
   // 1) 先画本地缓存（若有过一次访问），秒出不空等
   const cached = cachedRank();
   if (cached && Array.isArray(cached.list) && cached.list.length) {

@@ -18,6 +18,11 @@ async function readSnapshot() {
   return null;
 }
 function snapByCat(list, catId) { return list ? list.find(x => x && x.catId === String(catId)) || null : null; }
+// 读取全部猫咪的评分评语（走站点静态快照，免费，不消耗 Netlify 函数预算）
+export async function fetchAllReviews() {
+  const list = await readSnapshot();
+  return Array.isArray(list) ? list : [];
+}
 // 读取某猫的评分评语缓存（localStorage）
 export function cachedRating(catId) {
   try {
@@ -130,12 +135,16 @@ export async function mountRatingBox(host, catId) {
   const id = catId;
   host.innerHTML = `
     <div class="rate-box">
-      <div class="rate-bar">
-        <span class="rate-label">🐱 猫咪评分</span>
-        <span class="rate-num" data-avg>–</span><span class="rate-den">/10</span>
-        <span class="rate-meta" data-votes>暂无评分</span>
+      <div class="rate-hero">
+        <div class="rate-hero-score">
+          <span class="rate-num" data-avg>–</span><span class="rate-den">/10</span>
+        </div>
+        <div class="rate-hero-info">
+          <div class="rate-stars"><span class="stars-bg">★★★★★</span><span class="stars-fg" data-stars-fg>★★★★★</span></div>
+          <div class="rate-meta" data-votes>暂无评分</div>
+        </div>
       </div>
-      <div class="rate-tip">点数字打分，可顺带写一句评语</div>
+      <div class="rate-tip">点数字为它打分（1–10 分），可顺带写一句评语</div>
       <div class="rate-pick" data-pick></div>
       <div class="rate-mine" data-mine></div>
       <div class="cm-write cm-ext">
@@ -145,15 +154,18 @@ export async function mountRatingBox(host, catId) {
       </div>
       <div class="rate-feedback" data-feedback></div>
       <div class="cm-list" data-list></div>
+      <button class="cm-more" type="button" data-more hidden></button>
     </div>`;
   const avgEl = host.querySelector('[data-avg]');
   const votesEl = host.querySelector('[data-votes]');
+  const starsFg = host.querySelector('[data-stars-fg]');
   const mineEl = host.querySelector('[data-mine]');
   const pickEl = host.querySelector('[data-pick]');
   const nameEl = host.querySelector('.cm-name');
   const textEl = host.querySelector('.cm-text');
   const sendBtn = host.querySelector('.cm-send');
   const listEl = host.querySelector('[data-list]');
+  const moreBtn = host.querySelector('[data-more]');
   const fbEl = host.querySelector('[data-feedback]');
   let fbTimer = null;
   const feedback = (msg, ok) => {
@@ -164,6 +176,9 @@ export async function mountRatingBox(host, catId) {
   };
 
   let myScore = 0;
+  let allReviews = [];        // 全部评分评语
+  let reviewExpanded = false; // 评论是否已展开
+  const REVIEW_PREVIEW = 2;   // 默认只露 2 条，其余点「查看全部」展开
 
   const paintPick = (my) => {
     myScore = my;
@@ -173,35 +188,73 @@ export async function mountRatingBox(host, catId) {
       b.type = 'button';
       b.className = 'rate-chip' + (my === i ? ' on' : '');
       b.textContent = i;
+      b.setAttribute('aria-label', '打 ' + i + ' 分');
       b.addEventListener('click', () => { paintPick(i); });
       pickEl.appendChild(b);
     }
   };
 
-  const paintReviews = (arr) => {
-    listEl.innerHTML = arr && arr.length
-      ? arr.map(c => {
-          const s = Number(c.score) || 0;
-          return `<div class="cm-item">
-              <span class="cm-name-x">${esc(c.name || '匿名猫友')}</span><span class="cm-score">${s}分</span><span class="cm-time">${fmtTime(c.at)}</span>
-              <div class="cm-txt">${esc(c.content || '（只打了分，没写评语）')}</div>
-            </div>`;
-        }).join('')
-      : '<div class="cm-empty">还没有人评分，来打第一个分吧～</div>';
+  const reviewItem = (c) => {
+    const s = Number(c.score) || 0;
+    const nm = String(c.name || '匿名猫友').trim() || '匿名猫友';
+    return `<div class="cm-item">
+        <div class="cm-head">
+          <span class="cm-avatar">${esc(nm.slice(0, 1))}</span>
+          <span class="cm-name-x">${esc(nm)}</span>
+          <span class="cm-score">${s} 分</span>
+          <span class="cm-time">${fmtTime(c.at)}</span>
+        </div>
+        <div class="cm-txt">${esc(c.content || '（只打了分，没写评语）')}</div>
+      </div>`;
+  };
+
+  const paintReviews = () => {
+    if (!allReviews.length) {
+      listEl.innerHTML = '<div class="cm-empty">还没有人评分，来打第一个分吧～</div>';
+      if (moreBtn) moreBtn.hidden = true;
+      return;
+    }
+    const shown = reviewExpanded ? allReviews : allReviews.slice(0, REVIEW_PREVIEW);
+    listEl.innerHTML = shown.map(reviewItem).join('');
+    if (moreBtn) {
+      moreBtn.hidden = allReviews.length <= REVIEW_PREVIEW;
+      moreBtn.textContent = reviewExpanded ? '收起评论 ▴' : '查看全部 ' + allReviews.length + ' 条评论 ▾';
+    }
+  };
+
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => { reviewExpanded = !reviewExpanded; paintReviews(); });
+  }
+
+  // 星级条：平均分（满分 10）换算成 5 星填充比例
+  const paintStars = (avg) => {
+    if (!starsFg) return;
+    const pct = Math.max(0, Math.min(100, (Number(avg) || 0) / 10 * 100));
+    starsFg.style.width = pct + '%';
+  };
+
+  const paint = (d) => {
+    const votes = d && Number(d.votes);
+    if (votes) {
+      avgEl.textContent = d.avg;
+      votesEl.textContent = d.votes + ' 人评分';
+    } else {
+      avgEl.textContent = '–';
+      votesEl.textContent = '暂无评分';
+    }
+    paintStars(votes ? d.avg : 0);
+    mineEl.innerHTML = d && d.rated
+      ? '我的评分：<b>' + d.myScore + '</b> 分'
+      : '点击上方数字为它打分吧～';
+    allReviews = (d && Array.isArray(d.reviews) && d.reviews.length) ? d.reviews : [];
+    paintReviews();
   };
 
   // 先显示缓存（秒开），保证微信等慢网络也能立刻看到评论，不白屏
   const cached = cachedRating(id);
-  const paint = (d, my) => {
-    if (d && d.votes) { avgEl.textContent = d.avg; votesEl.textContent = d.votes + ' 人评分'; }
-    mineEl.innerHTML = d && d.rated
-      ? '我的评分：<b>' + d.myScore + '</b> 分'
-      : '点击上方数字为它打分吧～';
-    paintReviews(d && d.reviews && d.reviews.length ? d.reviews : (my && my.reviews) || []);
-  };
-  paint(cached, null);                       // 先用缓存渲染（秒出）
+  paint(cached);
   const rate = await fetchRating(id);        // 后台等最新
-  if (rate) { paintPick(rate.myScore || 0); paint(rate, null); }  // 有实时则覆盖
+  if (rate) { paintPick(rate.myScore || 0); paint(rate); }  // 有实时则覆盖
   else { paintPick(cached ? cached.myScore || 0 : 0); }
 
   sendBtn.addEventListener('click', async () => {
@@ -215,10 +268,7 @@ export async function mountRatingBox(host, catId) {
     sendBtn.textContent = '提交评分';
     if (r && r.ok) {
       textEl.value = '';
-      if (r.votes) votesEl.textContent = r.votes + ' 人评分';
-      avgEl.textContent = r.votes ? r.avg : '–';
-      mineEl.innerHTML = '我的评分：<b>' + r.myScore + '</b> 分';
-      paintReviews(r.reviews);
+      paint(r); // 复用统一渲染：平均分/星级/我的评分/评论一并刷新
       try { localStorage.setItem(RATE_KEY + '_' + id, JSON.stringify(r)); } catch (e2) {}
       feedback('✓ 评分已提交，感谢你的反馈', true);
     } else {

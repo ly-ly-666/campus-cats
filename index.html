@@ -33,7 +33,7 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="./style.css?v=23">
+  <link rel="stylesheet" href="./style.css?v=31">
 </head>
 <body>
   <!-- 加载页 -->
@@ -78,7 +78,7 @@
   <!-- 免责声明（手机端可点击展开，桌面端完整显示） -->
   <details class="site-disclaimer" id="site-disclaimer">
     <summary class="site-disclaimer-summary">⚠️ 站点声明<span class="disc-expand-hint">（点击展开）</span></summary>
-    <p class="site-disclaimer-body">本站由「这里油只喵」爱猫志愿组织的同学们自愿发起并维护，属学生公益记录，并非广东石油化工学院或其任何部门、社团或官方机构运营，也不代表学校立场。站内猫咪的照片、位置、状态等信息均由同学自发记录，可能滞后、不全或存在差错，仅供爱心参考，不构成任何承诺或保证；涉及领养、喂养、救助或放归等决定前，请通过「这里油只喵」官方账号（抖音 / 小红书 / B 站）咨询确认。如需领养、救助或反馈投诉，请到官方账号留言，本网站不代为受理。若发现站内信息有误，欢迎点击右下角「🐾 反馈」告知，我们会尽快更正。</p>
+    <p class="site-disclaimer-body">本站由「这里油只喵」爱猫志愿组织的同学们自愿发起并维护，属学生公益记录，并非广东石油化工学院或其任何部门、社团或官方机构运营，也不代表学校立场。站内猫咪的照片、位置、状态等信息均由同学自发记录，可能滞后、不全或存在差错，仅供爱心参考，不构成任何承诺或保证；涉及领养、喂养、救助或放归等决定前，请通过「这里油只喵」官方账号（抖音 / 小红书 / B 站）咨询确认。如需领养、救助或反馈投诉，请到官方账号留言，本网站不代为受理。若发现站内信息有误，或有猫咪故事、照片想投稿，欢迎点击右下角「🐾 反馈投稿」告知，我们会尽快更正与整理。</p>
   </details>
 
   <!-- 统计条 -->
@@ -156,6 +156,7 @@
 
     <!-- 故事集视图 -->
     <section id="stories-view" class="view">
+      <div id="submit-banner" class="submit-banner" hidden></div>
       <div id="stories-timeline" class="stories-timeline"></div>
     </section>
 
@@ -181,17 +182,17 @@
       <button class="modal-close" data-cclose="1" aria-label="关闭">×</button>
       <div class="modal-header">
         <div class="modal-title-block">
-          <h2 class="modal-name">🐾 信息有误？帮我更正</h2>
+          <h2 class="modal-name">🐾 反馈 · 投稿</h2>
         </div>
       </div>
-      <p class="modal-desc" style="margin-top:6px;">你发现的猫猫信息问题会整理成文字，复制后发给站长（微信 / 邮件均可），站长核对后会尽快更新。</p>
+      <p class="modal-desc" style="margin-top:6px;">发现的猫猫信息问题，或者想分享的猫咪故事、照片，都可以整理成文字发给站长（微信 / 邮件均可），站长核对后会尽快更新。</p>
       <div class="field" style="margin:12px 0 8px;">
         <label>🐱 涉及猫咪</label>
         <select id="corr-cat" class="corr-select"></select>
       </div>
       <div class="field" style="margin:8px 0;">
-        <label>✍️ 哪里不对 / 实际看到的情况</label>
-        <textarea id="corr-text" rows="4" placeholder="例如：小白已经搬到实验楼附近了 / 花花的毛色写错了 / 失踪状态其实还在图书馆…"></textarea>
+        <label>✍️ 想反馈的问题 / 想投稿的内容</label>
+        <textarea id="corr-text" rows="4" placeholder="例如：小白已经搬到实验楼附近了 / 花花的毛色写错了 / 想分享一件和 QQ 肠有关的小故事…"></textarea>
       </div>
       <div class="corr-actions">
         <button class="btn btn-green" id="corr-copy">📋 复制内容发站长</button>
@@ -202,7 +203,7 @@
   </div>
 
   <!-- 反馈浮动按钮 -->
-  <button id="corr-fab" class="corr-fab" title="点击反馈猫咪信息：更正资料、补充故事、报告问题">🐾 反馈</button>
+  <button id="corr-fab" class="corr-fab" title="点击反馈猫咪信息 / 投稿猫咪故事与照片：更正资料、补充故事、报告问题">🐾 反馈投稿</button>
 
   <!-- 加入我们 / 关于油喵 -->
   <section class="join-wrap">
@@ -277,6 +278,6 @@
   </script>
 
   <!-- 入口模块（?v= 版本号：改版时递增，防止浏览器/CDN 缓存旧 JS 导致加载失败） -->
-  <script type="module" src="./js/main.js?v=20260925b"></script>
+  <script type="module" src="./js/main.js?v=20260925k"></script>
 </body>
 </html>

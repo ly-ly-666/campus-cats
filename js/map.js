@@ -46,7 +46,7 @@ function createCatIcon(cat) {
   // 圆形标记：显示真实头像（缓存已固定，浏览器可正常缓存），加载失败时兜底显示名字首字
   const initial = (cat.name || '?')[0];
   const isPast = cat.life === '去喵星了' || cat.leftAt ? true : false;
-  const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : ''));
+  const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : (cat.life === '在校' && !isPast ? ' ring-present' : '')));
   const hasPhoto = !!cat.photo && cat.photo.indexOf('placeholder') < 0;
   const imgHtml = hasPhoto
     ? `<img class="cat-marker-img" src="${thumbUrl(cat.photo)}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">`

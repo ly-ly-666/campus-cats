@@ -1,7 +1,7 @@
 ﻿// profile.js — 猫咪独立档案页
 import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox, initLightbox } from './config.js?v=20260904p';
 import { mountLikeButton } from './likes.js?v=20260925b';
-import { mountRatingBox } from './ratings.js?v=20260925b';
+import { mountRatingBox } from './ratings.js?v=20260925d';
 initLightbox();
 window.openLightbox = openLightbox;
 
@@ -199,10 +199,20 @@ function render(cats, relations) {
     </div>
   `;
 
+  // 生活状态警示条（与地图弹窗保持一致，档案页也要能看到）
+  var statusBanner = '';
+  if (cat.life === '失踪') statusBanner = '<div class="profile-banner banner-missing">⚠️ 这只猫失踪了！如果你见过它，请尽快联系猫协（抖音 / 小红书 / B 站搜「这里油只喵」）。任何线索都可能是它回家的希望。</div>';
+  else if (cat.life === '失踪已久') statusBanner = '<div class="profile-banner banner-missing-long">⚠️ 这只猫已失踪很久了。若你还见过它，请给猫协留言（抖音 / 小红书 / B 站「这里油只喵」），任何线索都很宝贵。</div>';
+  else if (cat.life === '已领养') statusBanner = '<div class="profile-banner banner-adopted">🏠 这只猫已被领养，开启新生活啦～</div>';
+
+  // 字段对齐地图弹窗，保证「别处能看到的，总档案也能看到」（外号已在页头显示，此处不重复）
   const items = [
+    ['性别', GENDER_LABEL[cat.gender] || '未知'],
     ['年龄', cat.age],
     ['毛色', cat.color],
     ['常出现区域', cat.area],
+    ['绝育状态', cat.status || '未知'],
+    ['生活状态', cat.life],
     ['首次发现', cat.firstSeen],
     ['离开时间', cat.leftAt || (cat.life === '去喵星了' ? '去喵星了' : '')],
     ['照料人', cat.caretaker],
@@ -286,17 +296,29 @@ function render(cats, relations) {
     }).join('')
     : '<p class="hint">暂无关系记录</p>';
 
+  // 从排行榜点进来时，返回按钮回到排行榜标签页（而不是地图）
+  const fromRank = new URLSearchParams(location.search).get('from') === 'rank';
+  const backHref = fromRank ? './index.html?tab=rank' : './index.html';
+  const backText = fromRank ? '← 返回排行榜' : '← 返回地图';
+
   document.getElementById('profile-main').innerHTML = `
-    <a class="back-link" href="./index.html">← 返回地图</a>
+    <a class="back-link" href="${backHref}">${backText}</a>
+    ${statusBanner}
     <div class="profile-like" data-like-for="${cat.id}"></div>
-    <div class="rate-host" data-cat-id="${cat.id}"></div>
+    ${cat.description ? '<section class="profile-section"><h3>📝 简介</h3><div class="story-text">' + escapeHtml(cat.description) + '</div></section>' : ''}
     <section class="profile-section">
       <h3>📋 基本信息</h3>
       <div class="info-grid">${infoHtml}</div>
     </section>
+    <section class="profile-section rate-section">
+      <button type="button" class="rate-toggle" aria-expanded="true">
+        <span class="rate-toggle-title">⭐ 评分与评论</span>
+        <span class="rate-toggle-arrow">收起 ▴</span>
+      </button>
+      <div class="rate-host" data-cat-id="${cat.id}"></div>
+    </section>
     ${eventsHtml}
     ${renderProfileStories(cat)}
-    ${cat.description ? '<section class="profile-section"><h3>📝 简介</h3><div class="story-text">' + escapeHtml(cat.description) + '</div></section>' : ''}
     <section class="profile-section">
       <h3>🖼️ 相册</h3>
       ${albumHtml}
@@ -314,8 +336,19 @@ function render(cats, relations) {
   const likeBox = document.querySelector('.profile-like[data-like-for="' + cat.id + '"]');
   if (likeBox) mountLikeButton(likeBox, cat.id);
 
+  // 评分与评论默认展开（点标题行可收起）
+  const rateToggle = document.querySelector('.rate-toggle');
   const rateHost = document.querySelector('.rate-host[data-cat-id="' + cat.id + '"]');
   if (rateHost) mountRatingBox(rateHost, cat.id);
+  if (rateToggle && rateHost) {
+    rateToggle.addEventListener('click', function () {
+      const next = rateToggle.getAttribute('aria-expanded') !== 'true';
+      rateToggle.setAttribute('aria-expanded', String(next));
+      rateHost.hidden = !next;
+      const arrow = rateToggle.querySelector('.rate-toggle-arrow');
+      if (arrow) arrow.textContent = next ? '收起 ▴' : '展开 ▾';
+    });
+  }
 }
 
 loadData();
