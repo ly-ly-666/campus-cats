@@ -5,30 +5,32 @@ import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, close
 import { bulkLikeStats } from './likes.js?v=20260925b';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
+// 不带 ?v=时间戳：那会让浏览器每次都重新下载（cats.json 约 135KB）。
+// 改用 cache:'no-cache' 协商缓存 —— 数据没变只回 304，变了才真正下载，既快又不会看到旧数据。
 async function loadData() {
   let cats, relations, siteConfig = {}, knowledge = [];
   try {
-    const cfgResp = await fetch('./data/site-config.json?v=' + Date.now());
+    const cfgResp = await fetch('./data/site-config.json', { cache: 'no-cache' });
     if (cfgResp.ok) siteConfig = await cfgResp.json();
   } catch (e) {
     siteConfig = {};
   }
   try {
-    const catResp = await fetch('./data/cats.json?v=' + Date.now());
+    const catResp = await fetch('./data/cats.json', { cache: 'no-cache' });
     if (!catResp.ok) throw new Error(`猫咪数据加载失败（HTTP ${catResp.status}）`);
     cats = await catResp.json();
   } catch (e) {
     throw new Error(`无法加载 data/cats.json：${e.message}`);
   }
   try {
-    const relResp = await fetch('./data/relations.json?v=' + Date.now());
+    const relResp = await fetch('./data/relations.json', { cache: 'no-cache' });
     if (!relResp.ok) throw new Error(`关系数据加载失败（HTTP ${relResp.status}）`);
     relations = await relResp.json();
   } catch (e) {
     throw new Error(`无法加载 data/relations.json：${e.message}`);
   }
   try {
-    const knResp = await fetch('./data/knowledge.json?v=' + Date.now());
+    const knResp = await fetch('./data/knowledge.json', { cache: 'no-cache' });
     if (knResp.ok) knowledge = await knResp.json();
   } catch (e) {
     knowledge = [];
@@ -37,6 +39,11 @@ async function loadData() {
 }
 
 window.__splashStart = performance.now();
+// 本次会话已播过启动页：立刻移除，页面间来回切换不再被它挡一下
+if (document.documentElement.classList.contains('splash-skip')) {
+  var _splash = document.getElementById('splash');
+  if (_splash) _splash.remove();
+}
 setTimeout(function() { var s = document.getElementById('splash'); if (s) { s.classList.add('fade-out'); s.addEventListener('transitionend', function() { s.remove(); }, { once: true }); setTimeout(function() { if (s.parentNode) s.remove(); }, 800); } }, 6000);
 const loadingEl = document.getElementById('loading');
 
@@ -58,7 +65,8 @@ function dismissSplash() {
   var splash = document.getElementById('splash');
   if (!splash) return;
   var elapsed = performance.now() - (window.__splashStart || 0);
-  var minWait = Math.max(0, 1800 - elapsed);
+  // 最短展示 700ms：数据早就加载完时不必干等（淡入 0.45s + 短暂停留 + 0.6s 淡出）
+  var minWait = Math.max(0, 700 - elapsed);
   setTimeout(function() {
     splash.classList.add('fade-out');
     splash.addEventListener('transitionend', function() { splash.remove(); }, { once: true });

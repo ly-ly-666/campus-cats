@@ -33,7 +33,19 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="./style.css?v=33">
+  <!-- 启动页只在本次会话首次打开时播放，之后在首页/排行榜/档案页之间来回切换不再重播 -->
+  <script>
+    (function () {
+      try {
+        if (sessionStorage.getItem('ymao_splash_seen') === '1') {
+          document.documentElement.classList.add('splash-skip');
+        } else {
+          sessionStorage.setItem('ymao_splash_seen', '1');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="./style.css?v=34">
 </head>
 <body>
   <!-- 加载页 -->
@@ -278,6 +290,6 @@
   </script>
 
   <!-- 入口模块（?v= 版本号：改版时递增，防止浏览器/CDN 缓存旧 JS 导致加载失败） -->
-  <script type="module" src="./js/main.js?v=20260925m"></script>
+  <script type="module" src="./js/main.js?v=20260925n"></script>
 </body>
 </html>
