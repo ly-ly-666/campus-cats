@@ -1059,9 +1059,11 @@ html.splash-skip .splash-overlay { display: none; }
 .rate-feedback.err { display: block; color: #c0392b; background: #fdecea; }
 
 /* ---------- 猫咪评分榜 ---------- */
-#rank-view { overflow-y: auto; flex-direction: column; }
-.rank-list { padding: 8px 14px 24px; max-width: 720px; margin: 0 auto; }
-.rank-tip { max-width: 720px; margin: 10px auto 0; padding: 8px 12px; font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; line-height: 1.5; }
+#rank-view { overflow-y: auto; overflow-x: hidden; flex-direction: column; }
+/* width:100% 必须写：纵向 flex 里 margin:auto 会让 auto 外边距吃掉剩余空间，
+   元素退化成「按内容收缩」宽度，被行内不换行的内容撑到超出手机屏宽（需左右滑动）。 */
+.rank-list { width: 100%; max-width: 720px; margin: 0 auto; padding: 8px 14px 24px; }
+.rank-tip { width: 100%; max-width: 720px; margin: 10px auto 0; padding: 8px 12px; font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; line-height: 1.5; }
 .rank-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted, #8a857d); margin: 6px 0 10px; }
 /* 评分榜 / 热度榜 视角切换 */
 .rank-views { display: inline-flex; gap: 6px; }
@@ -1087,7 +1089,8 @@ html.splash-skip .splash-overlay { display: none; }
 .rank-avatar.ring-missing { border-color: #dc2626; box-shadow: 0 0 0 2px rgba(220,38,38,.3); }
 .rank-avatar.ring-missing-old { border-color: #9f1239; box-shadow: 0 0 0 2px rgba(159,18,57,.25); }
 .rank-avatar.ring-adopted { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.3); }
-.rank-name { flex: 1; font-size: 15px; font-weight: 600; color: var(--text, #2d2a26); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* min-width:0 让名字可被压缩：否则 nowrap 文本的最小宽度=整串文字宽度，会把整行撑爆 */
+.rank-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: var(--text, #2d2a26); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rank-name:hover { color: var(--primary-dark, #b45309); }
 .rank-votes { font-size: 12px; color: var(--muted, #8a857d); flex-shrink: 0; }
 .rank-avg { font-size: 18px; font-weight: 700; color: var(--primary-dark, #b45309); flex-shrink: 0; }
@@ -1107,6 +1110,20 @@ html.splash-skip .splash-overlay { display: none; }
 .rank-rate-title { font-size: 12.5px; font-weight: 700; color: var(--text, #2d2a26); }
 .rank-rate-pick { display: flex; gap: 6px; flex-wrap: wrap; }
 .rank-rate-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+/* 窄屏：压缩间距与固定宽度元素，保证「评分榜/热度榜」一行放得下，不出现横向滚动 */
+@media (max-width: 430px) {
+  .rank-list { padding: 8px 10px 24px; }
+  .rank-head { gap: 8px; }
+  .rank-head-txt { min-width: 0; }
+  .rank-item { padding: 9px 10px; }
+  .rank-row { gap: 8px; }
+  .rank-no { width: 22px; font-size: 16px; }
+  .rank-avatar { width: 38px; height: 38px; }
+  .rank-votes { font-size: 11px; }
+  .rank-avg { font-size: 16px; }
+  .rank-toggle { padding: 3px 8px; font-size: 11px; }
+  .rank-view-btn { padding: 5px 10px; font-size: 12px; }
+}
 /* 故事集顶部「欢迎投稿」标语 */
 .submit-banner {
   margin: 0 0 14px;
