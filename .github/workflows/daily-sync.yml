@@ -1,0 +1,42 @@
+# 每日自动同步（合并原 likes-backup.yml + sync-ratings.yml）
+# 一次跑完：点赞汇总备份 + 评分明细备份 + 评分快照（微信端回退用）。
+# 合并后每天的 Netlify 函数调用从 3 次降到 2 次。
+
+name: Daily sync (likes + ratings)
+
+on:
+  schedule:
+    # 每天 02:07 UTC = 北京时间 10:07，错峰跑
+    - cron: "7 2 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 拉取并写入备份 + 快照
+        run: node scripts/daily-sync.mjs
+
+      - name: 有变化才提交
+        run: |
+          git config user.name "daily-sync[bot]"
+          git config user.email "daily-sync@users.noreply.github.com"
+          git add data/likes-backup.json data/ratings-backup.json data/ratings-snapshot.json
+          if git diff --cached --quiet; then echo "备份无变化，跳过提交"; exit 0; fi
+          git commit -m "data: 每日同步点赞备份+评分备份+评分快照 $(date -u +%Y%m%d-%H%M)"
+          git push origin HEAD:main

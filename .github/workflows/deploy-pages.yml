@@ -36,6 +36,8 @@ jobs:
         run: node scripts/validate.mjs
 
       - name: 生成评分/评语快照(Netlify兜底)
+        # Netlify 拉不到时不要连累整站部署，沿用仓库里已有的快照即可
+        continue-on-error: true
         run: node scripts/gen-ratings-snapshot.mjs
 
       - name: Configure Pages
