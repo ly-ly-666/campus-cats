@@ -1450,7 +1450,21 @@
     "caretaker": "",
     "age": "",
     "events": [],
-    "stories": []
+    "stories": [
+      {
+        "id": "s_1790355179184_ac3bwm",
+        "date": "2026-09-25",
+        "title": "小布丁~",
+        "content": "",
+        "cats": [
+          "cat012"
+        ],
+        "images": [
+          "images/cat012_story_1790355183546.jpg",
+          "images/cat012_story_1790355207569.jpg"
+        ]
+      }
+    ]
   },
   {
     "id": "cat013",
