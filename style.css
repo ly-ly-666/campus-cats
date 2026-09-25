@@ -890,7 +890,7 @@ body { display: flex; flex-direction: column; }
   width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
   border: 2px solid #fff; background: #ffd9a8;
 }
-.legend-swatch-normal { box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.legend-swatch-present { box-shadow: 0 0 0 4px #f59e0b; }
 .legend-swatch-missing { box-shadow: 0 0 0 4px rgba(220,38,38,.9); animation: cat-pulse 1.5s infinite; }
 .legend-swatch-missing-old { box-shadow: 0 0 0 4px #9f1239; }
 .legend-swatch-adopted { box-shadow: 0 0 0 4px #10b981; }
@@ -1060,7 +1060,12 @@ body { display: flex; flex-direction: column; }
 #rank-view { overflow-y: auto; flex-direction: column; }
 .rank-list { padding: 8px 14px 24px; max-width: 720px; margin: 0 auto; }
 .rank-tip { max-width: 720px; margin: 10px auto 0; padding: 8px 12px; font-size: 12px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; line-height: 1.5; }
-.rank-head { font-size: 12px; color: var(--muted, #8a857d); margin: 6px 0 10px; }
+.rank-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted, #8a857d); margin: 6px 0 10px; }
+/* 评分榜 / 热度榜 视角切换 */
+.rank-views { display: inline-flex; gap: 6px; }
+.rank-view-btn { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border, #e8e1d6); background: #fff; color: var(--muted, #8a857d); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.rank-view-btn:hover { border-color: var(--primary, #f59e0b); color: var(--primary-dark, #b45309); }
+.rank-view-btn.on { background: #fff7ed; border-color: var(--primary, #f59e0b); color: var(--primary-dark, #b45309); }
 .rank-empty { text-align: center; color: var(--muted, #8a857d); font-size: 14px; line-height: 1.8; padding: 40px 0; }
 .rank-item {
   background: #f7f3ec; border: 1px solid var(--border, #e8e1d6);
@@ -1084,6 +1089,9 @@ body { display: flex; flex-direction: column; }
 .rank-name:hover { color: var(--primary-dark, #b45309); }
 .rank-votes { font-size: 12px; color: var(--muted, #8a857d); flex-shrink: 0; }
 .rank-avg { font-size: 18px; font-weight: 700; color: var(--primary-dark, #b45309); flex-shrink: 0; }
+/* 未评分区：与榜单主体用虚线分隔，分数位显示占位破折号 */
+.rank-sep { margin: 18px 0 4px; padding-top: 14px; border-top: 1px dashed var(--border, #e8e1d6); font-size: 13px; color: var(--muted, #8a857d); text-align: center; }
+.rank-avg-none { color: var(--muted, #8a857d); font-weight: 600; }
 .rank-avg em { font-size: 11px; color: var(--muted, #8a857d); font-style: normal; font-weight: 400; }
 /* 点行就地展开评语 */
 .rank-toggle { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border, #e8e1d6); background: #fff; color: var(--primary-dark, #b45309); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }

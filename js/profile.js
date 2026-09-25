@@ -186,9 +186,16 @@ function render(cats, relations) {
   const photo = photoUrl(cat.photo);
   const past = (cat.life === '去喵星了' || cat.leftAt) ? '<span class="tag tag-past">离世' + (cat.leftAt ? ' ' + escapeHtml(cat.leftAt) : '') + '</span>' : '';
   const tags = (cat.tags || []).map(function (t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
+  // 头像状态环：与地图/列表/排行榜一致（在校=橙、失踪=红、失踪已久=深红、已领养=绿）
+  const isPastCat = cat.life === '去喵星了' || !!cat.leftAt;
+  const lifeRing = cat.life === '失踪' ? ' ring-missing'
+    : cat.life === '失踪已久' ? ' ring-missing-old'
+    : cat.life === '已领养' ? ' ring-adopted'
+    : (cat.life === '在校' && !isPastCat) ? ' ring-present'
+    : '';
 
   document.getElementById('profile-header').innerHTML = `
-    <img class="profile-avatar" src="${photo}" alt="" onerror="this.src='${DEFAULT_PHOTO}'">
+    <img class="profile-avatar${lifeRing}" src="${photo}" alt="" onerror="this.src='${DEFAULT_PHOTO}'">
     <h1 class="profile-name">${escapeHtml(cat.name)}</h1>
     ${cat.nickname ? '<div class="profile-nick">外号：' + escapeHtml(cat.nickname) + '</div>' : ''}
     <div class="profile-tags">

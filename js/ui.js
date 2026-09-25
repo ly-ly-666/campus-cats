@@ -1100,8 +1100,10 @@ export async function renderRankTimeline(cats) {
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   };
 
-  const reviewsHtml = (rec) => {
-    if (!rec) return '<div class="cm-empty">评语数据暂未同步（快照每日更新），可点下方进档案看最新的～</div>';
+  const reviewsHtml = (rec, noData) => {
+    if (!rec) return noData
+      ? '<div class="cm-empty">这只猫还没有评语，来写第一条吧～</div>'
+      : '<div class="cm-empty">评语数据暂未同步（快照每日更新），可点下方进档案看最新的～</div>';
     const arr = Array.isArray(rec.reviews) ? rec.reviews : [];
     if (!arr.length) return '<div class="cm-empty">这只猫还没有评语，来写第一条吧～</div>';
     return arr.map((c) => {
@@ -1115,36 +1117,87 @@ export async function renderRankTimeline(cats) {
     }).join('');
   };
 
+  // 两种视角：评分榜（按平均分，原有排名不变）/ 热度榜（按评分人数），互不影响
+  let rankView = 'score';
+  let viewRows = null;
+  let viewFresh = false;
+
   const paint = (list, isFresh) => {
-    const rows = (list || []).filter((r) => catMap[r.catId]);
-    if (!rows.length) {
+    viewRows = (list || []).filter((r) => catMap[r.catId]);
+    viewFresh = isFresh;
+    render();
+  };
+
+  const render = () => {
+    const rows = viewRows || [];
+    const ratedIds = new Set(rows.map((r) => String(r.catId)));
+    // 还没人评分的猫：排在榜单下方，同样可就地打分
+    const unrated = (Array.isArray(cats) ? cats : []).filter((c) => !ratedIds.has(String(c.id)));
+    if (!rows.length && !unrated.length) {
       el.innerHTML = '<div class="rank-empty">🏆 还没有猫咪上榜<br>在地图里点开一只猫咪，为它打个分吧～</div>';
       return;
     }
     const medals = ['🥇', '🥈', '🥉'];
-    el.innerHTML = '<div class="rank-head">评分榜 · 平均分 / 10 · 按评分热度排序' + (isFresh ? '' : ' · 缓存数据') + '</div>'
-      + rows.map((r, i) => {
-        const cat = catMap[r.catId];
-        const href = './profile.html?from=rank#' + cat.id;
-        // 状态环与地图/列表保持一致：在校=橙、失踪=红、失踪已久=深红、已领养=绿
-        const past = cat.life === '去喵星了' || !!cat.leftAt;
-        const lifeRing = cat.life === '失踪' ? ' ring-missing'
-          : cat.life === '失踪已久' ? ' ring-missing-old'
-          : cat.life === '已领养' ? ' ring-adopted'
-          : (cat.life === '在校' && !past) ? ' ring-present'
-          : '';
-        return '<div class="rank-item' + (i < 3 ? ' top' : '') + '" data-cat="' + cat.id + '">'
-          + '<div class="rank-row">'
-          + '<span class="rank-no">' + (medals[i] || (i + 1)) + '</span>'
-          + '<a class="rank-avatar' + lifeRing + '" href="' + href + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
-          + '<a class="rank-name" href="' + href + '">' + escapeHtml(cat.name) + '</a>'
-          + '<span class="rank-votes">' + r.votes + ' 人评分</span>'
-          + '<span class="rank-avg">' + r.avg + '<em>/10</em></span>'
-          + '<button class="rank-toggle" type="button" aria-expanded="false">评语·打分 ▾</button>'
-          + '</div>'
-          + '<div class="rank-reviews" hidden></div>'
-          + '</div>';
-      }).join('');
+    const itemHtml = (o) => {
+      const cat = o.cat;
+      const href = './profile.html?from=rank#' + cat.id;
+      // 状态环与地图/列表保持一致：在校=橙、失踪=红、失踪已久=深红、已领养=绿
+      const past = cat.life === '去喵星了' || !!cat.leftAt;
+      const lifeRing = cat.life === '失踪' ? ' ring-missing'
+        : cat.life === '失踪已久' ? ' ring-missing-old'
+        : cat.life === '已领养' ? ' ring-adopted'
+        : (cat.life === '在校' && !past) ? ' ring-present'
+        : '';
+      return '<div class="rank-item' + (o.top ? ' top' : '') + (o.unrated ? ' unrated' : '') + '" data-cat="' + cat.id + '">'
+        + '<div class="rank-row">'
+        + '<span class="rank-no">' + o.no + '</span>'
+        + '<a class="rank-avatar' + lifeRing + '" href="' + href + '"><img src="' + thumbUrl(cat.photo) + '" alt="" loading="lazy"></a>'
+        + '<a class="rank-name" href="' + href + '">' + escapeHtml(cat.name) + '</a>'
+        + o.votes
+        + o.avg
+        + '<button class="rank-toggle" type="button" aria-expanded="false">评语·打分 ▾</button>'
+        + '</div>'
+        + '<div class="rank-reviews" hidden></div>'
+        + '</div>';
+    };
+    // 热度榜按评分人数降序（同票数看平均分）；评分榜沿用接口顺序（按平均分）
+    const sorted = rankView === 'hot'
+      ? rows.slice().sort((a, b) => (b.votes - a.votes) || (b.avg - a.avg))
+      : rows;
+    el.innerHTML = '<div class="rank-head">'
+      + '<span class="rank-head-txt">' + (rankView === 'hot' ? '热度榜 · 按评分人数排序' : '评分榜 · 平均分 / 10') + (viewFresh ? '' : ' · 缓存数据') + '</span>'
+      + '<span class="rank-views">'
+      + '<button type="button" class="rank-view-btn' + (rankView === 'score' ? ' on' : '') + '" data-view="score">🏆 评分榜</button>'
+      + '<button type="button" class="rank-view-btn' + (rankView === 'hot' ? ' on' : '') + '" data-view="hot">🔥 热度榜</button>'
+      + '</span>'
+      + '</div>'
+      + sorted.map((r, i) => itemHtml({
+        cat: catMap[r.catId],
+        no: medals[i] || (i + 1),
+        votes: '<span class="rank-votes">' + r.votes + ' 人评分</span>',
+        avg: '<span class="rank-avg">' + r.avg + '<em>/10</em></span>',
+        top: i < 3
+      })).join('')
+      + (unrated.length
+        ? '<div class="rank-sep">🐾 还没人评分的猫（' + unrated.length + ' 只）· 点开就能打分</div>'
+          + unrated.map((cat) => itemHtml({
+            cat: cat,
+            no: '—',
+            votes: '<span class="rank-votes">暂无评分</span>',
+            avg: '<span class="rank-avg rank-avg-none">—</span>',
+            unrated: true
+          })).join('')
+        : '');
+
+    // 视角切换（只重绘榜单，不重新请求数据）
+    el.querySelectorAll('.rank-view-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const v = btn.dataset.view;
+        if (v === rankView) return;
+        rankView = v;
+        render();
+      });
+    });
 
     const openers = {};
     el.querySelectorAll('.rank-item').forEach((item) => {
@@ -1152,6 +1205,7 @@ export async function renderRankTimeline(cats) {
       const panel = item.querySelector('.rank-reviews');
       const toggle = item.querySelector('.rank-toggle');
       const catId = String(item.dataset.cat);
+      const isUnrated = item.classList.contains('unrated');
       const setOpen = (open) => {
         item.classList.toggle('open', open);
         if (open) openSet.add(catId); else openSet.delete(catId);
@@ -1164,7 +1218,7 @@ export async function renderRankTimeline(cats) {
         panel.innerHTML = '<div class="cm-empty">正在加载评语…</div>';
         const paintPanel = (rec) => {
           let current = rec;
-          panel.innerHTML = '<div data-rl>' + reviewsHtml(current) + '</div>'
+          panel.innerHTML = '<div data-rl>' + reviewsHtml(current, isUnrated && !current) + '</div>'
             + '<div class="rank-rate">'
             + '<div class="rank-rate-title">✍️ 为它打分</div>'
             + '<div class="rank-rate-pick" data-rp></div>'
@@ -1178,11 +1232,11 @@ export async function renderRankTimeline(cats) {
             // 提交成功：只重绘评语列表 + 更新该行的人数/平均分，不动表单
             current = { catId: catId, avg: r.avg, votes: r.votes, reviews: r.reviews || [] };
             const listEl = panel.querySelector('[data-rl]');
-            if (listEl) listEl.innerHTML = reviewsHtml(current);
+            if (listEl) listEl.innerHTML = reviewsHtml(current, false);
             const vEl = item.querySelector('.rank-votes');
             const aEl = item.querySelector('.rank-avg');
             if (vEl && r.votes) vEl.textContent = r.votes + ' 人评分';
-            if (aEl && r.avg != null) aEl.innerHTML = r.avg + '<em>/10</em>';
+            if (aEl && r.avg != null) { aEl.classList.remove('rank-avg-none'); aEl.innerHTML = r.avg + '<em>/10</em>'; }
           });
           panel.dataset.loaded = '1';
         };
