@@ -18,8 +18,53 @@ async function readSnapshot() {
   return null;
 }
 function snapByCat(list, catId) { return list ? list.find(x => x && x.catId === String(catId)) || null : null; }
-// 读取全部猫咪的评分评语（走站点静态快照，免费，不消耗 Netlify 函数预算）
-export async function fetchAllReviews() {
+
+/* ---------- 实时数据（Netlify） ----------
+   一次 ?ratings=true 同时拿到「排行榜 + 全部评语」，比原来单独打 ?rank=true 更省。
+   时间戳落在 localStorage：同一浏览器 LIVE_TTL 内即使刷新页面也不会重复打函数。 */
+const LIVE_TTL = 10 * 60 * 1000;
+const LIVE_KEY = 'ymcao_live_rank_v1';
+let _live = null; // { list:[{catId,avg,votes,reviews}], ts }
+function readLiveCache() {
+  if (_live) return _live;
+  try {
+    const raw = localStorage.getItem(LIVE_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && Array.isArray(o.list) && o.list.length) { _live = o; return _live; }
+    }
+  } catch (e) {}
+  return null;
+}
+function saveLiveCache(list) {
+  _live = { list: list, ts: Date.now() };
+  try { localStorage.setItem(LIVE_KEY, JSON.stringify(_live)); } catch (e) {}
+}
+async function fetchLive(force) {
+  const c = readLiveCache();
+  if (!force && c && (Date.now() - c.ts) < LIVE_TTL) return c;
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
+  try {
+    const r = await fetch(RATE_API + '?ratings=true', { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+    if (timer) clearTimeout(timer);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j || !Array.isArray(j.list) || !j.list.length) return null;
+    saveLiveCache(j.list);
+    return _live;
+  } catch (e) { return null; }
+}
+const toRankRows = (list) => (list || []).map((x) => ({ catId: x.catId, avg: x.avg, votes: x.votes }));
+
+// 读取全部猫咪的评分评语。live=true 走实时接口（同一浏览器 10 分钟内复用）；
+// 否则读站点静态快照（免费，不消耗 Netlify 函数预算）。
+export async function fetchAllReviews(opts) {
+  const live = opts === true || !!(opts && opts.live);
+  if (live) {
+    const l = await fetchLive(false);
+    if (l) return l.list;
+  }
   const list = await readSnapshot();
   return Array.isArray(list) ? list : [];
 }
@@ -32,16 +77,13 @@ export function cachedRating(catId) {
   return null;
 }
 // 读取某猫的评分：{ avg, votes, myScore, rated, reviews:[{name,score,content,at}] }；带超时防卡死；Netlify 失败则回退站点快照
-// 为省 Netlify 函数预算：缓存较新(10分钟内)直接返回不做后台刷新；较旧才后台刷新。避免同一猫被反复查看时重复打函数
-const RATE_CACHE_TTL = 10 * 60 * 1000; // 10 分钟内的缓存视为新鲜，不再请求
+// 缓存只用来「秒出首屏」，不再当成最终结果：过期就等实时接口，拿到就重绘。
+// （旧逻辑缓存过期只在后台刷新、结果丢弃，导致档案页永远少最新那一条）
+const RATE_CACHE_TTL = 60 * 1000; // 1 分钟内的缓存视为新鲜，直接用
 export function fetchRating(catId) {
   const hit = cachedRating(catId);
-  if (hit) {
-    const fresh = (Date.now() - (hit._t || 0)) < RATE_CACHE_TTL;
-    if (!fresh) _refreshRating(catId).catch(() => {}); // 缓存较旧 → 后台拉新但不阻塞 UI
-    return Promise.resolve(hit);
-  }
-  return _refreshRating(catId);
+  if (hit && (Date.now() - (hit._t || 0)) < RATE_CACHE_TTL) return Promise.resolve(hit);
+  return _refreshRating(catId).then((fresh) => fresh || hit || null);
 }
 async function _refreshRating(catId) {
   try {
@@ -70,56 +112,58 @@ async function _refreshRating(catId) {
 export async function submitRating(catId, score, content, name) {
   try {
     const r = await fetch(RATE_API, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'rate', catId, score, content, name }) });
-    return await r.json();
+    const j = await r.json();
+    if (j && j.ok) {
+      // 刚提交的评分立刻并进本地实时缓存：本机后续重绘（切页/重进榜单）不会再退回旧数字
+      const c = readLiveCache();
+      if (c) {
+        const entry = { catId: String(catId), avg: j.avg, votes: j.votes, reviews: j.reviews || [] };
+        const i = c.list.findIndex((x) => String(x.catId) === String(catId));
+        if (i >= 0) c.list[i] = entry; else c.list.push(entry);
+        try { localStorage.setItem(LIVE_KEY, JSON.stringify(c)); } catch (e) {}
+      }
+    }
+    return j;
   } catch (e) { return { ok: false, error: '网络异常，请稍后再试' }; }
 }
 
-// 排行榜内存缓存：TTL 内直接返回，避免频繁触发 Netlify 冷启动、切页秒开
-const _rankCache = { data: null, ts: 0 };
-const RANK_TTL = 60 * 1000; // 60 秒内走缓存；后续进页显示缓存的同时后台刷新
-const RANK_KEY = 'ymcao_rank_cache_v1';
-// 排名优先读 GitHub Pages 的免费静态快照（不打 Netlify），仅每隔数小时才拉一次实时榜，压低积分消耗
-const RANK_NETLIFY_TTL = 6 * 60 * 60 * 1000; // 同一浏览器 6 小时内最多打一次 Netlify 实时排名
-let _netlifyRankTs = 0;
-export function cachedRank() {
-  try {
-    const raw = localStorage.getItem(RANK_KEY);
-    if (raw) { const o = JSON.parse(raw); if (o && Array.isArray(o.list) && o.list.length) return o; }
-  } catch (e) {}
+// 本地实时缓存（10 分钟内算「实时」，超时算「缓存」）→ 静态快照（免费秒开）。都没有才返回 null
+async function localRank() {
+  const c = readLiveCache();
+  if (c) return { list: toRankRows(c.list), source: (Date.now() - c.ts) < LIVE_TTL ? 'live' : 'cache' };
+  const snap = await readSnapshot();
+  if (Array.isArray(snap) && snap.length) return { list: toRankRows(snap), source: 'snap' };
   return null;
 }
-async function _refreshRankFromNetlify() {
-  _netlifyRankTs = Date.now();
-  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
-  try {
-    const r = await fetch(RATE_API + '?rank=true', { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
-    if (timer) clearTimeout(timer);
-    if (!r.ok) return null;
-    const data = await r.json();
-    if (data && Array.isArray(data.list)) {
-      _rankCache.data = data;
-      _rankCache.ts = Date.now();
-      try { localStorage.setItem(RANK_KEY, JSON.stringify({ list: data.list, t: Date.now() })); } catch (e) {}
-    }
-    return data;
-  } catch (e) { return null; }
-}
-export async function fetchRank(force) {
-  if (force !== true && _rankCache.data && (Date.now() - _rankCache.ts) < RANK_TTL) return _rankCache.data;
-  // 优先读免费静态快照（GitHub Pages，不产生 Netlify 调用），满足日常看榜
-  try {
-    const list = await readSnapshot();
-    if (list && list.length) {
-      const build = list.map((x) => ({ catId: x.catId, avg: x.avg, votes: x.votes }));
-      const data = { ok: true, list: build };
-      _rankCache.data = data; _rankCache.ts = Date.now();
-      try { localStorage.setItem(RANK_KEY, JSON.stringify({ list: build, t: Date.now() })); } catch (e) {}
-      if (Date.now() - _netlifyRankTs >= RANK_NETLIFY_TTL) _refreshRankFromNetlify().catch(() => {}); // 偶发后台刷新实时榜
-      return data;
-    }
-  } catch (e) {}
-  return _refreshRankFromNetlify();
+/**
+ * 排行榜取数。返回 { list, source }：list 立即可画，
+ * source = live(实时接口) / cache(本地缓存) / snap(站点静态快照)。
+ * 优先返回本地缓存/静态快照（免费、秒开），实时榜在后台拉，拿到后通过 onUpdate 回调再重绘一次
+ * —— 旧代码把实时结果只写进缓存、从不回绘，所以页面永远显示旧快照。
+ * @param {Object} [opts] { force } force=true（手动点「🔄 刷新最新」）忽略 10 分钟限制并等待实时结果
+ * @param {Function} [opts.onUpdate] 实时数据到达时的回调（用于二次重绘）
+ */
+export async function fetchRank(opts) {
+  const o = typeof opts === 'function' ? { onUpdate: opts } : (opts || {});
+  const force = o.force === true;
+  const base = await localRank();
+
+  if (force) {
+    const live = await fetchLive(true);
+    if (live) return { list: toRankRows(live.list), source: 'live' };
+    return base || { list: [], source: 'snap' };
+  }
+
+  const task = fetchLive(false).then((live) => {
+    if (!live) return null;
+    const out = { list: toRankRows(live.list), source: 'live' };
+    if (o.onUpdate) o.onUpdate(out);
+    return out;
+  }).catch(() => null);
+
+  if (base) { task.then(function () {}); return base; } // 先画旧的，实时到了再重绘
+  const out = await task;
+  return out || { list: [], source: 'snap' };
 }
 
 /* ---------- 渲染：评分+评语组件（地图弹窗 / 档案页复用） ---------- */

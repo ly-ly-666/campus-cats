@@ -1,7 +1,7 @@
 ﻿// main.js — 入口模块（装配并启动应用）
 import { initMap, initMapSearch } from './map.js?v=20260925c';
 import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260925b';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260925m';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260926a';
 import { bulkLikeStats } from './likes.js?v=20260925b';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。

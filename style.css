@@ -1070,6 +1070,9 @@ html.splash-skip .splash-overlay { display: none; }
 .rank-view-btn { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border, #e8e1d6); background: #fff; color: var(--muted, #8a857d); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .rank-view-btn:hover { border-color: var(--primary, #f59e0b); color: var(--primary-dark, #b45309); }
 .rank-view-btn.on { background: #fff7ed; border-color: var(--primary, #f59e0b); color: var(--primary-dark, #b45309); }
+/* 「🔄 刷新最新」：拉一次实时榜，跨设备刚打的评分立刻可见 */
+.rank-view-btn.rank-refresh { border-style: dashed; }
+.rank-view-btn.rank-refresh:disabled { opacity: .6; cursor: default; }
 .rank-empty { text-align: center; color: var(--muted, #8a857d); font-size: 14px; line-height: 1.8; padding: 40px 0; }
 .rank-item {
   background: #f7f3ec; border: 1px solid var(--border, #e8e1d6);
@@ -1113,8 +1116,10 @@ html.splash-skip .splash-overlay { display: none; }
 /* 窄屏：压缩间距与固定宽度元素，保证「评分榜/热度榜」一行放得下，不出现横向滚动 */
 @media (max-width: 430px) {
   .rank-list { padding: 8px 10px 24px; }
-  .rank-head { gap: 8px; }
+  /* 标题与按钮分两行，避免三个按钮挤在一起 */
+  .rank-head { flex-direction: column; align-items: flex-start; gap: 8px; }
   .rank-head-txt { min-width: 0; }
+  .rank-views { flex-wrap: wrap; }
   .rank-item { padding: 9px 10px; }
   .rank-row { gap: 8px; }
   .rank-no { width: 22px; font-size: 16px; }

@@ -1,7 +1,7 @@
 ﻿// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904o';
 import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260925b';
-import { mountRatingBox, fetchRank, cachedRank, fetchAllReviews, submitRating } from './ratings.js?v=20260925d';
+import { mountRatingBox, fetchRank, fetchAllReviews, submitRating } from './ratings.js?v=20260926a';
 export { openLightbox, initLightbox };
 
 // 温和化展示「离开时间」— 替换敏感词，展示层用
@@ -1092,7 +1092,7 @@ export async function renderRankTimeline(cats) {
   const catMap = {};
   (Array.isArray(cats) ? cats : []).forEach((c) => { catMap[c.id] = c; });
   const openSet = new Set();   // 已展开的猫，重绘后保持展开
-  let reviewMap = null;        // catId -> 快照记录，首次展开时才拉（走免费静态快照）
+  let reviewMap = null;        // catId -> 评分记录，首次展开时才拉（实时榜可用时走实时，否则走免费静态快照）
 
   const fmtAt = (t) => {
     if (!t) return '';
@@ -1120,11 +1120,16 @@ export async function renderRankTimeline(cats) {
   // 两种视角：评分榜（按平均分，原有排名不变）/ 热度榜（按评分人数），互不影响
   let rankView = 'score';
   let viewRows = null;
-  let viewFresh = false;
+  // 数据来源：live=实时接口 / snap=站点静态快照 / cache=本地缓存
+  let viewSource = 'cache';
+  let refreshing = false;
 
-  const paint = (list, isFresh) => {
+  const paint = (list, source) => {
+    const next = source || 'cache';
+    // 数据源换成实时后，已缓存的评语作废，下次展开重新取（否则展开的还是旧快照评语）
+    if (next === 'live' && viewSource !== 'live') reviewMap = null;
     viewRows = (list || []).filter((r) => catMap[r.catId]);
-    viewFresh = isFresh;
+    viewSource = next;
     render();
   };
 
@@ -1164,11 +1169,15 @@ export async function renderRankTimeline(cats) {
     const sorted = rankView === 'hot'
       ? rows.slice().sort((a, b) => (b.votes - a.votes) || (b.avg - a.avg))
       : rows;
+    const srcTag = viewSource === 'live' ? ' · 实时'
+      : viewSource === 'snap' ? ' · 快照' : ' · 缓存';
     el.innerHTML = '<div class="rank-head">'
-      + '<span class="rank-head-txt">' + (rankView === 'hot' ? '热度榜 · 按评分人数排序' : '评分榜 · 平均分 / 10') + (viewFresh ? '' : ' · 缓存数据') + '</span>'
+      + '<span class="rank-head-txt">' + (rankView === 'hot' ? '热度榜 · 按评分人数排序' : '评分榜 · 平均分 / 10') + srcTag + '</span>'
       + '<span class="rank-views">'
       + '<button type="button" class="rank-view-btn' + (rankView === 'score' ? ' on' : '') + '" data-view="score">🏆 评分榜</button>'
       + '<button type="button" class="rank-view-btn' + (rankView === 'hot' ? ' on' : '') + '" data-view="hot">🔥 热度榜</button>'
+      + '<button type="button" class="rank-view-btn rank-refresh" data-refresh' + (refreshing ? ' disabled' : '') + '>'
+      + (refreshing ? '刷新中…' : '🔄 刷新最新') + '</button>'
       + '</span>'
       + '</div>'
       + sorted.map((r, i) => itemHtml({
@@ -1190,7 +1199,7 @@ export async function renderRankTimeline(cats) {
         : '');
 
     // 视角切换（只重绘榜单，不重新请求数据）
-    el.querySelectorAll('.rank-view-btn').forEach((btn) => {
+    el.querySelectorAll('.rank-view-btn[data-view]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const v = btn.dataset.view;
         if (v === rankView) return;
@@ -1198,6 +1207,24 @@ export async function renderRankTimeline(cats) {
         render();
       });
     });
+    // 手动拉一次实时榜：忽略 10 分钟限制，拿到后重绘（跨设备刚打的评分立刻可见）
+    const refreshBtn = el.querySelector('[data-refresh]');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        if (refreshing) return;
+        refreshing = true;
+        render();
+        const res = await fetchRank({ force: true });
+        refreshing = false;
+        if (res && Array.isArray(res.list) && res.list.length) {
+          paint(res.list, res.source);
+          if (res.source !== 'live') showToast('暂时连不上服务器，先显示已有的数据');
+        } else {
+          render();
+          showToast('刷新失败，请稍后再试');
+        }
+      });
+    }
 
     const openers = {};
     el.querySelectorAll('.rank-item').forEach((item) => {
@@ -1241,7 +1268,8 @@ export async function renderRankTimeline(cats) {
           panel.dataset.loaded = '1';
         };
         if (reviewMap) { paintPanel(reviewMap[catId]); return; }
-        fetchAllReviews().then((all) => {
+        // 榜单是实时数据时，评语也读实时（同一份 ?ratings=true 结果，10 分钟内不再重复请求）
+        fetchAllReviews({ live: viewSource === 'live' }).then((all) => {
           reviewMap = {};
           (all || []).forEach((x) => { if (x && x.catId) reviewMap[String(x.catId)] = x; });
           paintPanel(reviewMap[catId]);
@@ -1259,15 +1287,9 @@ export async function renderRankTimeline(cats) {
     openSet.forEach((id) => { if (openers[id]) openers[id](true); });
   };
 
-  // 1) 先画本地缓存（若有过一次访问），秒出不空等
-  const cached = cachedRank();
-  if (cached && Array.isArray(cached.list) && cached.list.length) {
-    el.innerHTML = '<p class="hint">正在刷新最新评分…</p>';
-    paint(cached.list, false);
-  } else {
-    el.innerHTML = '<p class="hint">正在加载评分榜…</p>';
-  }
-  // 2) 后台拉最新，拿到后重绘（TTL 内走内存缓存，冷启动的等待被上一步的缓存盖住）
-  const res = await fetchRank(true);
-  if (res && Array.isArray(res.list) && res.list.length) paint(res.list, true);
+  // 1) 先给一份能立刻画的数据：本地缓存 → 站点静态快照（都免费、秒开），不空等
+  el.innerHTML = '<p class="hint">正在加载评分榜…</p>';
+  // 2) 实时榜在后台拉，拿到后通过 onUpdate 再重绘一次（旧代码把实时结果丢掉，页面永远显示旧快照）
+  const res = await fetchRank({ onUpdate: (live) => { paint(live.list, live.source); } });
+  if (res && Array.isArray(res.list) && res.list.length) paint(res.list, res.source);
 }
