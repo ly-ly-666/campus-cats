@@ -27,7 +27,18 @@ export function cachedRating(catId) {
   return null;
 }
 // 读取某猫的评分：{ avg, votes, myScore, rated, reviews:[{name,score,content,at}] }；带超时防卡死；Netlify 失败则回退站点快照
-export async function fetchRating(catId) {
+// 为省 Netlify 函数预算：缓存较新(10分钟内)直接返回不做后台刷新；较旧才后台刷新。避免同一猫被反复查看时重复打函数
+const RATE_CACHE_TTL = 10 * 60 * 1000; // 10 分钟内的缓存视为新鲜，不再请求
+export function fetchRating(catId) {
+  const hit = cachedRating(catId);
+  if (hit) {
+    const fresh = (Date.now() - (hit._t || 0)) < RATE_CACHE_TTL;
+    if (!fresh) _refreshRating(catId).catch(() => {}); // 缓存较旧 → 后台拉新但不阻塞 UI
+    return Promise.resolve(hit);
+  }
+  return _refreshRating(catId);
+}
+async function _refreshRating(catId) {
   try {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
@@ -36,6 +47,7 @@ export async function fetchRating(catId) {
     if (!r.ok) throw new Error('rate http ' + r.status);
     const data = await r.json();
     if (data && data.avg != null) {
+      data._t = Date.now();
       try { localStorage.setItem(RATE_KEY + '_' + catId, JSON.stringify(data)); } catch (e) {}
       return data;
     }
@@ -44,7 +56,7 @@ export async function fetchRating(catId) {
   try {
     const list = await readSnapshot();
     const s = snapByCat(list, catId);
-    if (s) { const data = { avg: s.avg, votes: s.votes, reviews: s.reviews || [], rated: false, myScore: 0, snap: true }; return data; }
+    if (s) { const data = { avg: s.avg, votes: s.votes, reviews: s.reviews || [], rated: false, myScore: 0, snap: true, _t: Date.now() }; return data; }
   } catch (e2) {}
   return null;
 }
@@ -61,6 +73,9 @@ export async function submitRating(catId, score, content, name) {
 const _rankCache = { data: null, ts: 0 };
 const RANK_TTL = 60 * 1000; // 60 秒内走缓存；后续进页显示缓存的同时后台刷新
 const RANK_KEY = 'ymcao_rank_cache_v1';
+// 排名优先读 GitHub Pages 的免费静态快照（不打 Netlify），仅每隔数小时才拉一次实时榜，压低积分消耗
+const RANK_NETLIFY_TTL = 6 * 60 * 60 * 1000; // 同一浏览器 6 小时内最多打一次 Netlify 实时排名
+let _netlifyRankTs = 0;
 export function cachedRank() {
   try {
     const raw = localStorage.getItem(RANK_KEY);
@@ -68,11 +83,11 @@ export function cachedRank() {
   } catch (e) {}
   return null;
 }
-export async function fetchRank(force) {
+async function _refreshRankFromNetlify() {
+  _netlifyRankTs = Date.now();
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
   try {
-    if (force !== true && _rankCache.data && (Date.now() - _rankCache.ts) < RANK_TTL) return _rankCache.data;
-    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
     const r = await fetch(RATE_API + '?rank=true', { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
     if (timer) clearTimeout(timer);
     if (!r.ok) return null;
@@ -84,6 +99,22 @@ export async function fetchRank(force) {
     }
     return data;
   } catch (e) { return null; }
+}
+export async function fetchRank(force) {
+  if (force !== true && _rankCache.data && (Date.now() - _rankCache.ts) < RANK_TTL) return _rankCache.data;
+  // 优先读免费静态快照（GitHub Pages，不产生 Netlify 调用），满足日常看榜
+  try {
+    const list = await readSnapshot();
+    if (list && list.length) {
+      const build = list.map((x) => ({ catId: x.catId, avg: x.avg, votes: x.votes }));
+      const data = { ok: true, list: build };
+      _rankCache.data = data; _rankCache.ts = Date.now();
+      try { localStorage.setItem(RANK_KEY, JSON.stringify({ list: build, t: Date.now() })); } catch (e) {}
+      if (Date.now() - _netlifyRankTs >= RANK_NETLIFY_TTL) _refreshRankFromNetlify().catch(() => {}); // 偶发后台刷新实时榜
+      return data;
+    }
+  } catch (e) {}
+  return _refreshRankFromNetlify();
 }
 
 /* ---------- 渲染：评分+评语组件（地图弹窗 / 档案页复用） ---------- */

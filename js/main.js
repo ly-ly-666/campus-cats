@@ -1,7 +1,8 @@
 ﻿// main.js — 入口模块（装配并启动应用）
-import { initMap, initMapSearch } from './map.js?v=20260904g';
-import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260904g';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260904o';
+import { initMap, initMapSearch } from './map.js?v=20260925b';
+import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260925b';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260925b';
+import { bulkLikeStats } from './likes.js?v=20260925b';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 async function loadData() {
@@ -139,6 +140,8 @@ async function boot() {
   renderEventsTimeline(cats);
   renderStoriesTimeline(cats, siteConfig);
   renderKnowledgeTimeline(knowledge, cats);
+  // 进首页就先批量拉一次全部点赞数（猫咪弹窗 + 故事列表共用这一次），避免后续逐个打 Netlify 函数
+  bulkLikeStats().catch(() => {});
 
   // 标签页
   bindTabs(

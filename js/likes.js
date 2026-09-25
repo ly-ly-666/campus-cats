@@ -8,9 +8,74 @@ const LIKES_API = (typeof window !== 'undefined' && window.YMCAO_LIKES_API)
   : 'https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes';
 
 const LS_KEY = 'ymaoditu_likes';
+const LS_LIKECOUNT_KEY = 'ymaoditu_like_counts_v1'; // 点赞数缓存：先显示缓存再后台刷新，避免每个按钮反复直连函数
 const localData = () => { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) { return {}; } };
 const saveLocal = (d) => { try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch (e) {} };
+const countCache = () => { try { return JSON.parse(localStorage.getItem(LS_LIKECOUNT_KEY) || '{}'); } catch (e) { return {}; } };
+const saveCountCache = (d) => { try { localStorage.setItem(LS_LIKECOUNT_KEY, JSON.stringify(d)); } catch (e) {} };
 
+// 点赞数读取：同会话 120 秒内复用缓存，避免每个按钮 no-store 反复打函数（地图/故事列表几十个赞按钮的重复直连是耗积分主因）
+const _countTTL = 120 * 1000;
+let _pendingLikes = null;
+// 批量点赞数预取：后端 ?stats=true 一次拉回全部猫咪+故事点赞，把「N 个按钮逐个打函数」压缩成 1 次调用。
+// 批量成功后，未出现在统计里的 id 视为 0 赞，不再逐条直连，是省 Netlify 积分的关键。
+let _bulkPromise = null;
+let _bulkLoaded = false;
+export function bulkLikeStats() {
+  if (!_bulkPromise) {
+    _bulkPromise = (async () => {
+      try {
+        const r = await fetch(LIKES_API + '?stats=true', { method: 'GET', cache: 'no-store' });
+        const j = await r.json();
+        if (!j || typeof j.stats !== 'object') return false;
+        const mine = localData();
+        const cc = countCache();
+        const now = Date.now();
+        for (const k in j.stats) {
+          const n = Number(j.stats[k]);
+          if (!Number.isFinite(n)) continue;
+          const raw = (k.indexOf('story_') === 0) ? k.slice(6) : k; // 后端故事的 key 带 story_ 前缀，前端用裸 id
+          cc[raw] = { likes: n, liked: !!mine[raw], t: now };
+        }
+        _bulkLoaded = true;
+        saveCountCache(cc);
+        return true;
+      } catch (e) { return false; }
+      finally { _bulkPromise = null; }
+    })();
+  }
+  return _bulkPromise;
+}
+function _countHit(id) {
+  const cc = countCache();
+  if (cc[id] && typeof cc[id].likes === 'number' && Date.now() - cc[id].t < _countTTL) return { likes: cc[id].likes, liked: !!cc[id].liked };
+  return null;
+}
+async function apiGetCached(id, kind) {
+  let hit = _countHit(id);
+  if (hit) return { likes: hit.likes, likedByMe: hit.liked };
+  // 尽量走一次批量 stats（多处并发的键在首次调用即触发，其余按钮共用同一次），批量命中则不逐条直连
+  if (!_bulkPromise) bulkLikeStats().catch(() => {});
+  if (_bulkPromise) { try { await _bulkPromise; } catch (e) {} }
+  hit = _countHit(id);
+  if (hit) return { likes: hit.likes, likedByMe: hit.liked };
+  if (_bulkLoaded) { // 批量统计里没有它 => 0 赞，本地缓存，不再直连函数
+    const mine = localData();
+    const cc = countCache(); cc[id] = { likes: 0, liked: !!mine[id], t: Date.now() }; saveCountCache(cc);
+    return { likes: 0, likedByMe: !!mine[id] };
+  }
+  // 批量不可用 -> 回退单条直连（保底，不阻塞功能）
+  if (_pendingLikes) { try { await _pendingLikes; } catch (e) {} return apiGetCached(id, kind); }
+  _pendingLikes = (async () => {
+    try {
+      const r = await fetch(LIKES_API + '?' + ((kind === 'story') ? 'storyId' : 'catId') + '=' + encodeURIComponent(id), { method: 'GET', cache: 'no-store' });
+      const j = await r.json();
+      if (j && typeof j.likes === 'number') { const cc = countCache(); cc[id] = { likes: j.likes, liked: !!j.likedByMe, t: Date.now() }; saveCountCache(cc); }
+      return j;
+    } finally { _pendingLikes = null; }
+  })();
+  return _pendingLikes;
+}
 async function apiGet(id, kind) {
   const param = (kind === 'story') ? 'storyId' : 'catId';
   const r = await fetch(LIKES_API + '?' + param + '=' + encodeURIComponent(id), { method: 'GET', cache: 'no-store' });
@@ -43,10 +108,12 @@ function renderLikeButton(container, id, kind) {
     els.btn.dataset.liked = liked ? '1' : '0';
   };
 
-  // 先读后端；失败则读本地降级
-  apiGet(id, kind).then((r) => {
+  // 先显示本地缓存（若有），再后台从后端刷新 —— 避免每个按钮都先等一轮网络
+  const cc = countCache();
+  if (cc[id] && typeof cc[id].likes === 'number') { count = cc[id].likes; liked = !!cc[id].liked; paint(); }
+  apiGetCached(id, kind).then((r) => {
     if (r && typeof r.likes === 'number') {
-      count = r.likes; liked = !!r.likedByMe; online = true;
+      count = r.likes; liked = !!r.likedByMe; online = true; paint();
     } else {
       degradedLoad();
     }
@@ -74,6 +141,7 @@ function renderLikeButton(container, id, kind) {
       animate();
       apiSend(id, kind, want).then((r) => {
         if (r && typeof r.likes === 'number') { count = r.likes; liked = !!r.likedByMe; paint(); }
+        const cc2 = countCache(); cc2[id] = { likes: count, liked: !!liked, t: Date.now() }; saveCountCache(cc2); // 更新缓存，减少后续重复请求
       }).catch(() => { /* 保持乐观值 */ });
     } else {
       const d = localData();
