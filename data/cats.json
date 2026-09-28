@@ -2650,13 +2650,21 @@
     "description": "",
     "story": "",
     "tags": [],
-    "status": "未绝育",
+    "status": "已绝育",
     "life": "在校",
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
     "age": "",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-09-27",
+        "text": "闯闯也绝育啦!过上了没有蛋蛋,但是和蛋蛋一样的生活",
+        "images": [
+          "images/cat036_event_1790603841343.jpg"
+        ]
+      }
+    ],
     "stories": [
       {
         "id": "s_1787929035230_xhszhq",
@@ -2804,7 +2812,7 @@
     "description": "",
     "story": "",
     "tags": [],
-    "status": "未绝育",
+    "status": "已绝育",
     "life": "在校",
     "firstSeen": "",
     "leftAt": "",
@@ -2907,8 +2915,8 @@
     "description": "",
     "story": "",
     "tags": [],
-    "status": "未绝育",
-    "life": "在校",
+    "status": "已绝育",
+    "life": "已领养",
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
@@ -2919,6 +2927,19 @@
         "text": "星星绝育归来,成功失去蛋蛋,听说绝育后开始躲着人了",
         "images": [
           "images/cat038_event_1788746278574.jpg"
+        ]
+      },
+      {
+        "date": "2026-09-28",
+        "text": "今天,星星被领养啦~也是过上吃喝不愁,有玩具玩的日子了",
+        "images": [
+          "images/cat038_event_1790603133107.jpg",
+          "images/cat038_event_1790603179724.jpg",
+          "images/cat038_event_1790603306217.jpg",
+          "images/cat038_event_1790603319819.jpg",
+          "images/cat038_event_1790603338042.jpg",
+          "images/cat038_event_1790603357610.jpg",
+          "images/cat038_event_1790603381454.jpg"
         ]
       }
     ],
@@ -3066,6 +3087,23 @@
           "images/cat001_story_1789659006768.jpg",
           "images/cat001_story_1789659022926.jpg",
           "images/cat001_story_1789659062872.jpg"
+        ]
+      },
+      {
+        "id": "s_1790603221332_pydnby",
+        "date": "2026-09-28",
+        "title": "我是星星, 我今天被领养啦!",
+        "content": "星星去到了新地方~拥有一个超级大萝卜猫抓板\n星星要幸福哦~我们会想你的!",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat038_story_1790603230612.jpg",
+          "images/cat038_story_1790603278569.jpg",
+          "images/cat038_story_1790603404336.jpg",
+          "images/cat038_story_1790603413496.jpg",
+          "images/cat038_story_1790603429303.jpg",
+          "images/cat038_story_1790603438586.jpg"
         ]
       }
     ]
@@ -4142,6 +4180,20 @@
           "images/cat067_story_1790352489478.jpg",
           "images/cat067_story_1790352513087.jpg",
           "images/cat067_story_1790352670723.jpg"
+        ]
+      },
+      {
+        "id": "s_1790604007987_mtl3jh",
+        "date": "2026-09-28",
+        "title": "小鸡毛吊单杠",
+        "content": "",
+        "cats": [
+          "cat067"
+        ],
+        "images": [
+          "images/cat067_story_1790604010762.jpg",
+          "images/cat067_story_1790604047967.jpg",
+          "images/cat067_story_1790604068926.jpg"
         ]
       }
     ]
