@@ -3,6 +3,7 @@ import { initMap, initMapSearch } from './map.js?v=20260925c';
 import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260925b';
 import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260926a';
 import { bulkLikeStats } from './likes.js?v=20260925b';
+import { initBoard } from './board.js?v=20261001b';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 // 不带 ?v=时间戳：那会让浏览器每次都重新下载（cats.json 约 135KB）。
@@ -166,6 +167,8 @@ async function boot() {
     }
   );
   renderRankTimeline(cats);
+  // 留言墙（弹幕 + 留言列表）：挂在「评分·留言墙」标签页里，与榜单同页
+  initBoard();
 
   // 从档案页点「返回排行榜」会带上 ?tab=rank，这里直接切到对应标签页
   try {

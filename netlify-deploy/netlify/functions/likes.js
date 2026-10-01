@@ -12,6 +12,12 @@
 //   POST {action:'add-comment', storyId, name, content} -> 追加评论，返回最新列表
 //   POST {action:'del-comment', storyId, commentId, adminKey} -> 删除评论（需口令）
 //
+// 留言墙（全局一条，key=board_messages）：
+//   GET  ?messages=true                 -> { ok, messages:[{id,name,content,at,likes,likedByMe}] }（最新在前）
+//   POST {action:'add-message', name, content} -> 追加留言，返回最新列表
+//   POST {action:'like-message', id, toggle}   -> 给某条留言点赞/取消，返回该条最新点赞数
+//   POST {action:'del-message', id, adminKey}  -> 删除留言（需口令）
+//
 // 访客身份用 IP+UA 哈希区分，非真实用户体系，仅用于避免同一访客重复计数。
 import { getStore } from '@netlify/blobs';
 
@@ -27,6 +33,22 @@ const HEADERS = {
 const ADMIN_KEY = process.env.ADMIN_KEY || 'lyf48d7f1e719409';
 const MAX_COMMENTS = 100;   // 每篇故事最多保留多少条（超出丢弃最旧的）
 const COOLDOWN_MS = 20000;  // 防刷：同一访客 20 秒内只能发一条评论
+
+// 留言墙
+const MSG_KEY = 'board_messages';
+const MAX_MESSAGES = 300;      // 留言墙最多保留多少条
+const MSG_MAX_LEN = 60;        // 单条留言长度上限（与前端 maxlength 一致）
+const MSG_COOLDOWN_MS = 20000; // 防刷：同一访客 20 秒内只能发一条留言
+
+// 对外只暴露必要字段，访客标识 vk 不下发；likes 是点赞人数，likedByMe 表示本访客点没点过
+const publicMsg = (m, vk) => {
+  const box = (m.likes && typeof m.likes === 'object') ? m.likes : {};
+  return {
+    id: m.id, name: m.name, content: m.content, at: m.at,
+    likes: Object.keys(box).length,
+    likedByMe: !!(vk && box[vk]),
+  };
+};
 
 function json(status, obj) {
   return new Response(JSON.stringify(obj), { status, headers: HEADERS });
@@ -66,7 +88,7 @@ export default async (req) => {
         const page = { cursor: cursor || undefined };
         const listing = await store.list(page);
         for (const item of listing.blobs || []) {
-          if (item.key.startsWith('comment_') || item.key.startsWith('rate_')) continue; // 评论/评语不计入点赞统计
+          if (item.key.startsWith('comment_') || item.key.startsWith('rate_') || item.key === MSG_KEY) continue; // 评论/评语/留言不计入点赞统计
           const s = await store.get(item.key).catch(() => null);
           if (!s) continue;
           let count = 0;
@@ -223,6 +245,56 @@ export default async (req) => {
       } while (cursor);
       list.sort((a, b) => b.avg - a.avg || b.votes - a.votes);
       return json(200, { ok: true, list: list.map((o) => ({ catId: o.catId, avg: +o.avg.toFixed(1), votes: o.votes })) });
+    }
+
+    // ---- 留言墙 GET ?messages=true ----
+    if (url.searchParams.get('messages') === 'true') {
+      const arr = await read(store, MSG_KEY, []);
+      const vk = visitorKey(req);
+      return json(200, { ok: true, messages: arr.map((m) => publicMsg(m, vk)) });
+    }
+
+    // ---- 发留言 POST {action:'add-message', name, content} ----
+    if (body.action === 'add-message') {
+      const content = String(body.content || '').trim().slice(0, MSG_MAX_LEN);
+      const name = String(body.name || '').trim().slice(0, 12) || '匿名猫友';
+      if (!content) return json(400, { ok: false, error: '留言内容不能为空' });
+      const arr = await read(store, MSG_KEY, []);
+      const vk = visitorKey(req);
+      // 冷却防刷：同一访客 20 秒内只能发一条
+      const mine = arr.filter((m) => m.vk === vk).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+      if (mine && (Date.now() - (mine.at || 0)) < MSG_COOLDOWN_MS) {
+        return json(429, { ok: false, error: '发送太快啦，歇 20 秒再发～' });
+      }
+      arr.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, content, at: Date.now(), vk, likes: {} });
+      const trimmed = arr.slice(0, MAX_MESSAGES);
+      await store.set(MSG_KEY, JSON.stringify(trimmed));
+      return json(200, { ok: true, messages: trimmed.map((m) => publicMsg(m, vk)) });
+    }
+
+    // ---- 给留言点赞/取消 POST {action:'like-message', id, toggle} ----
+    if (body.action === 'like-message') {
+      const id = String(body.id || '');
+      if (!id) return json(400, { ok: false, error: '缺少留言 id' });
+      const arr = await read(store, MSG_KEY, []);
+      const m = arr.find((x) => String(x.id) === id);
+      if (!m) return json(404, { ok: false, error: '这条留言已经不在了' });
+      if (!m.likes || typeof m.likes !== 'object') m.likes = {};
+      const vk = visitorKey(req);
+      if (body.toggle !== false) m.likes[vk] = 1; else delete m.likes[vk];
+      await store.set(MSG_KEY, JSON.stringify(arr));
+      return json(200, { ok: true, id, likes: Object.keys(m.likes).length, liked: !!m.likes[vk] });
+    }
+
+    // ---- 删除留言 POST {action:'del-message', id, adminKey} ----
+    if (body.action === 'del-message') {
+      if (String(body.adminKey || '') !== ADMIN_KEY) return json(403, { ok: false, error: '口令不对，无法删除' });
+      const id = String(body.id || '');
+      const arr = await read(store, MSG_KEY, []);
+      const vk = visitorKey(req);
+      const next = arr.filter((m) => String(m.id) !== id);
+      if (next.length !== arr.length) await store.set(MSG_KEY, JSON.stringify(next));
+      return json(200, { ok: true, messages: next.map((m) => publicMsg(m, vk)) });
     }
 
     // ---- 点赞 ----

@@ -45,7 +45,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="./style.css?v=36">
+  <link rel="stylesheet" href="./style.css?v=40">
 </head>
 <body>
   <!-- 加载页 -->
@@ -64,7 +64,7 @@
       <button class="tab-btn" data-tab="events" type="button">📅 最近事件</button>
       <button class="tab-btn" data-tab="stories" type="button">📖 故事集</button>
       <button class="tab-btn" data-tab="knowledge" type="button">📚 猫咪小知识</button>
-      <button class="tab-btn" data-tab="rank" type="button">🏆 猫咪评分榜</button>
+      <button class="tab-btn" data-tab="rank" type="button">🏆 评分·留言墙</button>
       <a class="tab-btn" href="./admin.html" title="在线编辑数据并自动部署" style="display:none">⚙️ 编辑</a>
     </nav>
   </header>
@@ -177,8 +177,61 @@
       <div id="knowledge-timeline" class="knowledge-timeline"></div>
     </section>
 
-    <!-- 猫咪评分榜视图 -->
+    <!-- 猫咪评分榜 + 留言墙视图 -->
     <section id="rank-view" class="view">
+      <!-- 留言墙：弹幕 + 写留言 + 留言列表，和榜单同页，不再多占一个标签按钮 -->
+      <div class="board-zone">
+        <div class="board-wall" id="board-wall">
+          <div class="wall-moon" aria-hidden="true"></div>
+          <div class="dm-wall" id="dm-wall"></div>
+          <!-- 墙上还没有留言时的引导语：不是留言，别让它长得像一条弹幕 -->
+          <div class="wall-empty" id="wall-empty">墙上还没有留言<br>点下面「✍️ 写一条留言」，你的话就会飘过去 →</div>
+          <div class="wall-head">
+            <span class="wall-title"><span class="wall-dot"></span>💬 留言墙</span>
+            <span class="wall-ctrl">
+              <button class="wall-btn" id="dm-toggle" type="button">弹幕 开</button>
+              <button class="wall-btn" id="dm-pause" type="button">⏸ 暂停</button>
+            </span>
+          </div>
+          <div class="wall-hint">点弹幕可点赞 · 说点什么让它飘过去 →</div>
+          <!-- 点弹幕弹出的小气泡：显示这条留言全文 + 点赞 -->
+          <div class="dm-pop" id="dm-pop" hidden>
+            <div class="dmp-name" id="dmp-name"></div>
+            <div class="dmp-text" id="dmp-text"></div>
+            <div class="dmp-foot">
+              <button class="dmp-like" id="dmp-like" type="button" aria-pressed="false">❤️ <b id="dmp-like-n">0</b></button>
+              <span class="dmp-tip">点空白处继续飘</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 两个入口默认收起，点开才展开；同一时间只开一个 -->
+        <div class="board-tabs">
+          <button class="board-tab" id="wall-write-btn" type="button" aria-expanded="false">✍️ 写一条留言</button>
+          <button class="board-tab" id="bl-toggle" type="button" aria-expanded="false">
+            <span>💬 全部留言</span><b class="bt-count" id="bl-count">—</b><i class="bt-caret">▾</i>
+          </button>
+        </div>
+
+        <div class="board-composer" id="board-composer" hidden>
+          <div class="bc-title">✍️ 写一条留言</div>
+          <div class="bc-row">
+            <input id="bc-name" class="bc-name" type="text" maxlength="12" placeholder="你的昵称（选填）" autocomplete="off">
+            <span class="bc-count"><b id="bc-count">0</b>/60</span>
+          </div>
+          <textarea id="bc-text" class="bc-text" maxlength="60" rows="2" placeholder="想对猫咪们说的话…"></textarea>
+          <div class="bc-actions">
+            <button class="bc-send" id="bc-send" type="button">🚀 发送，让它飘过留言墙</button>
+          </div>
+          <p class="bc-note">留言会公开显示在留言墙上，请文明发言；站长会删除不当内容。</p>
+        </div>
+
+        <div class="board-list" id="bl-body" hidden>
+          <div id="bl-items"></div>
+          <button class="bl-more" id="bl-more" type="button" hidden>展开剩余 ▾</button>
+        </div>
+      </div>
+
       <div class="rank-tip">💡 若在微信内榜单/评论加载慢或打不开，点右上角「···」→「在浏览器中打开」，加载更快更全</div>
       <div id="rank-list" class="rank-list"></div>
     </section>
@@ -290,6 +343,6 @@
   </script>
 
   <!-- 入口模块（?v= 版本号：改版时递增，防止浏览器/CDN 缓存旧 JS 导致加载失败） -->
-  <script type="module" src="./js/main.js?v=20260926a"></script>
+  <script type="module" src="./js/main.js?v=20261001b"></script>
 </body>
 </html>

@@ -1149,3 +1149,259 @@ html.splash-skip .splash-overlay { display: none; }
 .sb-copy { flex-shrink: 0; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--primary, #f59e0b); background: #fff; color: var(--primary-dark, #b45309); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .sb-copy:hover { background: var(--primary, #f59e0b); color: #fff; }
 .sb-note { font-size: 11.5px; color: var(--muted, #8a857d); }
+
+/* ================= 留言墙（并入「评分·留言墙」标签页） ================= */
+/* 与 .rank-list / .rank-tip 同宽同边距，视觉上属于同一栏内容 */
+.board-zone {
+  width: 100%; max-width: 720px; margin: 0 auto;
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+}
+
+/* 星夜弹幕墙 */
+.board-wall {
+  position: relative;
+  height: 196px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #3a2f55;
+  box-shadow: 0 6px 18px rgba(38, 26, 60, .20);
+  background:
+    radial-gradient(1200px 300px at 12% -25%, rgba(255, 183, 77, .30), transparent 62%),
+    radial-gradient(900px 260px at 92% 118%, rgba(129, 120, 255, .26), transparent 64%),
+    linear-gradient(180deg, #1b1b3a 0%, #2a2247 44%, #3a2a44 74%, #4a3140 100%);
+  margin: 0 0 10px;
+}
+/* 星星：两层径向小点平铺，缓慢呼吸 */
+.board-wall::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 24px 32px, rgba(255,255,255,.95), transparent),
+    radial-gradient(1.1px 1.1px at 96px 18px, rgba(255,255,255,.80), transparent),
+    radial-gradient(1.4px 1.4px at 168px 74px, rgba(255,255,255,.90), transparent),
+    radial-gradient(1px 1px at 58px 108px, rgba(255,255,255,.70), transparent),
+    radial-gradient(1.3px 1.3px at 206px 128px, rgba(255,255,255,.85), transparent),
+    radial-gradient(1px 1px at 132px 146px, rgba(255,255,255,.65), transparent),
+    radial-gradient(1.7px 1.7px at 214px 40px, rgba(255,255,255,.95), transparent),
+    radial-gradient(1px 1px at 12px 140px, rgba(255,255,255,.60), transparent);
+  background-size: 240px 160px;
+  background-repeat: repeat;
+  opacity: .55;
+  animation: wall-twinkle 4.5s ease-in-out infinite alternate;
+}
+@keyframes wall-twinkle { from { opacity: .35; } to { opacity: .80; } }
+/* 地平线暖光 */
+.board-wall::after {
+  content: ''; position: absolute; left: -10%; right: -10%; bottom: -30px; height: 84px; z-index: 1;
+  background: radial-gradient(closest-side, rgba(255, 183, 77, .38), transparent 72%);
+  pointer-events: none;
+}
+.wall-moon {
+  position: absolute; bottom: -14px; right: 44px; z-index: 1;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff8e6, #ffe9b8 44%, #f3d68f 70%, #e6c072 100%);
+  box-shadow: 0 0 24px 6px rgba(255, 226, 150, .34), 0 0 58px 18px rgba(255, 214, 120, .13);
+  opacity: .92;
+}
+.dm-wall { position: absolute; left: 0; right: 0; top: 40px; bottom: 26px; z-index: 2; overflow: hidden; }
+/* 墙上还没有留言时的引导语 */
+.wall-empty {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  z-index: 2; padding: 0 20px; text-align: center;
+  font-size: 12.5px; line-height: 1.95; color: rgba(255, 255, 255, .74);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+  pointer-events: none;
+}
+.wall-empty[hidden] { display: none; }
+
+.dm {
+  position: absolute; left: 100%; top: 0;
+  white-space: nowrap;
+  font-size: 12.5px; line-height: 1.5;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .18);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+  will-change: transform;
+  animation-name: dm-move;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  /* 弹幕要能点（点一下暂停并弹出这条留言），所以不能再是 none */
+  pointer-events: auto;
+  cursor: pointer;
+}
+.dm.mine { background: rgba(245, 158, 11, .34); border-color: rgba(255, 214, 140, .65); }
+/* 被点开的那条：高亮停住 */
+.dm.picked { background: rgba(245, 158, 11, .52); border-color: rgba(255, 214, 140, .95); }
+.dm-like { margin-left: 5px; font-size: 11px; opacity: .92; }
+@keyframes dm-move { to { transform: translateX(calc(-100% - var(--cw, 100vw))); } }
+
+/* 点弹幕弹出的小气泡（全文 + 点赞） */
+.dm-pop {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 5; width: min(88%, 330px);
+  background: rgba(22, 18, 40, .96);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 12px; padding: 10px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  color: #fff;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.dm-pop[hidden] { display: none; }
+.dmp-name { font-size: 11.5px; font-weight: 700; color: #ffd9a8; margin-bottom: 4px; }
+.dmp-text { font-size: 13px; line-height: 1.6; word-break: break-word; }
+.dmp-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+.dmp-like {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .10);
+  color: #fff; font-size: 12.5px; font-weight: 700; font-family: inherit;
+  padding: 4px 11px; border-radius: 999px; cursor: pointer;
+  transition: background .15s, transform .12s;
+}
+.dmp-like:hover { background: rgba(255, 255, 255, .20); }
+.dmp-like:active { transform: scale(.94); }
+.dmp-like.on { background: rgba(225, 29, 72, .88); border-color: rgba(255, 160, 180, .7); }
+.dmp-like b { font-size: 12px; }
+.dmp-like[hidden] { display: none; }
+.dmp-tip { font-size: 10.5px; color: rgba(255, 255, 255, .55); }
+
+.wall-head {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 11px;
+}
+.wall-title {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 700; color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+}
+.wall-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, .25);
+  animation: wall-pulse 1.8s ease-in-out infinite;
+}
+@keyframes wall-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.wall-ctrl { display: flex; gap: 6px; flex-shrink: 0; }
+.wall-btn {
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .30);
+  background: rgba(0, 0, 0, .30);
+  color: #fff; font-size: 11.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  transition: background .15s, opacity .15s;
+}
+.wall-btn:hover { background: rgba(0, 0, 0, .48); }
+.wall-btn.off { opacity: .52; }
+.wall-hint {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  padding: 6px 11px; text-align: right;
+  font-size: 11px; color: rgba(255, 255, 255, .62);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+  pointer-events: none;
+}
+
+/* 两个入口（写留言 / 全部留言）：默认都收起，点开才展开 */
+.board-tabs { display: flex; gap: 8px; margin: 0 0 10px; }
+.board-tab {
+  flex: 1 1 0; min-width: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 12px; border-radius: 12px;
+  border: 1px solid #f0dcb4; background: #fffdf8; color: var(--primary-dark);
+  font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+.board-tab:hover { background: #fff7ed; }
+.board-tab[aria-expanded="true"] { background: #fff1dc; border-color: #f5c76d; }
+.bt-count { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.bt-caret { font-size: 10px; font-style: normal; transition: transform .2s; }
+.board-tab[aria-expanded="true"] .bt-caret { transform: rotate(180deg); }
+.board-composer {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 13px 11px; margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(120, 100, 70, .06);
+}
+.board-composer[hidden] { display: none; }
+.bc-title { font-size: 13px; font-weight: 700; margin-bottom: 9px; }
+.bc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.bc-name {
+  flex: 1; min-width: 0;
+  padding: 8px 11px; border-radius: 10px;
+  border: 1px solid var(--border); background: #fffdfa;
+  font-size: 13px; font-family: inherit; color: var(--text);
+}
+.bc-name:focus, .bc-text:focus { outline: none; border-color: var(--primary); background: #fff; }
+.bc-count { font-size: 11.5px; color: var(--muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.bc-text {
+  width: 100%; resize: vertical;
+  padding: 9px 11px; border-radius: 10px;
+  border: 1px solid var(--border); background: #fffdfa;
+  font-size: 13.5px; line-height: 1.6; font-family: inherit; color: var(--text);
+}
+.bc-actions { display: flex; justify-content: flex-end; margin-top: 9px; }
+.bc-send {
+  border: none; border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff; font-size: 13.5px; font-weight: 700;
+  padding: 10px 20px; cursor: pointer; font-family: inherit;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, .35);
+  transition: transform .15s, box-shadow .15s;
+}
+.bc-send:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(245, 158, 11, .45); }
+.bc-send:active { transform: scale(.98); }
+.bc-send:disabled { opacity: .6; cursor: default; transform: none; }
+.bc-note { font-size: 11.5px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
+
+/* 留言列表（默认收起；展开后默认只显示 3 条） */
+.board-list { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.board-list[hidden] { display: none; }
+.msg { display: flex; gap: 10px; padding: 11px 14px; border-bottom: 1px solid #f4efe6; }
+.msg:last-child { border-bottom: none; }
+.msg-empty { color: var(--muted); font-size: 13px; }
+.msg-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: #ffd9a8; color: #7c4a1e;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700;
+}
+.msg-body { flex: 1; min-width: 0; }
+.msg-top { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.msg-name { font-size: 13px; font-weight: 700; }
+.msg-time { font-size: 11px; color: var(--muted); }
+.msg-text { font-size: 13.5px; line-height: 1.65; margin-top: 3px; word-break: break-word; }
+/* 列表每条右侧的点赞 */
+.msg-like {
+  flex-shrink: 0; align-self: flex-start;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
+  min-width: 34px; padding: 3px 5px; border: none; border-radius: 9px;
+  background: transparent; cursor: pointer; font-family: inherit;
+  font-size: 13px; line-height: 1.1; color: var(--muted);
+  transition: background .15s, transform .12s;
+}
+.msg-like:hover { background: #fff1f2; }
+.msg-like:active { transform: scale(.9); }
+.msg-like b { font-size: 10.5px; font-weight: 700; }
+.msg-like.on { color: #e11d48; }
+.bl-more {
+  width: 100%; padding: 10px; border: none; border-top: 1px solid var(--border);
+  background: #fff; color: var(--primary-dark); font-size: 12.5px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.bl-more:hover { background: #fff7ed; }
+.bl-more[hidden] { display: none; }
+
+/* 留言墙窄屏：压矮墙体、按钮铺满，避免横向溢出 */
+@media (max-width: 600px) {
+  .board-zone { padding: 8px 10px 0; }
+  .board-wall { height: 168px; border-radius: 12px; }
+  .dm { font-size: 12px; padding: 2px 9px; }
+  .wall-moon { width: 46px; height: 46px; right: 24px; }
+  .wall-hint { font-size: 10.5px; }
+  .board-tab { font-size: 12px; padding: 9px 8px; gap: 4px; }
+  .bt-count { font-size: 11px; }
+  .bc-send { width: 100%; }
+  .msg { padding: 10px 12px; }
+}
