@@ -409,6 +409,29 @@
           "images/cat001_story_1790352788031.jpg",
           "images/cat001_story_1790353403725.jpg"
         ]
+      },
+      {
+        "id": "s_1791215451278_tullch",
+        "date": "2026-10-05",
+        "title": "小白减肥日记2!",
+        "content": "应该算小有成效吧~嗯....",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1791215469540.jpg",
+          "images/cat001_story_1791215477636.jpg",
+          "images/cat001_story_1791215484687.jpg",
+          "images/cat001_story_1791215492095.jpg",
+          "images/cat001_story_1791215499280.jpg",
+          "images/cat001_story_1791215505278.jpg",
+          "images/cat001_story_1791215515186.jpg",
+          "images/cat001_story_1791215531863.jpg",
+          "images/cat001_story_1791215539041.jpg",
+          "images/cat001_story_1791215551825.jpg",
+          "images/cat001_story_1791215560474.jpg",
+          "images/cat001_story_1791215568383.jpg"
+        ]
       }
     ]
   },
