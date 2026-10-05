@@ -1307,6 +1307,18 @@
           "images/cat009_story_1789311288166.jpg",
           "images/cat009_story_1789311297003.jpg"
         ]
+      },
+      {
+        "id": "s_1791214815894_oldg4t",
+        "date": "2026-10-05",
+        "title": "奶油~",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1791214817953.jpg"
+        ]
       }
     ]
   },
@@ -1745,6 +1757,21 @@
           "images/cat017_story_1789223034986.jpg",
           "images/cat017_story_1789223042607.jpg"
         ]
+      },
+      {
+        "id": "s_1791214857434_fga2o0",
+        "date": "2026-10-05",
+        "title": "至今无人敢跟当姐握手",
+        "content": "可能是当姐的天然抵抗力,或者说些许武力",
+        "cats": [
+          "cat017"
+        ],
+        "images": [
+          "images/cat017_story_1791214860453.jpg",
+          "images/cat017_story_1791214873199.jpg",
+          "images/cat017_story_1791214886224.jpg",
+          "images/cat017_story_1791214899511.jpg"
+        ]
       }
     ]
   },
@@ -2085,6 +2112,23 @@
           "images/cat020_story_1789221186775.jpg",
           "images/cat020_story_1789221285613.jpg",
           "images/cat020_story_1789221298049.jpg"
+        ]
+      },
+      {
+        "id": "s_1791214645107_iutd0u",
+        "date": "2026-10-05",
+        "title": "没人的学校就是爽,没人来打扰咪",
+        "content": "野人们终于回去了",
+        "cats": [
+          "cat020"
+        ],
+        "images": [
+          "images/cat020_story_1791214698071.jpg",
+          "images/cat020_story_1791214706044.jpg",
+          "images/cat020_story_1791214725945.jpg",
+          "images/cat020_story_1791214734663.jpg",
+          "images/cat020_story_1791214743091.jpg",
+          "images/cat020_story_1791214753068.jpg"
         ]
       }
     ]
@@ -3779,6 +3823,20 @@
         "images": [
           "images/cat060_story_1788747011396.jpg"
         ]
+      },
+      {
+        "id": "s_1791214960314_eauonj",
+        "date": "2026-10-05",
+        "title": "更新一手外国佬的动态",
+        "content": "",
+        "cats": [
+          "cat060"
+        ],
+        "images": [
+          "images/cat060_story_1791214983165.jpg",
+          "images/cat060_story_1791214989388.jpg",
+          "images/cat060_story_1791214998236.jpg"
+        ]
       }
     ]
   },
@@ -4026,6 +4084,25 @@
           "images/cat065_story_1789223264776.jpg",
           "images/cat065_story_1789223270900.jpg",
           "images/cat065_story_1789223278753.jpg"
+        ]
+      },
+      {
+        "id": "s_1791215024469_fn5b8z",
+        "date": "2026-10-05",
+        "title": "一只大鸡腿",
+        "content": "",
+        "cats": [
+          "cat065"
+        ],
+        "images": [
+          "images/cat065_story_1791215041888.jpg",
+          "images/cat065_story_1791215049610.jpg",
+          "images/cat065_story_1791215061043.jpg",
+          "images/cat065_story_1791215066850.jpg",
+          "images/cat065_story_1791215075221.jpg",
+          "images/cat065_story_1791215083723.jpg",
+          "images/cat065_story_1791215143842.jpg",
+          "images/cat065_story_1791215150655.jpg"
         ]
       }
     ]
