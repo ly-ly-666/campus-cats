@@ -87,6 +87,13 @@
           "images/cat001_event_1790351897172.jpg",
           "images/cat001_event_1790351911569.jpg"
         ]
+      },
+      {
+        "date": "2026-10-09",
+        "text": "大家有没有见过乔乔~最近在花坛都见不到乔乔了",
+        "images": [
+          "images/cat001_event_1791731551947.jpg"
+        ]
       }
     ],
     "stories": [
@@ -2981,6 +2988,19 @@
           "images/cat037_story_1790352992463.jpg",
           "images/cat037_story_1790352999690.jpg"
         ]
+      },
+      {
+        "id": "s_1791731361981_3ost49",
+        "date": "2026-10-11",
+        "title": "星星和包包在一起吃饭",
+        "content": "",
+        "cats": [
+          "cat038",
+          "cat037"
+        ],
+        "images": [
+          "images/cat038_story_1791731378427.jpg"
+        ]
       }
     ]
   },
@@ -2999,7 +3019,7 @@
     "story": "",
     "tags": [],
     "status": "已绝育",
-    "life": "已领养",
+    "life": "在校",
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
@@ -3023,6 +3043,14 @@
           "images/cat038_event_1790603338042.jpg",
           "images/cat038_event_1790603357610.jpg",
           "images/cat038_event_1790603381454.jpg"
+        ]
+      },
+      {
+        "date": "2026-10-06",
+        "text": "星星由于在新家一直忧郁嚎叫,不适应,现在是在校状态啦",
+        "images": [
+          "images/cat038_event_1791731331857.jpg",
+          "images/cat038_event_1791731353722.jpg"
         ]
       }
     ],
@@ -3187,6 +3215,19 @@
           "images/cat038_story_1790603413496.jpg",
           "images/cat038_story_1790603429303.jpg",
           "images/cat038_story_1790603438586.jpg"
+        ]
+      },
+      {
+        "id": "s_1791731361981_3ost49",
+        "date": "2026-10-11",
+        "title": "星星和包包在一起吃饭",
+        "content": "",
+        "cats": [
+          "cat038",
+          "cat037"
+        ],
+        "images": [
+          "images/cat038_story_1791731378427.jpg"
         ]
       }
     ]
