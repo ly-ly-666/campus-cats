@@ -25,6 +25,12 @@
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
     .card h2 { font-size: 15px; margin-bottom: 6px; color: var(--primary-dark); }
     .hint { font-size: 12px; color: var(--muted); margin: 4px 0 10px; line-height: 1.7; }
+    /* 自动保存状态徽标（固定右下角，添加内容后自动落盘） */
+    .save-status { position: fixed; right: 14px; bottom: 14px; z-index: 99999; background: #fff; border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 6px 12px; border-radius: 999px; box-shadow: 0 2px 10px rgba(0,0,0,.08); max-width: 78vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
+    .save-status.pending { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
+    .save-status.saving { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .save-status.ok { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .save-status.err { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
     .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
     .btn:hover { background: #fff7ed; }
     .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
@@ -59,6 +65,10 @@
     .catcard .nick { color: var(--muted); font-size: 12px; margin-left: 4px; }
     .catcard .meta { font-size: 12px; color: var(--muted); margin: 4px 0; }
     .catcard .ops { display: flex; gap: 6px; margin-top: 6px; }
+    /* 已隐藏的猫咪：公开站不展示，这里置灰提醒 */
+    .catcard.off { background: #f7f5f2; }
+    .catcard.off .th img { filter: grayscale(1); opacity: .5; }
+    .catcard .off-badge { background: #57534e; color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
 
     .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
     .modal-bg.open { display: flex; }
@@ -219,6 +229,8 @@
   </style>
 </head>
 <body>
+  <!-- 自动保存状态徽标 -->
+  <div class="save-status" id="save-status" aria-live="polite">尚未改动</div>
   <div class="workbench">
     <aside class="wb-side">
       <div class="wb-brand">🐱 校园猫<br>本地管理端</div>
@@ -249,7 +261,7 @@
           <p class="hint">
             1️⃣ 先点「📁 选择项目文件夹」，选到本项目所在文件夹（一般会自动关联）<br>
             2️⃣ 从左侧切换到「🗺️ 地图编辑 / 🐱 猫咪管理 / 🪢 关系管理 / 📖 故事集」，每个功能独立一页，编辑区更宽敞<br>
-            3️⃣ 改完点「💾 保存到本地」；全部完成后到「🚀 部署到 GitHub」页填写仓库信息并推送<br>
+            3️⃣ 添加 / 修改内容（加图片、加故事、加事件等）会<b>自动保存到本地</b>，右下角有状态提示，不用再担心忘记点保存；也可以随时点「💾 保存到本地」手动保存一次<br>
             4️⃣ 编辑猫咪时，点「＋ 添加猫咪」或某只猫的「编辑」会打开加宽编辑窗，字段一目了然
           </p>
         </div>
@@ -268,9 +280,13 @@
       <section class="page" data-page="cats">
         <div class="page-head">
           <h1>🐱 猫咪管理</h1>
-          <button class="btn btn-primary" id="btn-add">＋ 添加猫咪</button>
+          <div class="row" style="margin-top:0;gap:8px;">
+            <button class="btn" id="btn-filter-hidden">👁️ 只看已隐藏</button>
+            <button class="btn btn-primary" id="btn-add">＋ 添加猫咪</button>
+          </div>
         </div>
         <div class="card">
+          <p class="hint">点卡片上的「🚫 隐藏」可让这只猫<b>整个内容都不在公开网站上出现</b>（地图、列表、关系图、排行榜、档案页），数据仍保留在本地，随时点「👁️ 恢复展示」还原。</p>
           <div class="field" style="margin-top:0;"><input id="admin-cat-search" type="search" placeholder="🔍 搜索猫咪（名字 / 外号 / 毛色 / 区域）" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;"></div>
           <div id="cats-list" class="catcards"><p class="hint">请先选择项目文件夹。</p></div>
         </div>
@@ -310,11 +326,11 @@
         <div class="page-head"><h1>📖 故事集</h1></div>
         <div class="card">
           <h2>故事置顶</h2>
-          <p class="hint">点击故事右侧「📌 置顶」把它固定到公开站故事集最前面（<b style="color:#e11d48;">最多 3 篇</b>）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。改完点下方「💾 保存到本地」，公开站刷新即可预览。</p>
+          <p class="hint">点击故事右侧「📌 置顶」把它固定到公开站故事集最前面（<b style="color:#e11d48;">最多 3 篇</b>）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。置顶改动会<b>自动保存</b>，公开站刷新即可预览。</p>
           <div id="story-order-list" class="story-order-list"></div>
           <div class="row" style="margin-top:10px;">
             <button class="btn btn-primary" id="btn-save-story-order">💾 保存到本地</button>
-            <span class="hint" id="story-order-save-tip" style="align-self:center;">置顶/编辑后记得点这里保存</span>
+            <span class="hint" id="story-order-save-tip" style="align-self:center;">置顶会自动保存，也可点这里手动保存</span>
           </div>
           <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用右侧 ▲▼ 调整先后；想换掉某篇，点「📌 置顶 N」取消后再置顶新的即可。</p>
         </div>
@@ -350,7 +366,7 @@
           <div id="knowledge-list" class="knowledge-list"></div>
           <div class="row" style="margin-top:10px;">
             <button class="btn btn-primary" id="btn-save-knowledge">💾 保存到本地</button>
-            <span class="hint" id="knowledge-save-tip" style="align-self:center;">编辑 / 增删后记得点这里保存</span>
+            <span class="hint" id="knowledge-save-tip" style="align-self:center;">编辑 / 增删会自动保存，也可点这里手动保存</span>
           </div>
         </div>
       </section>
@@ -448,6 +464,14 @@
       <h3 id="modal-title">编辑猫咪</h3>
       <div id="cat-status-banner"></div>
       <div class="field" style="margin-bottom:10px;">
+        <label>👁️ 网站展示</label>
+        <select id="f-visible" style="max-width:260px;">
+          <option value="1">✅ 展示（公开站正常显示这只猫）</option>
+          <option value="0">🚫 隐藏（公开站不显示它的全部内容）</option>
+        </select>
+        <p class="hint" style="margin:4px 0 0 0;">选「隐藏」后，这只猫的地图标记、猫咪列表、关系图、排行榜和档案页都不再出现在公开网站上；本地数据和图片会完整保留，随时改回「展示」即可恢复。</p>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
         <label>📷 头像</label>
         <div class="row" style="margin-top:0;">
           <button type="button" class="btn btn-sm" id="btn-avatar">🖼️ 选择头像</button>
@@ -540,6 +564,6 @@
 
   <script src="./vendor/leaflet.min.js"></script>
   <script src="./vendor/cropper.min.js"></script>
-  <script src="./js/local-admin.js"></script>
+  <script src="./js/local-admin.js?v=20261016a"></script>
 </body>
 </html>

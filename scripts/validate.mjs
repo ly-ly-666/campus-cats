@@ -122,6 +122,11 @@ for (let i = 0; i < cats.length; i++) {
   if (c.photo !== undefined && c.photo !== null && c.photo !== "" && typeof c.photo !== "string") {
     error(idx + " photo 应为字符串路径: " + JSON.stringify(c.photo));
   }
+
+  // visible 可选布尔（false = 公开站不展示这只猫的全部内容；不写或 true 均为正常展示）
+  if (c.visible !== undefined && typeof c.visible !== "boolean") {
+    error(idx + " visible 应为布尔值: " + JSON.stringify(c.visible));
+  }
 }
 
 // ---------- validate relations ----------

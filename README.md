@@ -100,6 +100,7 @@ python -m http.server 4173
 | `status` | ✅ | 仅限 `已绝育` 或 `未绝育` |
 | `firstSeen` | ✅ | 首次发现时间，格式 `YYYY-MM` |
 | `caretaker` | ❌ | 投喂人/照料人 |
+| `visible` | ❌ | 可选布尔值；设为 `false` 时公开站不展示这只猫的全部内容（地图/列表/关系图/排行榜/档案页），本地管理端「🐱 猫咪管理」页可一键切换 |
 
 ### data/relations.json（关系数据）
 

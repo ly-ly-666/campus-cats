@@ -36,6 +36,14 @@ async function loadData() {
   } catch (e) {
     knowledge = [];
   }
+
+  // 本地管理端可把某只猫设为「隐藏」（visible: false）：公开站不展示它的任何内容
+  // （地图标记、猫咪列表、关系图、排行榜、档案页），关系数据里指向它的连线一并去掉，避免悬空节点。
+  if (Array.isArray(cats)) cats = cats.filter((c) => c && c.visible !== false);
+  if (Array.isArray(relations)) {
+    const shownIds = new Set(cats.map((c) => c.id));
+    relations = relations.filter((r) => r && shownIds.has(r.from) && shownIds.has(r.to));
+  }
   return { cats, relations, siteConfig, knowledge };
 }
 

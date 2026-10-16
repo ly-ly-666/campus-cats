@@ -97,8 +97,14 @@ async function loadData() {
       fetch('./data/cats.json'),
       fetch('./data/relations.json')
     ]);
-    const cats = await catsRes.json();
-    const relations = await relsRes.json();
+    let cats = await catsRes.json();
+    let relations = await relsRes.json();
+    // 本地管理端标记为「隐藏」的猫（visible: false）在公开站整体不展示，其档案页显示「找不到」
+    if (Array.isArray(cats)) cats = cats.filter(function (c) { return c && c.visible !== false; });
+    if (Array.isArray(relations)) {
+      const shownIds = new Set(cats.map(function (c) { return c.id; }));
+      relations = relations.filter(function (r) { return r && shownIds.has(r.from) && shownIds.has(r.to); });
+    }
     _lastData = { cats, relations };
     render(cats, relations);
   } catch (e) {

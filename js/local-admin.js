@@ -14,6 +14,7 @@
   var siteConfig = {};
   var knowledge = [];
   var editIdx = -1;
+  var showOnlyHidden = false;   // 猫咪管理页：只看已隐藏（visible === false）的猫
   var pendingAvatar = null;
   var pendingAvatarName = '';
   var cropInstance = null;
@@ -169,7 +170,9 @@
       var isMissing = c.life === '失踪';
       var isMissingOld = c.life === '失踪已久';
       var isAdopted = c.life === '已领养';
+      var isHiddenCat = c.visible === false;
       var ring = isMissing ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #dc2626,0 0 0 8px rgba(220,38,38,.3);animation:cat-missing-pulse 1.5s infinite;' : (isMissingOld ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #9f1239;' : (isAdopted ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #10b981;' : 'box-shadow:0 0 0 3px #fff,0 0 0 4px #e5e0d8;'));
+      if (isHiddenCat) ring += 'opacity:.45;filter:grayscale(1);';
       var size = 44;
       var photo = (c.photo && c.photo.indexOf('placeholder') < 0) ? c.photo : '';
       var imgHtml = photo
@@ -183,12 +186,13 @@
       });
       var m = L.marker([c.lat, c.lng], { icon: icon, draggable: true }).addTo(markerLayer);
       m.options.catIndex = i;
-      m.bindTooltip(c.name + (c.leftAt ? '（过往）' : ''), { direction: 'top' });
+      m.bindTooltip(c.name + (c.leftAt ? '（过往）' : '') + (isHiddenCat ? '（已隐藏）' : ''), { direction: 'top' });
       m.on('click', function () { openCatModal(i); });
       m.on('dragend', function () {
         var idx = m.options.catIndex; var ll = m.getLatLng();
         cats[idx].lat = +ll.lat.toFixed(6); cats[idx].lng = +ll.lng.toFixed(6);
         renderMarkers();
+        autoSave('地图位置');
       });
     });
   }
@@ -360,10 +364,128 @@
       }
       await writeTextFile(KNOWLEDGE_PATH, JSON.stringify(knowledge, null, 2) + '\n');
       log('✅ 已保存到本地文件', 'ok');
+      setSaveStatus('✅ 已保存到本地文件', 'ok');
     } catch (e) {
       log('❌ 保存失败：' + e.message, 'err');
+      setSaveStatus('❌ 保存失败：' + e.message, 'err');
     }
   }
+
+  // ---------- 自动保存 ----------
+  // 添加图片/内容后立刻把内存数据写回 JSON：图片在选中时就已经落盘，若 JSON 不同步更新，
+  // 中途关掉管理端就会留下「磁盘有图、cats.json 没引用」的孤儿图片（看起来像图片丢了）。
+  var _autoSaveTimer = null;
+  var _autoSaveChain = Promise.resolve();
+
+  function setSaveStatus(text, kind) {
+    var el = $('save-status');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'save-status' + (kind ? ' ' + kind : '');
+  }
+
+  // 防抖：短时间内的连续改动（如一次加 16 张图）合并成少量写入
+  function autoSave(reason) {
+    if (!dirHandle) return;
+    setSaveStatus('● 待自动保存…', 'pending');
+    if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = setTimeout(function () {
+      _autoSaveTimer = null;
+      _autoSaveChain = _autoSaveChain.then(function () { return autoSaveWrite(reason); });
+    }, 400);
+  }
+
+  async function autoSaveWrite(reason) {
+    if (!dirHandle) return;
+    setSaveStatus('⏳ 自动保存中…', 'saving');
+    try {
+      await writeTextFile(CATS_PATH, JSON.stringify(cats, null, 2) + '\n');
+      await writeTextFile(RELS_PATH, JSON.stringify(relations, null, 2) + '\n');
+      if (siteConfig && typeof siteConfig === 'object') {
+        await writeTextFile(SITE_CFG_PATH, JSON.stringify(siteConfig, null, 2) + '\n');
+      }
+      await writeTextFile(KNOWLEDGE_PATH, JSON.stringify(knowledge, null, 2) + '\n');
+      var d = new Date();
+      var hh = ('0' + d.getHours()).slice(-2), mm = ('0' + d.getMinutes()).slice(-2), ss = ('0' + d.getSeconds()).slice(-2);
+      setSaveStatus('✅ 已自动保存 ' + hh + ':' + mm + ':' + ss + (reason ? '（' + reason + '）' : ''), 'ok');
+    } catch (e) {
+      setSaveStatus('❌ 自动保存失败：' + e.message, 'err');
+    }
+  }
+
+  // 把编辑弹窗里暂存的「故事 / 事件」写回当前猫咪对象，让自动保存能真正持久化它们
+  function commitCatDraft() {
+    if (editIdx < 0 || !cats[editIdx]) return false;
+    var c = cats[editIdx];
+    var stories = getStories();
+    if (stories.length) c.stories = stories; else delete c.stories;
+    c.events = getEvents();
+    syncStoryLinks(editIdx);
+    return true;
+  }
+
+  // 把「猫咪小知识」编辑弹窗的内容写回 knowledge 数组
+  function commitKnowledgeDraft() {
+    if (!_pendingKnowledge) return false;
+    var imgs = (_pendingKnowledge.images || []).map(function (im) { return im.path || ''; }).filter(Boolean);
+    var draft = {
+      id: _pendingKnowledge.id,
+      title: _pendingKnowledge.title || '',
+      date: _pendingKnowledge.date || '',
+      category: _pendingKnowledge.category || '',
+      content: _pendingKnowledge.content || '',
+      cats: (_pendingKnowledge.cats || []).filter(Boolean),
+      images: imgs
+    };
+    if (_knowledgeIdx >= 0 && knowledge[_knowledgeIdx]) knowledge[_knowledgeIdx] = draft;
+    else { knowledge.push(draft); _knowledgeIdx = knowledge.length - 1; }
+    return true;
+  }
+
+  // 把「故事集快速编辑」弹窗的内容写回宿主猫
+  function commitQuickStoryDraft() {
+    if (!_quickStory || _quickStoryHost < 0 || !cats[_quickStoryHost]) return false;
+    var host = cats[_quickStoryHost];
+    var imgs = (_quickStory.images || []).map(function (im) { return im.path || ''; }).filter(Boolean);
+    var draft = {
+      id: _quickStory.id,
+      date: _quickStory.date || '',
+      title: _quickStory.title || '',
+      content: _quickStory.content || '',
+      cats: (_quickStory.cats || []).filter(Boolean),
+      images: imgs
+    };
+    if (!Array.isArray(host.stories)) host.stories = [];
+    var found = false;
+    for (var j = 0; j < host.stories.length; j++) {
+      if (host.stories[j] && host.stories[j].id === draft.id) { host.stories[j] = draft; found = true; break; }
+    }
+    if (!found) host.stories.push(draft);
+    syncStoryLinks(_quickStoryHost);
+    return true;
+  }
+
+  // 改动后的统一入口：先回写对应草稿，再防抖落盘
+  // kind: 'cat' | 'knowledge' | 'quickStory' | ''（无草稿）
+  function autoSaveAfterChange(kind, reason) {
+    if (kind === 'cat') commitCatDraft();
+    else if (kind === 'knowledge') commitKnowledgeDraft();
+    else if (kind === 'quickStory') commitQuickStoryDraft();
+    autoSave(reason);
+  }
+
+  // 页面切走/关闭前把待保存的改动尽快落盘，避免「处理到一半关掉」丢数据
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && _autoSaveTimer) {
+      clearTimeout(_autoSaveTimer);
+      _autoSaveTimer = null;
+      _autoSaveChain = _autoSaveChain.then(function () { return autoSaveWrite('页面切走'); });
+    }
+  });
+  window.addEventListener('beforeunload', function (e) {
+    if (_autoSaveTimer) { e.preventDefault(); e.returnValue = ''; }
+  });
+
   // ---------- 故事集展示顺序 ----------
   function renderStoryOrder() {
     var box = $('story-order-list');
@@ -398,12 +520,14 @@
       }
       siteConfig.storyPinOrder = pin.slice();
       renderStoryOrder();
+      autoSave('故事置顶');
     }
     function movePin(i, j) {
       if (i < 0 || j < 0 || i >= pin.length || j >= pin.length) return;
       var t = pin[i]; pin[i] = pin[j]; pin[j] = t;
       siteConfig.storyPinOrder = pin.slice();
       renderStoryOrder();
+      autoSave('故事置顶');
     }
     // 预览顺序：置顶在前（按置顶顺序），其余按日期（无日期按上传时间）从新到旧
     var pinSet = {};
@@ -462,10 +586,16 @@
             var hay = [c.name, c.nickname, c.color, c.area, c.caretaker, c.age, (c.tags || []).join(' ')].join(' ').toLowerCase();
             return hay.indexOf(kw) >= 0;
           })
-        : cats;
+        : cats.slice();
+      if (showOnlyHidden) {
+        filtered = filtered.filter(function (c) { return c.visible === false; });
+      }
 
       if (!filtered.length) {
-        box.innerHTML = '<p class="hint">' + (kw ? '没找到匹配「' + esc(kw) + '」的猫咪。' : '还没有猫咪，点右上角「添加猫咪」。') + '</p>';
+        var emptyTxt = showOnlyHidden
+          ? '没有被隐藏的猫咪，所有猫都在公开站正常展示。'
+          : (kw ? '没找到匹配「' + esc(kw) + '」的猫咪。' : '还没有猫咪，点右上角「添加猫咪」。');
+        box.innerHTML = '<p class="hint">' + emptyTxt + '</p>';
         return;
       }
 
@@ -473,19 +603,21 @@
         var photo = c.photo || 'images/placeholder.svg';
         var fallback = photo.indexOf('placeholder') >= 0 ? '' : '<span class="fallback">🐱</span>';
         var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
+        var hidden = c.visible === false;
         function statusBadge(c) {
           if (c.life === '失踪') return ' <span style="background:#dc2626;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪</span>';
           if (c.life === '失踪已久') return ' <span style="background:#9f1239;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">⚠️ 失踪已久</span>';
           if (c.life === '已领养') return ' <span style="background:#10b981;color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;font-weight:700;">🏠 已领养</span>';
           return '';
         }
-        return '<div class="catcard">' +
+        return '<div class="catcard' + (hidden ? ' off' : '') + '">' +
           '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.opacity=0">' + fallback + '</div>' +
           '<div class="bd">' +
-          '<div class="nm">' + esc(c.name) + ' <span style="color:#94a3b8;font-size:12px;font-weight:400">#' + esc(c.id) + '</span>' + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + '</div>' +
+          '<div class="nm">' + esc(c.name) + ' <span style="color:#94a3b8;font-size:12px;font-weight:400">#' + esc(c.id) + '</span>' + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + (hidden ? ' <span class="off-badge">🚫 已隐藏</span>' : '') + '</div>' +
           '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未知') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
           '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
           '<div class="ops"><button class="btn btn-sm" data-edit-id="' + c.id + '">编辑</button>' +
+          '<button class="btn btn-sm" data-toggle-id="' + c.id + '">' + (hidden ? '👁️ 恢复展示' : '🚫 隐藏') + '</button>' +
           '<button class="btn btn-sm btn-danger" data-del-id="' + c.id + '">删除</button></div>' +
           '</div></div>';
       }).join('');
@@ -494,6 +626,23 @@
         b.addEventListener('click', function () {
           var idx = cats.findIndex(function (x) { return x.id === b.dataset.editId; });
           if (idx >= 0) openCatModal(idx);
+        });
+      });
+      box.querySelectorAll('[data-toggle-id]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var idx = cats.findIndex(function (x) { return x.id === b.dataset.toggleId; });
+          if (idx < 0) return;
+          var c = cats[idx];
+          if (c.visible === false) {
+            delete c.visible;
+            log('👁️ 已恢复展示：' + c.name + '（公开站刷新即可看到）', 'info');
+          } else {
+            c.visible = false;
+            log('🚫 已隐藏：' + c.name + '（公开站刷新后不再出现）', 'info');
+          }
+          renderCats();
+          renderMarkers();
+          autoSave('网站展示');
         });
       });
       box.querySelectorAll('[data-del-id]').forEach(function (b) {
@@ -509,12 +658,26 @@
       });
     }
 
-    renderFiltered('');
-
     var searchEl = $('admin-cat-search');
+    renderFiltered(searchEl ? searchEl.value : '');
+
     if (searchEl && !searchEl._bound) {
       searchEl._bound = true;
       searchEl.addEventListener('input', function () { renderFiltered(searchEl.value); });
+    }
+
+    var filterBtn = $('btn-filter-hidden');
+    if (filterBtn) {
+      if (!filterBtn._bound) {
+        filterBtn._bound = true;
+        filterBtn.addEventListener('click', function () {
+          showOnlyHidden = !showOnlyHidden;
+          renderCats();
+        });
+      }
+      var hiddenCount = cats.filter(function (c) { return c.visible === false; }).length;
+      filterBtn.textContent = (showOnlyHidden ? '👁️ 显示全部猫咪' : '👁️ 只看已隐藏') + (hiddenCount ? '（' + hiddenCount + '）' : '');
+      filterBtn.classList.toggle('btn-primary', showOnlyHidden);
     }
   }
 
@@ -619,7 +782,8 @@
       b.addEventListener('click', function () {
         relations.splice(Number(b.dataset.relIdx), 1);
         renderRelList();
-        log('🗑️ 已删除关系', 'info');
+        log('🗑️ 已删除关系（已自动保存）', 'info');
+        autoSave('关系');
       });
     });
   }
@@ -642,7 +806,8 @@
     if ($('rel-note')) $('rel-note').value = '';
     if ($('rel-from')) $('rel-from').value = '';
     if ($('rel-to')) $('rel-to').value = '';
-    log('✅ 已添加关系，记得点「💾 保存到本地」', 'ok');
+    log('✅ 已添加关系（已自动保存）', 'ok');
+    autoSave('关系');
   }
 
   // 根据关系类型动态更新 A/B 的方向提示
@@ -678,6 +843,7 @@
     $('f-area').value = c ? (c.area || '') : '';
     $('f-status').value = c ? (c.status || '') : '未知';
     $('f-life').value = c ? (c.life || '在校') : '在校';
+    $('f-visible').value = (c && c.visible === false) ? '0' : '1';
     $('f-lat').value = c ? c.lat : '';
     $('f-lng').value = c ? c.lng : '';
     var fs = c ? (c.firstSeen || '') : '';
@@ -725,6 +891,7 @@
         var c = cats[editIdx];
         c.album.splice(Number(b.dataset.idx), 1);
         renderAlbum(c.album);
+        autoSave('相册');
       });
     });
   }
@@ -983,9 +1150,10 @@
     for (var i = 0; i < files.length; i++) {
       var f = files[i]; var dataUrl = await readFileAsDataURL(f); var compressed = await compressImage(dataUrl, 1600, 0.85);
       if (editIdx >= 0 && cats[editIdx]) { var name = cats[editIdx].id + '_story_' + Date.now() + '_' + i + '.jpg'; var path = IMAGES_DIR + '/' + name; await writeImageFileWithThumb(path, compressed); s.images.push({ path: path }); log('✅ 已保存故事截图：' + path, 'ok'); }
-      else { s.images.push({ dataUrl: compressed, ext: 'jpg' }); }
+      else { s.images.push({ dataUrl: compressed, ext: 'jpg' }); log('ℹ️ 新猫咪尚未保存：图片暂存在内存，点「保存」后才会写入磁盘', 'info'); }
     }
     refreshStories(); $('f-story-img').value = '';
+    autoSaveAfterChange('cat', '故事截图');
   }
 
   // ---------- 故事快速编辑（故事集页点开） ----------
@@ -1104,6 +1272,7 @@
     }
     renderQuickStoryEditor();
     $('f-quick-story-img').value = '';
+    autoSaveAfterChange('quickStory', '故事截图');
   }
   async function saveQuickStory() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
@@ -1195,7 +1364,8 @@
         if (!confirm('确定删除「' + t + '」？')) return;
         knowledge.splice(i, 1);
         renderKnowledgeList();
-        log('🗑️ 已删除，记得点「💾 保存到本地」', 'info');
+        log('🗑️ 已删除（已自动保存）', 'info');
+        autoSave('删除小知识');
       });
     });
   }
@@ -1311,6 +1481,7 @@
     }
     renderKnowledgeEditor();
     $('f-knowledge-img').value = '';
+    autoSaveAfterChange('knowledge', '小知识配图');
   }
   async function saveKnowledge() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
@@ -1375,10 +1546,12 @@
         log('✅ 已保存事件截图：' + path, 'ok');
       } else {
         ev.images.push({ dataUrl: compressed, ext: 'jpg' });
+        log('ℹ️ 新猫咪尚未保存：图片暂存在内存，点「保存」后才会写入磁盘', 'info');
       }
     }
     refreshEvents();
     $('f-event-img').value = '';
+    autoSaveAfterChange('cat', '事件截图');
   }
 
   // ---------- 图片上传 ----------
@@ -1396,6 +1569,7 @@
     if (!files || !files.length) return;
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
     var c = cats[editIdx];
+    if (!c) { log('❌ 新猫咪还没保存过：请先点「保存」生成档案，再添加相册照片（否则图片无法写入磁盘）', 'err'); return; }
     if (!c.album) c.album = [];
     for (var i = 0; i < files.length; i++) {
       var f = files[i];
@@ -1407,8 +1581,10 @@
       await writeImageFileWithThumb(path, compressed);
       c.album.push(path);
       log('✅ 已添加相册照片（已压缩）：' + path, 'ok');
+      autoSave('相册');   // 每张都触发，批量处理到一半关掉也不会丢引用
     }
     renderAlbum(c.album);
+    autoSave('相册');
     $('f-album').value = '';
   }
 
@@ -1472,10 +1648,12 @@
         c.album.push(path);
         renderAlbum(c.album);
         log('📋 已粘贴截图到相册：' + path, 'ok');
+        autoSave('相册');
       } else if (pasteTarget === 3) {
         if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
         var ev = _pendingEvents[_evtImgTarget];
         if (!ev) { log('❌ 请先添加一个事件', 'err'); setPasteMode(0); return; }
+        if (editIdx < 0) { log('❌ 新猫咪还没保存过：请先点「保存」生成档案，再粘贴事件图片', 'err'); setPasteMode(0); return; }
         if (!ev.images) ev.images = [];
         var compressed = await compressImage(dataUrl, 1600, 0.85);
         var name = cats[editIdx].id + '_event_' + Date.now() + '.jpg';
@@ -1484,6 +1662,7 @@
         ev.images.push({ path: path });
         refreshEvents();
         log('📋 已粘贴截图到事件：' + path, 'ok');
+        autoSaveAfterChange('cat', '事件截图');
       } else if (pasteTarget === 4) {
         if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
         var compressed = await compressImage(dataUrl, 1600, 0.85);
@@ -1494,12 +1673,15 @@
           var qname = qhost + '_story_' + Date.now() + '.jpg'; var qpath = IMAGES_DIR + '/' + qname;
           await writeImageFileWithThumb(qpath, compressed); _quickStory.images.push({ path: qpath }); renderQuickStoryEditor();
           log('📋 已粘贴截图到故事：' + qpath, 'ok');
+          autoSaveAfterChange('quickStory', '故事截图');
         } else {
           var sv = _pendingStories[_storyImgTarget]; if (!sv) { log('❌ 请先添加一个故事', 'err'); setPasteMode(0); return; }
+          if (editIdx < 0) { log('❌ 新猫咪还没保存过：请先点「保存」生成档案，再粘贴故事图片', 'err'); setPasteMode(0); return; }
           if (!sv.images) sv.images = [];
           var name = cats[editIdx].id + '_story_' + Date.now() + '.jpg'; var path = IMAGES_DIR + '/' + name;
           await writeImageFileWithThumb(path, compressed); sv.images.push({ path: path }); refreshStories();
           log('📋 已粘贴截图到故事：' + path, 'ok');
+          autoSaveAfterChange('cat', '故事截图');
         }
       } else if (pasteTarget === 5) {
         if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
@@ -1512,6 +1694,7 @@
         _pendingKnowledge.images.push({ path: kpath });
         renderKnowledgeEditor();
         log('📋 已粘贴截图到猫咪小知识：' + kpath, 'ok');
+        autoSaveAfterChange('knowledge', '小知识配图');
       }
       setPasteMode(0);
     };
@@ -1646,6 +1829,8 @@
       events: getEvents(),
       stories: getStories()
     };
+    // 网站展示开关：只有「隐藏」才落盘 visible:false，展示中的猫不写这个字段（保持数据干净）
+    if ($('f-visible').value === '0') cat.visible = false;
 
     // 故事截图落盘
     if (cat.stories && cat.stories.length) {

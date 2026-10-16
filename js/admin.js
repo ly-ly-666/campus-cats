@@ -329,7 +329,11 @@
       leftAt: $('f-leftAt').value.trim() || '',
       caretaker: $('f-caretaker').value.trim()
     };
-    if (isAdd) state.cats.push(cat); else state.cats[editIndex] = cat;
+    if (isAdd) state.cats.push(cat); else {
+      // 保留本地管理端设置的「网站展示」开关（visible:false），避免在这里编辑后又被自动放出
+      if (state.cats[editIndex] && state.cats[editIndex].visible === false) cat.visible = false;
+      state.cats[editIndex] = cat;
+    }
 
     closeModal('cat-modal');
     renderAll();
