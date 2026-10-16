@@ -20,14 +20,40 @@
   var cropInstance = null;
   var map = null, markerLayer = null, tempMarker = null;
   var CAMPUS_CENTER = [21.6795, 110.9226];
+  // 与 js/config.js 保持一致：校园范围（范围外的地图区域会被半透明蒙版盖住，且拖不出去）
+  var MAP_BOUNDS_SW = [CAMPUS_CENTER[0] - 0.009, CAMPUS_CENTER[1] - 0.0097];
+  var MAP_BOUNDS_NE = [CAMPUS_CENTER[0] + 0.009, CAMPUS_CENTER[1] + 0.0097];
+  var MAP_DEFAULT_ZOOM = 17; // 与网站地图初始缩放一致
   var pendingLatLng = null;
   var TILES = [
     { name: '高德', url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', att: '© 高德地图', max: 20, native: 18, subs: ['1', '2', '3', '4'] },
     { name: 'OSM', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', att: '© OpenStreetMap', max: 20, native: 19, subs: null }
   ];
   var tileIdx = 0, tileErrors = 0;
+  var IMG_CACHE_BUST = 'v2'; // 与 js/ui.js 保持一致，保证缩略图缓存命中
+
+  // 公开站代码清单：本地改了样式/脚本/页面也必须能一起推上去，
+  // 否则会出现「本地端弄好了、网页端还是旧的」。（内容未变的文件会按 blob sha 自动跳过，不浪费请求）
+  var CODE_FILES = [
+    'index.html', 'profile.html', 'style.css',
+    'js/config.js', 'js/main.js', 'js/map.js', 'js/ui.js', 'js/graph.js',
+    'js/profile.js', 'js/board.js', 'js/ratings.js', 'js/likes.js', 'js/admin.js',
+    'local-admin.html', 'js/local-admin.js'
+  ];
 
   function $(id) { return document.getElementById(id); }
+
+  // 以下两个工具与 js/ui.js 中的实现保持一致：管理端预览地图必须和公开站看到的一模一样
+  function thumbUrl(src) {
+    if (!src) return 'images/placeholder.svg';
+    if (/^https?:/i.test(src) || /^data:/i.test(src)) return src;
+    var name = String(src).split('?')[0].replace(/^.*[\\/]/, '');
+    return 'images/thumb/' + name.replace(/\.[^.]+$/, '') + '.jpg?v=' + IMG_CACHE_BUST;
+  }
+  function gentleLeftAt(cat) {
+    if (!cat || cat.life === '去喵星了') return '';
+    return String(cat.leftAt || '').replace(/离世|去世|车祸去世/g, '去喵星了');
+  }
 
   // ---------- 配置（仓库/分支/Token）记忆 ----------
   var CFG_KEY = 'campus-cats-local-cfg';
@@ -124,7 +150,14 @@
     if (map) return;
     if (typeof L === 'undefined') { log('❌ Leaflet 未加载（vendor/leaflet.min.js 缺失？）', 'err'); return; }
     // 默认 marker 图标不需要（用 circleMarker 和 divIcon）
-    map = L.map('admin-map', { zoomControl: true }).setView(CAMPUS_CENTER, 16);
+    var bounds = L.latLngBounds(MAP_BOUNDS_SW, MAP_BOUNDS_NE);
+    map = L.map('admin-map', { zoomControl: true, maxBounds: bounds, maxBoundsViscosity: 1.0 }).setView(CAMPUS_CENTER, MAP_DEFAULT_ZOOM);
+    // 校园范围外的半透明蒙版，与网站地图一致
+    var maskStyle = { fillColor: '#f5f0e8', fillOpacity: 0.45, stroke: false, interactive: false };
+    L.rectangle([[bounds.getNorthEast().lat, -180], [90, 180]], maskStyle).addTo(map);
+    L.rectangle([[-90, -180], [bounds.getSouthWest().lat, 180]], maskStyle).addTo(map);
+    L.rectangle([[bounds.getSouthWest().lat, -180], [bounds.getNorthEast().lat, bounds.getSouthWest().lng]], maskStyle).addTo(map);
+    L.rectangle([[bounds.getSouthWest().lat, bounds.getNorthEast().lng], [bounds.getNorthEast().lat, 180]], maskStyle).addTo(map);
     addTileLayer();
     markerLayer = L.layerGroup().addTo(map);
     map.on('click', function (e) {
@@ -162,31 +195,49 @@
     });
     if (map.getZoom() < 16) map.setView([latlng.lat, latlng.lng], 16);
   }
+  // 猫咪标记：与公开站 js/map.js 的 createCatIcon 完全同构（同一套 class、同一套缩略图、同样的兜底逻辑）
+  function catIcon(c, isHiddenCat) {
+    var initial = (c.name || '?')[0];
+    var isPast = c.life === '去喵星了' || c.leftAt ? true : false;
+    var lifeRing = c.life === '失踪' ? ' ring-missing' : (c.life === '失踪已久' ? ' ring-missing-old' : (c.life === '已领养' ? ' ring-adopted' : (c.life === '在校' && !isPast ? ' ring-present' : '')));
+    var hasPhoto = !!c.photo && c.photo.indexOf('placeholder') < 0;
+    var imgHtml = hasPhoto
+      ? '<img class="cat-marker-img" src="' + thumbUrl(c.photo) + '" alt="" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'marker-fallback\');">'
+      : '';
+    var html = '<div class="cat-marker' + (isPast ? ' cat-marker-past' : '') + lifeRing + (isHiddenCat ? ' cat-marker-hidden' : '') + '" data-cat-id="' + c.id + '">' +
+      imgHtml + '<span class="marker-letter">' + initial + '</span></div>';
+    return L.divIcon({
+      className: 'cat-marker-wrapper',
+      html: html,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -22]
+    });
+  }
+  // 悬停提示：内容与公开站点击标记弹出的气泡一致，方便管理端核对访客看到的信息
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function catTipHtml(c, isHiddenCat) {
+    var gentleLeft = gentleLeftAt(c);
+    var lines = [
+      '<strong>' + esc(c.name) + '</strong>' + (c.life === '去喵星了' ? ' <span class="tag tag-past">去喵星了</span>' : (c.leftAt ? ' <span class="tag tag-past">过往</span>' : '')) + (isHiddenCat ? ' <span class="tag tag-past">已隐藏</span>' : ''),
+      c.nickname ? '🐾 外号：' + esc(c.nickname) : null,
+      c.area ? '📍 ' + esc(c.area) : null,
+      gentleLeft ? '🚪 ' + esc(gentleLeft) : null,
+      c.description ? '💬 ' + esc(c.description) : null
+    ].filter(Boolean);
+    return lines.join('<br>');
+  }
   function renderMarkers() {
     if (!map || !markerLayer) return;
     markerLayer.clearLayers();
     cats.forEach(function (c, i) {
       if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
-      var isMissing = c.life === '失踪';
-      var isMissingOld = c.life === '失踪已久';
-      var isAdopted = c.life === '已领养';
       var isHiddenCat = c.visible === false;
-      var ring = isMissing ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #dc2626,0 0 0 8px rgba(220,38,38,.3);animation:cat-missing-pulse 1.5s infinite;' : (isMissingOld ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #9f1239;' : (isAdopted ? 'box-shadow:0 0 0 3px #fff,0 0 0 5px #10b981;' : 'box-shadow:0 0 0 3px #fff,0 0 0 4px #e5e0d8;'));
-      if (isHiddenCat) ring += 'opacity:.45;filter:grayscale(1);';
-      var size = 44;
-      var photo = (c.photo && c.photo.indexOf('placeholder') < 0) ? c.photo : '';
-      var imgHtml = photo
-        ? '<img src="' + photo + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.style.opacity=0">'
-        : '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;">🐱</span>';
-      var icon = L.divIcon({
-        className: '',
-        html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;position:relative;background:#ffd9a8;' + ring + '">' + imgHtml + '</div>',
-        iconSize: [size, size],
-        iconAnchor: [size/2, size/2]
-      });
-      var m = L.marker([c.lat, c.lng], { icon: icon, draggable: true }).addTo(markerLayer);
+      var m = L.marker([c.lat, c.lng], { icon: catIcon(c, isHiddenCat), draggable: true }).addTo(markerLayer);
       m.options.catIndex = i;
-      m.bindTooltip(c.name + (c.leftAt ? '（过往）' : '') + (isHiddenCat ? '（已隐藏）' : ''), { direction: 'top' });
+      m.bindTooltip(catTipHtml(c, isHiddenCat), { direction: 'top' });
       m.on('click', function () { openCatModal(i); });
       m.on('dragend', function () {
         var idx = m.options.catIndex; var ll = m.getLatLng();
@@ -2106,12 +2157,21 @@
         (await treeRes.json()).tree.forEach(function (t) { if (t.type === 'blob') remoteSha[t.path] = t.sha; });
       }
 
-      // 3. 收集要推送的本地文件（JSON + 头像/相册/事件/故事/小知识图片 + 对应缩略图）
+      // 3. 收集要推送的本地文件（数据 JSON + 前端代码 + 头像/相册/事件/故事/小知识图片 + 对应缩略图）
       var files = [], seen = {};
       function pushFile(path, b64) { if (!seen[path]) { seen[path] = 1; files.push({ path: path, localB64: b64 }); } }
       pushFile(CATS_PATH, utf8ToB64(await readTextFile(CATS_PATH)));
       pushFile(RELS_PATH, utf8ToB64(await readTextFile(RELS_PATH)));
       pushFile(KNOWLEDGE_PATH, utf8ToB64(await readTextFile(KNOWLEDGE_PATH)));
+      // 站点配置（置顶故事、公告、提交入口等）也是本地改完要上线的数据
+      if (await fileExists(SITE_CFG_PATH)) pushFile(SITE_CFG_PATH, utf8ToB64(await readTextFile(SITE_CFG_PATH)));
+      else log('⚠️ 本地缺少 ' + SITE_CFG_PATH + '，已跳过', 'info');
+      // 前端代码：本地改过的页面/样式/脚本同样一起推，避免「本地改了、线上没变」
+      for (var ci = 0; ci < CODE_FILES.length; ci++) {
+        var codePath = CODE_FILES[ci];
+        if (await fileExists(codePath)) pushFile(codePath, utf8ToB64(await readTextFile(codePath)));
+        else log('⚠️ 本地缺少 ' + codePath + '，已跳过', 'info');
+      }
       // 小知识配图
       var knImgs = [];
       (knowledge || []).forEach(function (k) {

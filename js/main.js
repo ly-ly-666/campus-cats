@@ -39,12 +39,13 @@ async function loadData() {
 
   // 本地管理端可把某只猫设为「隐藏」（visible: false）：公开站不展示它的任何内容
   // （地图标记、猫咪列表、关系图、排行榜、档案页），关系数据里指向它的连线一并去掉，避免悬空节点。
+  const hiddenCats = Array.isArray(cats) ? cats.filter((c) => c && c.visible === false) : [];
   if (Array.isArray(cats)) cats = cats.filter((c) => c && c.visible !== false);
   if (Array.isArray(relations)) {
     const shownIds = new Set(cats.map((c) => c.id));
     relations = relations.filter((r) => r && shownIds.has(r.from) && shownIds.has(r.to));
   }
-  return { cats, relations, siteConfig, knowledge };
+  return { cats, relations, siteConfig, knowledge, hiddenCats };
 }
 
 window.__splashStart = performance.now();
@@ -96,6 +97,35 @@ function bindMapLegend() {
   });
 }
 
+// 本地预览提示：管理端点「👀 预览公开站效果」会带 ?preview=1 打开本地 index.html，
+// 这里给站长一个明确信号 —— 看到的是本地数据、以及哪些猫被隐藏了（线上不会出现）。
+function renderPreviewNotice(hiddenCats) {
+  let isPreview = false;
+  try { isPreview = new URLSearchParams(location.search).get('preview') === '1'; } catch (e) {}
+  if (!isPreview) return;
+  const names = (hiddenCats || []).map((c) => c.name).filter(Boolean);
+  const bar = document.createElement('div');
+  bar.id = 'preview-notice';
+  bar.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:9999;max-width:min(420px,86vw);background:#111827;color:#fff;font-size:12px;line-height:1.7;padding:10px 34px 10px 14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.35);';
+  const title = document.createElement('div');
+  title.textContent = '👀 本地预览模式 · 数据来自本地文件，尚未推送线上';
+  bar.appendChild(title);
+  const sub = document.createElement('div');
+  sub.style.cssText = 'color:#fbbf24;margin-top:4px;';
+  sub.textContent = names.length
+    ? '🚫 已隐藏 ' + names.length + ' 只：' + names.join('、') + '（线上不会出现）'
+    : '✅ 当前没有隐藏的猫（与线上一致）';
+  bar.appendChild(sub);
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = '✕';
+  close.setAttribute('aria-label', '关闭预览提示');
+  close.style.cssText = 'position:absolute;top:6px;right:8px;background:none;border:none;color:#9ca3af;font-size:14px;cursor:pointer;padding:2px;';
+  close.addEventListener('click', () => bar.remove());
+  bar.appendChild(close);
+  document.body.appendChild(bar);
+}
+
 async function boot() {
   setLoading('正在加载猫咪数据…');
   let data;
@@ -114,6 +144,7 @@ async function boot() {
   }
 
   setLoading('');
+  renderPreviewNotice(data.hiddenCats);
 
   // 地图：点击标记 -> 弹出详情
   let map = null;

@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 本地管理端不缓存：改了管理端代码后刷新即生效，不会出现「本地改了、浏览器还在跑旧代码」 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>校园猫 · 本地管理端</title>
   <link rel="stylesheet" href="./vendor/leaflet.min.css">
   <link rel="stylesheet" href="./vendor/cropper.min.css">
@@ -69,6 +73,34 @@
     .catcard.off { background: #f7f5f2; }
     .catcard.off .th img { filter: grayscale(1); opacity: .5; }
     .catcard .off-badge { background: #57534e; color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
+    /* ---------- 地图猫咪标记：与公开站 style.css 保持一致，管理端看到的观感＝网站上的观感 ---------- */
+    .cat-marker-wrapper { background: transparent; border: none; }
+    .cat-marker {
+      width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
+      border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+      background: #ffd9a8; display: flex; align-items: center; justify-content: center;
+      font-size: 22px; position: relative;
+    }
+    .cat-marker .marker-letter {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      z-index: 0; font-size: 20px; font-weight: 700; color: #7c4a1e; line-height: 1;
+      pointer-events: none; user-select: none;
+    }
+    .cat-marker img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; z-index: 1; }
+    .cat-marker.marker-fallback img { display: none; }
+    .cat-marker:hover { transform: scale(1.08); box-shadow: 0 3px 10px rgba(0,0,0,.45); }
+    .cat-marker-past { filter: grayscale(0.85) opacity(0.75); }
+    @keyframes cat-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.7); } 50% { box-shadow: 0 0 0 14px rgba(220,38,38,0); } }
+    .cat-marker.ring-missing { animation: cat-pulse 1.5s infinite; box-shadow: 0 0 0 4px rgba(220,38,38,.9); }
+    .cat-marker.ring-missing-old { box-shadow: 0 0 0 4px #9f1239; }
+    .cat-marker.ring-adopted { box-shadow: 0 0 0 4px #10b981; }
+    .cat-marker.ring-present { box-shadow: 0 0 0 4px #f59e0b, 0 2px 6px rgba(0,0,0,.35); }
+    /* 管理端专属：被「网站展示」关掉的猫仍显示，但置灰，方便找回来（公开站上它是完全不出现的） */
+    .cat-marker.cat-marker-hidden { filter: grayscale(1) opacity(.45); }
+    /* 悬停气泡：内容与公开站标记气泡一致，长文案自动换行 */
+    .leaflet-tooltip { max-width: 240px; white-space: normal; line-height: 1.6; font-size: 13px; }
+    .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; line-height: 1.6; }
+    .tag-past { background: #9ca3af; }
 
     .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
     .modal-bg.open { display: flex; }
@@ -564,6 +596,13 @@
 
   <script src="./vendor/leaflet.min.js"></script>
   <script src="./vendor/cropper.min.js"></script>
-  <script src="./js/local-admin.js?v=20261016a"></script>
+  <!-- 用时间戳加载管理端脚本：每次打开都取最新代码（本地工具不需要缓存） -->
+  <script>
+    (function () {
+      var s = document.createElement('script');
+      s.src = './js/local-admin.js?v=' + Date.now();
+      document.body.appendChild(s);
+    })();
+  </script>
 </body>
 </html>
