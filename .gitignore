@@ -26,6 +26,9 @@ _shot*.png
 _server2.mjs
 _mobile_preview.html
 
+# 公网预览临时打包目录（构建产物，不入库）
+_deploy_preview/
+
 # Netlify 部署压缩包（构建产物，不入库）
 netlify-deploy.zip
 

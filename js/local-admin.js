@@ -6,6 +6,7 @@
   var RELS_PATH = 'data/relations.json';
   var SITE_CFG_PATH = 'data/site-config.json';
   var KNOWLEDGE_PATH = 'data/knowledge.json';
+  var STICKERS_PATH = 'data/stickers.json';
   var IMAGES_DIR = 'images';
 
   var dirHandle = null;
@@ -13,6 +14,7 @@
   var relations = [];
   var siteConfig = {};
   var knowledge = [];
+  var stickers = [];
   var editIdx = -1;
   var showOnlyHidden = false;   // 猫咪管理页：只看已隐藏（visible === false）的猫
   var pendingAvatar = null;
@@ -394,6 +396,13 @@
     } catch (e) {
       knowledge = [];
     }
+    try {
+      var stText = await readTextFile(STICKERS_PATH);
+      stickers = JSON.parse(stText) || [];
+      if (!Array.isArray(stickers)) stickers = [];
+    } catch (e) {
+      stickers = [];
+    }
     renderCats();
     ensureMap();
     renderMarkers();
@@ -402,6 +411,7 @@
     updateRelLabels();
     renderStoryOrder();
     renderKnowledgeList();
+    renderStickerList();
     if (typeof refreshLikes === 'function') refreshLikes();
   }
 
@@ -414,6 +424,7 @@
         await writeTextFile(SITE_CFG_PATH, JSON.stringify(siteConfig, null, 2) + '\n');
       }
       await writeTextFile(KNOWLEDGE_PATH, JSON.stringify(knowledge, null, 2) + '\n');
+      await writeTextFile(STICKERS_PATH, JSON.stringify(stickers || [], null, 2) + '\n');
       log('✅ 已保存到本地文件', 'ok');
       setSaveStatus('✅ 已保存到本地文件', 'ok');
     } catch (e) {
@@ -456,6 +467,7 @@
         await writeTextFile(SITE_CFG_PATH, JSON.stringify(siteConfig, null, 2) + '\n');
       }
       await writeTextFile(KNOWLEDGE_PATH, JSON.stringify(knowledge, null, 2) + '\n');
+      await writeTextFile(STICKERS_PATH, JSON.stringify(stickers || [], null, 2) + '\n');
       var d = new Date();
       var hh = ('0' + d.getHours()).slice(-2), mm = ('0' + d.getMinutes()).slice(-2), ss = ('0' + d.getSeconds()).slice(-2);
       setSaveStatus('✅ 已自动保存 ' + hh + ':' + mm + ':' + ss + (reason ? '（' + reason + '）' : ''), 'ok');
@@ -516,12 +528,32 @@
     return true;
   }
 
+  // 把「表情包」编辑弹窗的内容写回 stickers 数组
+  function commitStickerDraft() {
+    if (!_pendingSticker) return false;
+    var items = (_pendingSticker.items || []).filter(function (it) { return it && it.src; }).map(function (it) {
+      return { id: it.id || ('si_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)), src: it.src, label: String(it.label || '').trim(), animated: !!it.animated };
+    });
+    var draft = {
+      id: _pendingSticker.id,
+      title: String(_pendingSticker.title || '').trim(),
+      date: String(_pendingSticker.date || '').trim(),
+      note: String(_pendingSticker.note || '').trim(),
+      cats: (_pendingSticker.cats || []).filter(Boolean),
+      items: items
+    };
+    if (_stickerIdx >= 0 && stickers[_stickerIdx]) stickers[_stickerIdx] = draft;
+    else { stickers.push(draft); _stickerIdx = stickers.length - 1; }
+    return true;
+  }
+
   // 改动后的统一入口：先回写对应草稿，再防抖落盘
-  // kind: 'cat' | 'knowledge' | 'quickStory' | ''（无草稿）
+  // kind: 'cat' | 'knowledge' | 'quickStory' | 'sticker' | ''（无草稿）
   function autoSaveAfterChange(kind, reason) {
     if (kind === 'cat') commitCatDraft();
     else if (kind === 'knowledge') commitKnowledgeDraft();
     else if (kind === 'quickStory') commitQuickStoryDraft();
+    else if (kind === 'sticker') commitStickerDraft();
     autoSave(reason);
   }
 
@@ -1575,6 +1607,240 @@
     setPasteMode(0);
   }
 
+  // ---------- 🎭 表情包 ----------
+  // 表情要能长按存进微信，前提是公开站铺的是「原图 <img>」。所以这里的图片处理与相册不同：
+  // GIF 必须原样落盘（writeImageFile）—— 走 compressImage 会被 canvas 转成静态 JPEG，动画就没了；
+  // 静图压到 480px（表情本来就小，也让 GitHub Contents API 不被大文件卡住，单文件上限 1MB）。
+  var _pendingSticker = null;   // 当前编辑的表情包草稿；{id,title,date,note,cats,items:[{id,src,label,animated}],_search}
+  var _stickerIdx = -1;         // stickers 数组下标（-1=新建）
+
+  function renderStickerList() {
+    var box = $('sticker-list');
+    if (!box) return;
+    if (!Array.isArray(stickers) || !stickers.length) {
+      box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有表情包，点右上角「＋ 新建表情包」上传第一批。</p>';
+      return;
+    }
+    box.innerHTML = stickers.map(function (p, i) {
+      var items = Array.isArray(p.items) ? p.items : [];
+      var gifs = items.filter(function (it) { return it && it.animated; }).length;
+      var linked = (Array.isArray(p.cats) ? p.cats : []).filter(function (cid) { return catById(cid); });
+      var thumbs = items.slice(0, 8).map(function (it) {
+        return '<div class="thumb-wrap"><img class="thumb" src="' + esc(it.src || '') + '" alt="" onerror="this.style.display=\'none\'"></div>';
+      }).join('');
+      return '<div class="kl-item">' +
+        '<div class="kl-main">' +
+          '<div class="kl-title">' + (p.title && String(p.title).trim() ? esc(p.title) : '<span class="kl-null">（未命名表情包）</span>') + '</div>' +
+          '<div class="kl-meta">' +
+            (p.date ? '<span class="kl-date">🗓 ' + esc(p.date) + '</span>' : '') +
+            '<span class="kl-imgs">🎭 ' + items.length + ' 张' + (gifs ? '（动图 ' + gifs + '）' : '') + '</span>' +
+            (linked.length ? '<span class="kl-imgs">🐾 ' + linked.map(function (cid) { return esc(catById(cid).name); }).join('、') + '</span>' : '') +
+          '</div>' +
+          '<div class="story-imgs" style="margin-top:6px;">' + thumbs + '</div>' +
+        '</div>' +
+        '<div class="kl-ops">' +
+          '<button type="button" class="btn btn-sm" data-sedit="' + i + '">✏️ 编辑</button>' +
+          '<button type="button" class="btn btn-sm btn-danger" data-sdel="' + i + '">删除</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    box.querySelectorAll('[data-sedit]').forEach(function (b) {
+      b.addEventListener('click', function () { openStickerEditor(Number(b.dataset.sedit)); });
+    });
+    box.querySelectorAll('[data-sdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var i2 = Number(b.dataset.sdel);
+        var t = (stickers[i2] && stickers[i2].title) ? stickers[i2].title : '这个表情包';
+        if (!confirm('确定删除「' + t + '」？（图片文件会留在 images/stickers/ 里，不会误删）')) return;
+        stickers.splice(i2, 1);
+        renderStickerList();
+        log('🗑️ 已删除表情包（已自动保存）', 'info');
+        autoSave('删除表情包');
+      });
+    });
+  }
+
+  function openStickerEditor(idx) {
+    if (!Array.isArray(stickers)) stickers = [];
+    _stickerIdx = idx;
+    var p = idx >= 0 ? stickers[idx] : null;
+    _pendingSticker = {
+      id: p && p.id ? p.id : ('st_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+      title: p ? (p.title || '') : '',
+      date: p ? (p.date || '') : '',
+      note: p ? (p.note || '') : '',
+      cats: (p && Array.isArray(p.cats)) ? p.cats.slice() : [],
+      items: (p && Array.isArray(p.items)) ? p.items.map(function (it) { return Object.assign({}, it); }) : [],
+      _search: ''
+    };
+    renderStickerEditor();
+    openModal('sticker-edit-modal');
+    var delBtn = $('sticker-del');
+    if (delBtn) delBtn.style.display = idx >= 0 ? '' : 'none';
+  }
+
+  function stickerResultsBox() {
+    var box = $('sticker-editor');
+    return box ? box.querySelector('.story-cat-results') : null;
+  }
+  function toggleStickerCat(cid) {
+    var arr = _pendingSticker.cats || [];
+    var k2 = arr.indexOf(cid);
+    if (k2 >= 0) arr.splice(k2, 1); else arr.push(cid);
+    renderStickerEditor();
+    if (_pendingSticker._search) renderStickerCatResults();
+  }
+  function renderStickerCatResults() {
+    var box = stickerResultsBox();
+    if (!box) return;
+    var q = String(_pendingSticker._search || '').trim().toLowerCase();
+    if (!q) { box.innerHTML = ''; return; }
+    var arr = _pendingSticker.cats || [];
+    var matches = (cats || []).filter(function (cc) {
+      return (cc.name || '').toLowerCase().indexOf(q) >= 0 || (cc.nickname || '').toLowerCase().indexOf(q) >= 0 || (cc.id || '').toLowerCase().indexOf(q) >= 0;
+    });
+    if (!matches.length) { box.innerHTML = '<div class="hint" style="margin:4px 0;">没有找到匹配的猫</div>'; return; }
+    box.innerHTML = matches.slice(0, 8).map(function (cc) {
+      var on = arr.indexOf(cc.id) >= 0;
+      return '<button type="button" class="story-cat-result' + (on ? ' on' : '') + '" data-cat="' + esc(cc.id) + '" title="' + (on ? '取消关联' : '关联') + '「' + esc(cc.name) + '」">' + (on ? '✓ ' : '＋ ') + esc(cc.name) + (cc.nickname ? '（' + esc(cc.nickname) + '）' : '') + '</button>';
+    }).join('');
+    box.querySelectorAll('.story-cat-result').forEach(function (b) {
+      b.addEventListener('click', function () { toggleStickerCat(b.dataset.cat); });
+    });
+  }
+
+  function renderStickerEditor() {
+    var box = $('sticker-editor');
+    if (!box || !_pendingSticker) return;
+    var k = _pendingSticker;
+    var selChips = (k.cats || []).map(function (cid) {
+      var cc = catById(cid);
+      if (!cc) return '';
+      return '<span class="story-cat-chip on" data-cat="' + esc(cid) + '" title="点击取消关联「' + esc(cc.name) + '」">' + esc(cc.name) + ' <b class="chip-x">×</b></span>';
+    }).join('');
+    var itemRows = (k.items || []).map(function (it, j) {
+      return '<div class="sticker-admin-row">' +
+          '<img class="thumb" src="' + esc(it.src || '') + '" alt="" onerror="this.style.display=\'none\'">' +
+          '<input type="text" class="sticker-label" data-si="' + j + '" placeholder="表情文字（选填，如：馆长坐镇）" value="' + esc(it.label || '') + '" autocomplete="off">' +
+          (it.animated ? '<span class="kl-cat">动图</span>' : '<span class="kl-null">静图</span>') +
+          '<button type="button" class="btn btn-sm" data-sleft="' + j + '" title="前移">◀</button>' +
+          '<button type="button" class="btn btn-sm" data-sright="' + j + '" title="后移">▶</button>' +
+          '<button type="button" class="btn btn-sm btn-danger" data-sitemdel="' + j + '">删除</button>' +
+        '</div>';
+    }).join('');
+    box.innerHTML = '<div class="story-edit-item"><div class="story-body">' +
+      '<div class="field" style="margin-top:4px;"><label>表情包标题</label><input type="text" class="sticker-title" placeholder="如：馆长小白 · 第一批" value="' + esc(k.title) + '"></div>' +
+      '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="sticker-date" value="' + esc(k.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick-clear">清空</button></div></div>' +
+      '<div class="field" style="margin-top:4px;"><label>说明（选填，展示在表情网格上方）</label><input type="text" class="sticker-note" placeholder="如：第一批试水，动图以后再加" value="' + esc(k.note) + '"></div>' +
+      '<div class="field" style="margin-top:4px;"><label>关联猫咪（可关联多只，搜索后点击结果添加/取消）</label>' +
+        '<div class="story-cat-selected">' + selChips + '</div>' +
+        '<div class="story-cat-search-row"><input type="text" class="story-cat-search" placeholder="🔍 输入猫名 / 外号搜索…" value="' + esc(k._search || '') + '" autocomplete="off"></div>' +
+        '<div class="story-cat-results"></div>' +
+      '</div>' +
+      '<div class="field" style="margin-top:4px;"><label>表情图（选图/粘贴均按上面的规则处理；GIF 原样保存）</label><button type="button" class="btn btn-sm" id="sticker-add-img">🖼️ 选择表情图</button><button type="button" class="btn btn-sm" id="sticker-paste-img" style="margin-left:4px">📋 粘贴表情图</button></div>' +
+      '<div class="sticker-admin-items">' + (itemRows || '<p class="hint" style="margin:4px 0 0 0;">还没有表情，点上面「选择表情图」或「粘贴表情图」加入第一张。</p>') + '</div>' +
+    '</div></div>';
+    var titleIp = box.querySelector('.sticker-title');
+    if (titleIp) titleIp.addEventListener('input', function () { _pendingSticker.title = titleIp.value; });
+    var noteIp = box.querySelector('.sticker-note');
+    if (noteIp) noteIp.addEventListener('input', function () { _pendingSticker.note = noteIp.value; });
+    var dateIp = box.querySelector('.sticker-date');
+    if (dateIp) dateIp.addEventListener('input', function () { _pendingSticker.date = dateIp.value; });
+    box.querySelectorAll('.btn-story-quick').forEach(function (b) { b.addEventListener('click', function () { _pendingSticker.date = daysAgoDate(Number(b.dataset.off)); renderStickerEditor(); }); });
+    var clearBtn = box.querySelector('.btn-story-quick-clear');
+    if (clearBtn) clearBtn.addEventListener('click', function () { _pendingSticker.date = ''; renderStickerEditor(); });
+    box.querySelectorAll('.story-cat-chip').forEach(function (b) { b.addEventListener('click', function () { toggleStickerCat(b.dataset.cat); }); });
+    var searchIp = box.querySelector('.story-cat-search');
+    if (searchIp) searchIp.addEventListener('input', function () { _pendingSticker._search = searchIp.value; renderStickerCatResults(); });
+    box.querySelectorAll('.sticker-label').forEach(function (ip) {
+      // 输入文字不重绘（否则打字会丢焦点），直接写回草稿
+      ip.addEventListener('input', function () {
+        var j = Number(ip.dataset.si);
+        if (_pendingSticker && _pendingSticker.items[j]) _pendingSticker.items[j].label = ip.value;
+      });
+    });
+    var addBtn = box.querySelector('#sticker-add-img');
+    if (addBtn) addBtn.addEventListener('click', function () { $('f-sticker-img').click(); });
+    var pasteBtn = box.querySelector('#sticker-paste-img');
+    if (pasteBtn) pasteBtn.addEventListener('click', function () { setPasteMode(6); });
+    box.querySelectorAll('[data-sleft]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var j = Number(b.dataset.sleft);
+        if (j <= 0 || !_pendingSticker) return;
+        var arr = _pendingSticker.items;
+        var t = arr[j - 1]; arr[j - 1] = arr[j]; arr[j] = t;
+        renderStickerEditor();
+      });
+    });
+    box.querySelectorAll('[data-sright]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var j = Number(b.dataset.sright);
+        var arr = _pendingSticker ? _pendingSticker.items : [];
+        if (j >= arr.length - 1) return;
+        var t = arr[j + 1]; arr[j + 1] = arr[j]; arr[j] = t;
+        renderStickerEditor();
+      });
+    });
+    box.querySelectorAll('[data-sitemdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!_pendingSticker) return;
+        _pendingSticker.items.splice(Number(b.dataset.sitemdel), 1);
+        renderStickerEditor();
+      });
+    });
+    if (k._search) renderStickerCatResults();
+  }
+
+  async function onStickerImgChange() {
+    var files = $('f-sticker-img').files;
+    if (!files || !files.length || !_pendingSticker) return;
+    if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); $('f-sticker-img').value = ''; return; }
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var type = String(file.type || '');
+      var isGif = type === 'image/gif';
+      var ext = isGif ? 'gif' : 'jpg';
+      var path = 'images/stickers/' + _pendingSticker.id + '_' + Date.now() + '_' + i + '.' + ext;
+      try {
+        if (isGif) {
+          // GIF 原样写入（writeImageFile 不经 canvas）：一旦重编码就只剩首帧、动画丢失
+          var raw = await readFileAsDataURL(file);
+          await writeImageFile(path, raw);
+          if (file.size > 900 * 1024) log('⚠️ ' + path + ' 超过 900KB：GitHub 网页推送单文件上限 1MB，可能推不上去', 'warn');
+        } else {
+          // 静图压到 480px：表情尺寸本来小，长按存的也是这张
+          var dataUrl = await readFileAsDataURL(file);
+          var still = await compressImage(dataUrl, 480, 0.86);
+          await writeImageFile(path, still);
+        }
+        _pendingSticker.items.push({ id: 'si_' + Date.now() + '_' + i, src: path, label: '', animated: isGif });
+        log('✅ 已存入表情：' + path, 'ok');
+      } catch (e) {
+        log('❌ 表情保存失败：' + e.message, 'err');
+      }
+    }
+    renderStickerEditor();
+    $('f-sticker-img').value = '';
+    autoSaveAfterChange('sticker', '表情图片');
+  }
+
+  async function saveSticker() {
+    if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+    if (!_pendingSticker) return;
+    commitStickerDraft();
+    await saveAll();
+    closeModal('sticker-edit-modal');
+    _pendingSticker = null; _stickerIdx = -1;
+    setPasteMode(0);
+    renderStickerList();
+    log('✏️ 表情包已保存', 'ok');
+  }
+  function closeStickerEditor() {
+    closeModal('sticker-edit-modal');
+    _pendingSticker = null; _stickerIdx = -1;
+    setPasteMode(0);
+  }
+
 
   async function onEventImgChange() {
     var files = $('f-event-img').files;
@@ -1669,6 +1935,9 @@
     } else if (mode === 5) {
       if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把截图粘到<b>猫咪小知识</b>（直接保存）'; hint.style.display = ''; }
       if (btn) { btn.textContent = '📚 准备粘小知识'; btn.style.background = '#fef3c7'; }
+    } else if (mode === 6) {
+      if (hint) { hint.innerHTML = '已就绪，按 <b>Ctrl + V</b> 把表情粘到<b>表情包</b>（GIF 原样保留动画）'; hint.style.display = ''; }
+      if (btn) { btn.textContent = '🎭 准备粘表情'; btn.style.background = '#fef3c7'; }
     } else {
       if (hint) hint.style.display = 'none';
       if (btn) { btn.textContent = '📋 粘贴截图'; btn.style.background = ''; }
@@ -1746,6 +2015,24 @@
         renderKnowledgeEditor();
         log('📋 已粘贴截图到猫咪小知识：' + kpath, 'ok');
         autoSaveAfterChange('knowledge', '小知识配图');
+      } else if (pasteTarget === 6) {
+        if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); setPasteMode(0); return; }
+        if (!_pendingSticker) { log('❌ 请先打开一个表情包的编辑弹窗', 'err'); setPasteMode(0); return; }
+        var stype = String(blob.type || '');
+        var isGif = stype === 'image/gif';
+        var spath = 'images/stickers/' + _pendingSticker.id + '_' + Date.now() + (isGif ? '.gif' : '.jpg');
+        if (isGif) {
+          // GIF 原样写入（不经 canvas 重编码，动画才保得住）
+          await writeImageFile(spath, dataUrl);
+          if (blob.size > 900 * 1024) log('⚠️ 表情超过 900KB：GitHub 网页推送单文件上限 1MB，可能推不上去', 'warn');
+        } else {
+          var sstill = await compressImage(dataUrl, 480, 0.86);
+          await writeImageFile(spath, sstill);
+        }
+        _pendingSticker.items.push({ id: 'si_' + Date.now(), src: spath, label: '', animated: isGif });
+        renderStickerEditor();
+        log('📋 已粘贴表情：' + spath, 'ok');
+        autoSaveAfterChange('sticker', '表情图片');
       }
       setPasteMode(0);
     };
@@ -2079,13 +2366,56 @@
         await writeTextFile(KNOWLEDGE_PATH, '[]\n');
       }
 
+      // 拉取 stickers.json（表情包）—— 远端还没有这个文件时，保留本地版本而不是清空
+      var remoteStickers = Array.isArray(stickers) ? stickers.slice() : [];
+      var r4 = await fetch('https://api.github.com/repos/' + repo + '/contents/' + STICKERS_PATH + q, { headers: headers });
+      if (r4.ok) {
+        try {
+          var sj = await r4.json();
+          var stText = decodeBase64Utf8(sj.content || '');
+          await writeTextFile(STICKERS_PATH, stText);
+          var parsed = JSON.parse(stText);
+          if (Array.isArray(parsed)) remoteStickers = parsed;
+          // 同步表情图片（GIF 走原始字节，不经 canvas，动画不会丢）
+          var stPaths = [];
+          remoteStickers.forEach(function (p) {
+            (Array.isArray(p.items) ? p.items : []).forEach(function (it) {
+              if (it && it.src && it.src.indexOf('data:') !== 0 && it.src.indexOf('placeholder') < 0) stPaths.push(it.src);
+            });
+          });
+          for (var si = 0; si < stPaths.length; si++) {
+            if (await fileExists(stPaths[si])) continue;
+            try {
+              var sr = await fetch('https://api.github.com/repos/' + repo + '/contents/' + stPaths[si] + q, { headers: headers });
+              if (!sr.ok) continue;
+              var sjj = await sr.json();
+              var sbin = atob((sjj.content || '').replace(/\n/g, ''));
+              var sbytes = new Uint8Array(sbin.length);
+              for (var sb = 0; sb < sbin.length; sb++) sbytes[sb] = sbin.charCodeAt(sb);
+              var sparts = stPaths[si].split('/');
+              var sname = sparts.pop();
+              var sd = await getDir(sparts);
+              var sfh = await sd.getFileHandle(sname, { create: true });
+              var sw = await sfh.createWritable();
+              await sw.write(sbytes);
+              await sw.close();
+              log('📥 已下载表情图片：' + stPaths[si], 'info');
+            } catch (e) { /* 忽略单张表情失败 */ }
+          }
+        } catch (e) { log('⚠️ stickers.json 解析失败，已跳过：' + e.message, 'warn'); }
+      } else {
+        log('ℹ️ GitHub 上还没有 ' + STICKERS_PATH + '（推送后就有了），本次保留本地表情包', 'info');
+      }
+      stickers = remoteStickers;
+
       cats = remoteCats;
       knowledge = remoteKnowledge;
       try { relations = JSON.parse(await readTextFile(RELS_PATH)); } catch (e) { relations = []; }
       renderCats();
       renderKnowledgeList();
+      if (typeof renderStickerList === 'function') renderStickerList();
       if (typeof L !== 'undefined') { ensureMap(); renderMarkers(); }
-      log('✅ 已从 GitHub 拉取最新数据并写入本地文件（' + cats.length + ' 只猫，' + knowledge.length + ' 篇小知识）', 'ok');
+      log('✅ 已从 GitHub 拉取最新数据并写入本地文件（' + cats.length + ' 只猫，' + knowledge.length + ' 篇小知识，' + stickers.length + ' 个表情包）', 'ok');
     } catch (e) {
       log('❌ 拉取失败：' + e.message, 'err');
     }
@@ -2163,6 +2493,9 @@
       pushFile(CATS_PATH, utf8ToB64(await readTextFile(CATS_PATH)));
       pushFile(RELS_PATH, utf8ToB64(await readTextFile(RELS_PATH)));
       pushFile(KNOWLEDGE_PATH, utf8ToB64(await readTextFile(KNOWLEDGE_PATH)));
+      if (Array.isArray(stickers) && stickers.length && await fileExists(STICKERS_PATH)) {
+        pushFile(STICKERS_PATH, utf8ToB64(await readTextFile(STICKERS_PATH)));
+      }
       // 站点配置（置顶故事、公告、提交入口等）也是本地改完要上线的数据
       if (await fileExists(SITE_CFG_PATH)) pushFile(SITE_CFG_PATH, utf8ToB64(await readTextFile(SITE_CFG_PATH)));
       else log('⚠️ 本地缺少 ' + SITE_CFG_PATH + '，已跳过', 'info');
@@ -2186,6 +2519,12 @@
         var kthumb = 'images/thumb/' + kp.replace(/^.*\//, '').replace(/\.[^.]+$/, '') + '.jpg';
         if (await fileExists(kthumb)) pushFile(kthumb, dataUrlToBase64(await readImageAsDataURL(kthumb)));
       }
+      // 表情包图片：GIF 原样推（不做缩略图——公开站铺的就是这张原图，压了动画就没了）
+      (stickers || []).forEach(function (p) {
+        (Array.isArray(p.items) ? p.items : []).forEach(function (it) {
+          if (it && it.src && it.src.indexOf('data:') !== 0 && it.src.indexOf('placeholder') < 0) knImgs.push(it.src);
+        });
+      });
       for (var i = 0; i < cats.length; i++) {
         var c = cats[i];
         var imgs = [c.photo].concat(c.album || []);
@@ -2397,6 +2736,28 @@
     $('knowledge-cancel').addEventListener('click', closeKnowledgeEditor);
     $('knowledge-edit-close').addEventListener('click', closeKnowledgeEditor);
     $('knowledge-edit-modal').addEventListener('click', function (e) { if (e.target === $('knowledge-edit-modal')) closeKnowledgeEditor(); });
+
+    // 🎭 表情包
+    $('btn-sticker-add').addEventListener('click', function () {
+      if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
+      openStickerEditor(-1);
+    });
+    var saveStickersBtn = $('btn-save-stickers');
+    if (saveStickersBtn) saveStickersBtn.addEventListener('click', saveAll);
+    $('f-sticker-img').addEventListener('change', onStickerImgChange);
+    $('sticker-save').addEventListener('click', saveSticker);
+    $('sticker-del').addEventListener('click', function () {
+      if (_stickerIdx < 0) return;
+      var t = (_pendingSticker && _pendingSticker.title) ? _pendingSticker.title : '这个表情包';
+      if (!confirm('确定删除「' + t + '」？（图片文件会留在 images/stickers/ 里，不会误删）')) return;
+      stickers.splice(_stickerIdx, 1);
+      closeStickerEditor();
+      renderStickerList();
+      saveAll();
+    });
+    $('sticker-cancel').addEventListener('click', closeStickerEditor);
+    $('sticker-edit-close').addEventListener('click', closeStickerEditor);
+    $('sticker-edit-modal').addEventListener('click', function (e) { if (e.target === $('sticker-edit-modal')) closeStickerEditor(); });
 
     // ❤️ 点赞统计（读取 Netlify 后端）
     var LIKES_API = 'https://melodic-crepe-74a890.netlify.app/.netlify/functions/likes';
@@ -2815,7 +3176,8 @@
       if (pasteTarget === 0) return;
       var qsOpen = $('story-edit-modal') && $('story-edit-modal').classList.contains('open');
       var kOpen = $('knowledge-edit-modal') && $('knowledge-edit-modal').classList.contains('open');
-      if (!$('cat-modal').classList.contains('open') && !qsOpen && !kOpen) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); return; }
+      var sOpen = $('sticker-edit-modal') && $('sticker-edit-modal').classList.contains('open');
+      if (!$('cat-modal').classList.contains('open') && !qsOpen && !kOpen && !sOpen) { log('❌ 请先打开一只猫的编辑弹窗', 'err'); return; }
       var items = (e.clipboardData || window.clipboardData).items || [];
       for (var i = 0; i < items.length; i++) {
         if (items[i].kind === 'file' && items[i].type.indexOf('image') === 0) {
@@ -2835,7 +3197,22 @@
   }
 
   // ---------- 工作台导航 ----------
-  function initWorkbench() {
+  // 表情包功能开关：读 data/site-config.json 的 stickersEnabled。
+  // 关着的时候管理端也不出现「🎭 表情包」页（代码与 data/stickers.json 都保留，改回 true 即恢复）。
+  function readStickersFlag() {
+    return fetch('./data/site-config.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (cfg) { return !!(cfg && cfg.stickersEnabled === true); })
+      .catch(function () { return false; });
+  }
+  function setStickersNavVisible(on) {
+    var nav = document.querySelector('.wb-nav[data-page="stickers"]');
+    var page = document.querySelector('.page[data-page="stickers"]');
+    if (nav) nav.style.display = on ? '' : 'none';
+    if (page) page.style.display = on ? '' : 'none';
+  }
+
+  async function initWorkbench() {
     var navs = document.querySelectorAll('.wb-nav');
     var pages = document.querySelectorAll('.page');
     var consoleEl = $('wb-console');
@@ -2850,6 +3227,7 @@
         if (pg === 'relations') renderRelList();
         if (pg === 'stories') renderStoryOrder();
         if (pg === 'knowledge') renderKnowledgeList();
+        if (pg === 'stickers') renderStickerList();
         if (pg === 'ranking' && typeof refreshRanking === 'function') refreshRanking();
       });
     });
@@ -2858,6 +3236,16 @@
       consoleEl.classList.toggle('collapsed');
       $('console-toggle').textContent = consoleEl.classList.contains('collapsed') ? '展开 ▾' : '收起 ▴';
     });
+    // 开关状态决定「🎭 表情包」页是否可用（关着就隐藏，且不允许深链进去）
+    var stickersOn = await readStickersFlag();
+    setStickersNavVisible(stickersOn);
+    // 深链：local-admin.html?page=stickers 直接打开指定工作台页（便于收藏/分享/截图）
+    var want = new URLSearchParams(location.search).get('page') || (location.hash || '').replace(/^#/, '');
+    if (want === 'stickers' && !stickersOn) want = 'cats';
+    if (want) {
+      var target = Array.prototype.find.call(navs, function (b) { return b.dataset.page === want; });
+      if (target) target.click();
+    }
   }
 
   bind();

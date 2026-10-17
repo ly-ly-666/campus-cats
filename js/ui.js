@@ -1,4 +1,4 @@
-﻿// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
+// ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
 import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904o';
 import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260925b';
 import { mountRatingBox, fetchRank, fetchAllReviews, submitRating } from './ratings.js?v=20260926a';
@@ -1292,4 +1292,90 @@ export async function renderRankTimeline(cats) {
   // 2) 实时榜在后台拉，拿到后通过 onUpdate 再重绘一次（旧代码把实时结果丢掉，页面永远显示旧快照）
   const res = await fetchRank({ onUpdate: (live) => { paint(live.list, live.source); } });
   if (res && Array.isArray(res.list) && res.list.length) paint(res.list, res.source);
+}
+
+// ---------- 🎭 表情包 ----------
+// 微信没有开放任何「网页把图片写进表情面板」的接口（JS-SDK、剪贴板、navigator.share 都不行），
+// 所以这一步只能靠用户在微信里长按图片完成。页面能做的只有两件事：
+//   1) 用真正的 <img> 展示原图（CSS 背景图长按是存不下来的，缩略图阶段长按存到的是小图），
+//   2) 按 UA 给出正确的操作指引 + 非微信环境提供下载。
+const IS_WEIXIN = /MicroMessenger/i.test(navigator.userAgent || '');
+
+export function renderStickers(stickers, cats) {
+  const el = document.getElementById('stickers-list');
+  if (!el) return;
+  const catById = new Map((cats || []).filter((c) => c && c.id).map((c) => [String(c.id), c]));
+  const packs = (Array.isArray(stickers) ? stickers : []).filter((p) => p && Array.isArray(p.items) && p.items.length);
+
+  if (!packs.length) {
+    el.innerHTML = '<p class="hint">还没有表情包，等我们做好第一批再来看 🐾</p>';
+    return;
+  }
+
+  const guide = IS_WEIXIN
+    ? '<div class="sticker-guide weixin">' +
+        '<div class="sg-title">👇 长按任意表情，两步存进微信</div>' +
+        '<ol class="sg-steps">' +
+          '<li><b>长按表情</b> → 菜单里有 <b>「添加到表情」</b>就直接点，一步搞定</li>' +
+          '<li>没有的话就选 <b>「保存图片」</b>（存进相册）</li>' +
+          '<li>再到微信：<b>我 → 表情 → 右上角 ⚙️ → 我添加的表情 → ＋</b>，从相册里选它</li>' +
+        '</ol>' +
+        '<div class="sg-note">各版本长按菜单略有差异，两条路都给你写了；动图存相册后多数微信版本会保留动画，若变成静图，请从原文件重新添加。</div>' +
+      '</div>'
+    : '<div class="sticker-guide">' +
+        '<div class="sg-title">🐾 表情要回到微信里才能用起来</div>' +
+        '<div class="sg-note">微信没有「从网页一键加表情」的接口，得走两步：点图片右下角 <b>⬇</b> 存到相册 → 微信里 <b>我 → 表情 → 右上角 ⚙️ → 我添加的表情 → ＋</b> 选中它。或者把本页地址发到微信（文件传输助手），在微信里打开后长按表情添加。</div>' +
+        '<button type="button" class="btn sg-copy" id="stickers-copy-url">📋 复制本页地址</button>' +
+      '</div>';
+
+  const body = packs.map((p) => {
+    const linked = (Array.isArray(p.cats) ? p.cats : []).map((id) => catById.get(String(id))).filter(Boolean);
+    const chips = linked.length
+      ? '<div class="sticker-cats">' + linked.map((c) => '<a class="sticker-cat" href="./profile.html#' + encodeURIComponent(c.id) + '">🐱 ' + escapeHtml(c.name) + '</a>').join('') + '</div>'
+      : '';
+    const date = p.date ? '<span class="sticker-date">🗓 ' + escapeHtml(String(p.date)) + '</span>' : '';
+    const note = p.note ? '<div class="sticker-note">' + escapeHtml(String(p.note)) + '</div>' : '';
+    const cells = p.items.filter((it) => it && it.src).map((it) => {
+      const src = photoUrl(String(it.src));
+      const label = String(it.label || '').trim();
+      const kind = it.animated ? '动图' : '静图';
+      // 原图直接铺在页面上（不走缩略图、不走「查看原图」两段加载）：
+      // 表情本身就该是小图（480px 内），页面显示的这张就是用户长按要存的那张。
+      return '<figure class="sticker-cell" data-src="' + escapeHtml(src) + '" data-label="' + escapeHtml(label) + '">' +
+          '<div class="sticker-shot">' +
+            // 图片加载失败（上传漏了/路径写错）就把整格收起来：表情墙出现碎图标很难看，
+            // 而且长按存图时用户会以为是自己手机的问题。
+            '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(label || '表情') + '" loading="lazy" onerror="var f=this.closest(\'.sticker-cell\'); if(f) f.style.display=\'none\';">' +
+            '<span class="sticker-kind">' + kind + '</span>' +
+            (IS_WEIXIN ? '' : '<a class="sticker-dl" href="' + escapeHtml(src) + '" download="' + escapeHtml((label || it.id || 'sticker')) + '" title="下载原图">⬇</a>') +
+          '</div>' +
+          (label ? '<figcaption>' + escapeHtml(label) + '</figcaption>' : '') +
+        '</figure>';
+    }).join('');
+    return '<section class="sticker-pack">' +
+        '<header class="sticker-pack-head">' +
+          '<h3>' + escapeHtml(String(p.title || '表情包')) + '</h3>' + date +
+          '<span class="sticker-count">' + p.items.length + ' 张</span>' +
+        '</header>' + chips + note +
+        '<div class="sticker-grid">' + cells + '</div>' +
+      '</section>';
+  }).join('');
+
+  el.innerHTML = '<div class="sticker-wip-bar">🚧 表情包功能开发中 · 先试试长按保存，样式和内容还会调整</div>' + guide + body;
+
+  const copyBtn = document.getElementById('stickers-copy-url');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const ok = copyTextSync(location.href.split('#')[0]);
+      showToast(ok ? '✅ 地址已复制，发到微信里打开即可' : '❌ 复制失败，请长按地址栏手动复制');
+    });
+  }
+  // 点表情 = 全屏看大图（thumbSrc 传同一个地址，避免「先看缩略图再看原图」把长按时机卡在小图上）
+  el.querySelectorAll('.sticker-cell').forEach((cell) => {
+    cell.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return; // 下载链接不抢事件
+      const src = cell.dataset.src;
+      if (src) openLightbox(src, cell.dataset.label || '', src);
+    });
+  });
 }

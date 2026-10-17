@@ -1,6 +1,6 @@
 // board.js — 留言墙（弹幕 + 留言列表），挂在首页「评分·留言墙」标签页里
 // 数据走后端 likes 函数的留言接口；接口不可用时退回本地缓存 + 官方欢迎语，保证墙不空着。
-import { showToast } from './ui.js?v=20260926a';
+import { showToast } from './ui.js?v=20261016e';
 
 // 与 ratings.js 同一个后端函数（likes），这里单独写一份地址是为了不动 ratings.js 的版本号
 const LIKES_API = (typeof window !== 'undefined' && window.YMCAO_LIKES_API)

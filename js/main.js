@@ -1,9 +1,9 @@
-﻿// main.js — 入口模块（装配并启动应用）
-import { initMap, initMapSearch } from './map.js?v=20260925c';
-import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20260925b';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline } from './ui.js?v=20260926a';
+// main.js — 入口模块（装配并启动应用）
+import { initMap, initMapSearch } from './map.js?v=20261016e';
+import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20261016e';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline, renderStickers } from './ui.js?v=20261016e';
 import { bulkLikeStats } from './likes.js?v=20260925b';
-import { initBoard } from './board.js?v=20261001b';
+import { initBoard } from './board.js?v=20261016e';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 // 不带 ?v=时间戳：那会让浏览器每次都重新下载（cats.json 约 135KB）。
@@ -36,6 +36,17 @@ async function loadData() {
   } catch (e) {
     knowledge = [];
   }
+  // 表情包：功能开关（site-config.json 的 stickersEnabled）关着就连数据都不拉。
+  // 关闭时公开站与故事集页跟从前完全一致；代码和 data/stickers.json 都保留，改回 true 即恢复。
+  let stickers = [];
+  if (siteConfig && siteConfig.stickersEnabled === true) {
+    try {
+      const stResp = await fetch('./data/stickers.json', { cache: 'no-cache' });
+      if (stResp.ok) stickers = await stResp.json();
+    } catch (e) {
+      stickers = [];
+    }
+  }
 
   // 本地管理端可把某只猫设为「隐藏」（visible: false）：公开站不展示它的任何内容
   // （地图标记、猫咪列表、关系图、排行榜、档案页），关系数据里指向它的连线一并去掉，避免悬空节点。
@@ -45,7 +56,7 @@ async function loadData() {
     const shownIds = new Set(cats.map((c) => c.id));
     relations = relations.filter((r) => r && shownIds.has(r.from) && shownIds.has(r.to));
   }
-  return { cats, relations, siteConfig, knowledge, hiddenCats };
+  return { cats, relations, siteConfig, knowledge, stickers, hiddenCats };
 }
 
 window.__splashStart = performance.now();
@@ -137,7 +148,10 @@ async function boot() {
     return;
   }
 
-  const { cats, relations, siteConfig, knowledge } = data;
+  const { cats, relations, siteConfig, knowledge, stickers } = data;
+  // 表情包功能总开关（data/site-config.json → stickersEnabled）：
+  // 为 false 时公开站不显示「🎭 表情包」子栏目、不拉表情数据、也不响应 ?sub=stickers。
+  const stickersOn = !!(siteConfig && siteConfig.stickersEnabled === true);
   if (!Array.isArray(cats) || !cats.length) {
     showError('猫咪数据为空，请检查 data/cats.json');
     return;
@@ -189,6 +203,7 @@ async function boot() {
   renderSubmitBanner(siteConfig);
   renderStoriesTimeline(cats, siteConfig);
   renderKnowledgeTimeline(knowledge, cats);
+  if (stickersOn) renderStickers(stickers, cats);
   // 进首页就先批量拉一次全部点赞数（猫咪弹窗 + 故事列表共用这一次），避免后续逐个打 Netlify 函数
   bulkLikeStats().catch(() => {});
 
@@ -217,6 +232,40 @@ async function boot() {
       if (tabBtn) tabBtn.click();
     }
   } catch (e) {}
+
+  // 故事集页内二级切换：📖 猫咪故事 / 🎭 表情包（开发中），交互沿用评分榜的胶囊按钮
+  function bindStorySubtabs() {
+    const bar = document.querySelector('.story-subtabs');
+    if (!bar) return;
+    // 子栏目条在 HTML 里默认 display:none（配合功能开关），只有启用表情包时才亮出来
+    bar.style.display = '';
+    const btns = Array.from(bar.querySelectorAll('.story-subtab'));
+    const panes = {
+      stories: document.getElementById('stories-pane'),
+      stickers: document.getElementById('stickers-pane')
+    };
+    function activate(key) {
+      btns.forEach((b) => b.classList.toggle('active', b.dataset.sub === key));
+      Object.keys(panes).forEach((k) => { if (panes[k]) panes[k].hidden = k !== key; });
+      // 同步地址栏，方便直接分享/回到表情包子页
+      try {
+        const sp = new URLSearchParams(location.search);
+        sp.set('tab', 'stories');
+        if (key === 'stickers') sp.set('sub', 'stickers'); else sp.delete('sub');
+        history.replaceState(null, '', location.pathname + '?' + sp.toString());
+      } catch (e) {}
+    }
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.story-subtab');
+      if (btn) activate(btn.dataset.sub);
+    });
+    // 支持 ?tab=stories&sub=stickers 直达表情包
+    try {
+      if (new URLSearchParams(location.search).get('sub') === 'stickers') activate('stickers');
+    } catch (e) {}
+  }
+  // 开关关闭时不启用二级切换：子栏目条保持隐藏，故事集页回到单列表状态
+  if (stickersOn) bindStorySubtabs();
 
   // 手机端：关系图平移/缩放按钮
   const gc = document.getElementById('graph-controls');

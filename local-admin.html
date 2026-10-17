@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -239,6 +239,7 @@
     #story-edit-modal .modal-panel { max-width: 1120px; width: 100%; }
     #story-edit-modal .stories-editor .story-edit-item { padding: 14px; }
     #knowledge-edit-modal .modal-panel { max-width: 1120px; width: 100%; }
+    #sticker-edit-modal .modal-panel { max-width: 1120px; width: 100%; }
     #knowledge-edit-modal .stories-editor .story-edit-item { padding: 14px; }
     #cat-modal .modal-panel .grid3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
     #cat-modal .modal-panel .photo-preview { height: 200px; }
@@ -272,6 +273,7 @@
       <button type="button" class="wb-nav" data-page="relations">🪢 关系管理</button>
       <button type="button" class="wb-nav" data-page="stories">📖 故事集</button>
       <button type="button" class="wb-nav" data-page="knowledge">📚 猫咪小知识</button>
+      <button type="button" class="wb-nav" data-page="stickers">🎭 表情包</button>
       <button type="button" class="wb-nav" data-page="likes">❤️ 点赞统计</button>
       <button type="button" class="wb-nav" data-page="ranking">🏆 猫猫排行榜</button>
       <button type="button" class="wb-nav" data-page="deploy">🚀 部署到 GitHub</button>
@@ -399,6 +401,23 @@
           <div class="row" style="margin-top:10px;">
             <button class="btn btn-primary" id="btn-save-knowledge">💾 保存到本地</button>
             <span class="hint" id="knowledge-save-tip" style="align-self:center;">编辑 / 增删会自动保存，也可点这里手动保存</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 🎭 表情包 -->
+      <section class="page" data-page="stickers">
+        <div class="page-head">
+          <h1>🎭 表情包 <span style="font-size:12px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;border-radius:999px;padding:2px 8px;vertical-align:middle;">🚧 开发中</span></h1>
+          <button class="btn btn-primary" id="btn-sticker-add">＋ 新建表情包</button>
+        </div>
+        <div class="card">
+          <p class="hint">这是公开站「📖 故事集」页里的<b>🎭 表情包</b>子栏目（数据文件 <code>data/stickers.json</code>，图片存 <code>images/stickers/</code>）。<b>动图（GIF）会原样保存、不做压缩转码</b>——一旦过 canvas 转 JPEG 就只剩第一帧、动画会丢；静图统一压到 480px 以内。</p>
+          <p class="hint">⚠️ 微信没有「网页一键存表情」的接口，粉丝必须<b>在微信里打开本页 → 长按表情</b>才能加进表情面板，所以表情本身要小到适合长按直接保存。</p>
+          <div id="sticker-list" class="knowledge-list"></div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-primary" id="btn-save-stickers">💾 保存到本地</button>
+            <span class="hint" id="sticker-save-tip" style="align-self:center;">编辑 / 上传 / 增删都会自动保存，这里只是手动兜底</span>
           </div>
         </div>
       </section>
@@ -590,6 +609,21 @@
         <button class="btn btn-primary" id="knowledge-save">保存</button>
         <button class="btn btn-danger" id="knowledge-del">删除</button>
         <button class="btn" id="knowledge-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表情包编辑弹窗 -->
+  <div class="modal-bg" id="sticker-edit-modal">
+    <div class="modal-panel">
+      <button class="modal-close" id="sticker-edit-close">×</button>
+      <h3>✏️ 编辑表情包</h3>
+      <div id="sticker-editor" class="stories-editor"></div>
+      <input type="file" id="f-sticker-img" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none;">
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="sticker-save">保存</button>
+        <button class="btn btn-danger" id="sticker-del">删除</button>
+        <button class="btn" id="sticker-cancel">取消</button>
       </div>
     </div>
   </div>

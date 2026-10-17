@@ -129,6 +129,48 @@ for (let i = 0; i < cats.length; i++) {
   }
 }
 
+// ---------- validate stickers (可选：表情包 data/stickers.json) ----------
+// 表情包是独立增量：文件不存在就跳过（老分支 / 尚未上传表情时不应卡部署）
+try {
+  const stRaw = readFileSync(join(ROOT, "data", "stickers.json"), "utf-8");
+  const stickers = JSON.parse(stRaw);
+  if (!Array.isArray(stickers)) throw new Error("stickers.json 顶层不是数组");
+  const stIds = new Set();
+  stickers.forEach((p, pi) => {
+    const idx = "stickers[" + pi + "]";
+    if (!p || typeof p !== "object") { error(idx + " 应为对象"); return; }
+    if (!p.id || typeof p.id !== "string" || !p.id.trim()) error(idx + " 缺少 id 或 id 为空");
+    if (p.id) {
+      if (stIds.has(p.id)) error(idx + " id 重复: " + p.id);
+      stIds.add(p.id);
+    }
+    if (p.title !== undefined && typeof p.title !== "string") error(idx + " title 应为字符串");
+    if (p.note !== undefined && typeof p.note !== "string") error(idx + " note 应为字符串");
+    if (p.date !== undefined && p.date !== "" && !/^\d{4}(-\d{2})?(-\d{2})?$/.test(String(p.date))) {
+      error(idx + " date 格式无效 (应为 YYYY-MM-DD): " + p.date);
+    }
+    if (p.cats !== undefined) {
+      if (!Array.isArray(p.cats)) error(idx + " cats 应为猫咪 id 数组");
+      else p.cats.forEach((cid, ci) => {
+        if (typeof cid !== "string") error(idx + ".cats[" + ci + "] 应为字符串 id");
+        else if (!catIds.has(cid)) error(idx + ".cats[" + ci + "] 引用不存在的猫咪 id: " + cid);
+      });
+    }
+    if (!Array.isArray(p.items)) { error(idx + " items 应为表情图片数组"); return; }
+    p.items.forEach((it, ii) => {
+      const iidx = idx + ".items[" + ii + "]";
+      if (!it || typeof it !== "object") { error(iidx + " 应为对象"); return; }
+      if (!it.src || typeof it.src !== "string") error(iidx + " 缺少 src 或 src 为空");
+      else if (!/^images\//.test(it.src)) error(iidx + " src 应为 images/ 下的路径: " + it.src);
+      if (it.label !== undefined && typeof it.label !== "string") error(iidx + " label 应为字符串");
+      if (it.animated !== undefined && typeof it.animated !== "boolean") error(iidx + " animated 应为布尔值");
+    });
+  });
+  ok("data/stickers.json 解析成功，共 " + stickers.length + " 个表情包");
+} catch (e) {
+  if (e.code !== "ENOENT") error("data/stickers.json 读取/解析失败: " + e.message);
+}
+
 // ---------- validate relations ----------
 for (let i = 0; i < relations.length; i++) {
   const r = relations[i];

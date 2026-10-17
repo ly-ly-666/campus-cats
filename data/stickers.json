@@ -1,0 +1,27 @@
+[
+  {
+    "id": "pack_guanzhang",
+    "title": "馆长小白 · 第一批",
+    "cats": ["cat001"],
+    "date": "2026-10-16",
+    "note": "第一批试水：先拿馆长和团子们的照片当静态表情，动图（GIF）以后再加。",
+    "items": [
+      { "id": "st_001", "src": "images/cat001.jpg", "label": "馆长坐镇", "animated": false },
+      { "id": "st_002", "src": "images/cat001_album_1787764928408_0.jpg", "label": "盯——", "animated": false },
+      { "id": "st_003", "src": "images/cat001_album_1787767505259.jpg", "label": "再看一眼", "animated": false },
+      { "id": "st_004", "src": "images/cat001_album_1787812115676.jpg", "label": "装睡", "animated": false }
+    ]
+  },
+  {
+    "id": "pack_tuanzi",
+    "title": "团子天团",
+    "cats": ["cat002", "cat003", "cat004"],
+    "date": "2026-10-16",
+    "note": "",
+    "items": [
+      { "id": "st_011", "src": "images/cat002.jpg", "label": "花花问号", "animated": false },
+      { "id": "st_012", "src": "images/cat003.jpg", "label": "毛毛无语", "animated": false },
+      { "id": "st_013", "src": "images/cat004.jpg", "label": "年年摊手", "animated": false }
+    ]
+  }
+]

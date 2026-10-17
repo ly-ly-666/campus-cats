@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -45,7 +45,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="./style.css?v=40">
+  <link rel="stylesheet" href="./style.css?v=42">
 </head>
 <body>
   <!-- 加载页 -->
@@ -166,10 +166,21 @@
       <div id="events-timeline" class="events-timeline"></div>
     </section>
 
-    <!-- 故事集视图 -->
+    <!-- 故事集视图。二级切换（📖 猫咪故事 / 🎭 表情包）默认隐藏：
+         只有在 data/site-config.json 把 stickersEnabled 设为 true 时，main.js 才把它显示出来。
+         表情包功能目前关闭，故事集页与从前一样是一条列表。 -->
     <section id="stories-view" class="view">
-      <div id="submit-banner" class="submit-banner" hidden></div>
-      <div id="stories-timeline" class="stories-timeline"></div>
+      <div class="story-subtabs" role="tablist" style="display:none">
+        <button class="story-subtab active" data-sub="stories" type="button">📖 猫咪故事</button>
+        <button class="story-subtab" data-sub="stickers" type="button">🎭 表情包<span class="sticker-wip">开发中</span></button>
+      </div>
+      <div id="stories-pane" class="sub-pane">
+        <div id="submit-banner" class="submit-banner" hidden></div>
+        <div id="stories-timeline" class="stories-timeline"></div>
+      </div>
+      <div id="stickers-pane" class="sub-pane" hidden>
+        <div id="stickers-list"></div>
+      </div>
     </section>
 
     <!-- 猫咪小知识视图 -->
@@ -343,6 +354,6 @@
   </script>
 
   <!-- 入口模块（?v= 版本号：改版时递增，防止浏览器/CDN 缓存旧 JS 导致加载失败） -->
-  <script type="module" src="./js/main.js?v=20261016b"></script>
+  <script type="module" src="./js/main.js?v=20261016f"></script>
 </body>
 </html>
