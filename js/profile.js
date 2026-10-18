@@ -1,4 +1,4 @@
-﻿// profile.js — 猫咪独立档案页
+// profile.js — 猫咪独立档案页
 import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox, initLightbox } from './config.js?v=20260904p';
 import { mountLikeButton } from './likes.js?v=20260925b';
 import { mountRatingBox } from './ratings.js?v=20260926a';

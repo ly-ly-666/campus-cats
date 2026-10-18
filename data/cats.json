@@ -25,7 +25,7 @@
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
-    "age": "",
+    "age": "大约三岁了",
     "events": [
       {
         "date": "2026-09-01",
@@ -504,6 +504,51 @@
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
         ]
+      },
+      {
+        "id": "s_1792330527048_l4xynw",
+        "date": "2026-10-16",
+        "title": "小白美照集",
+        "content": "",
+        "cats": [
+          "cat001"
+        ],
+        "images": [
+          "images/cat001_story_1792330540258.jpg",
+          "images/cat001_story_1792330543627.jpg",
+          "images/cat001_story_1792330663925.jpg",
+          "images/cat001_story_1792330665890.jpg",
+          "images/cat001_story_1792330667902.jpg",
+          "images/cat001_story_1792330670778.jpg",
+          "images/cat001_story_1792330674251.jpg",
+          "images/cat001_story_1792330846806.jpg",
+          "images/cat001_story_1792330861355.jpg",
+          "images/cat001_story_1792331000499.jpg",
+          "images/cat001_story_1792331004526.jpg",
+          "images/cat001_story_1792331007093.jpg",
+          "images/cat001_story_1792331009301.jpg",
+          "images/cat001_story_1792331011528.jpg",
+          "images/cat001_story_1792331014225.jpg",
+          "images/cat001_story_1792331029838.jpg",
+          "images/cat001_story_1792331042883.jpg",
+          "images/cat001_story_1792331056145.jpg",
+          "images/cat001_story_1792331071893.jpg",
+          "images/cat001_story_1792331390076.jpg",
+          "images/cat001_story_1792331392537.jpg",
+          "images/cat001_story_1792331394628.jpg",
+          "images/cat001_story_1792331397574.jpg",
+          "images/cat001_story_1792331401378.jpg",
+          "images/cat001_story_1792331403163.jpg",
+          "images/cat001_story_1792331405236.jpg",
+          "images/cat001_story_1792331408418.jpg",
+          "images/cat001_story_1792331410586.jpg",
+          "images/cat001_story_1792331511293.jpg",
+          "images/cat001_story_1792331884329.jpg",
+          "images/cat001_story_1792331889295.jpg",
+          "images/cat001_story_1792332847973.jpg",
+          "images/cat001_story_1792332850438.jpg",
+          "images/cat001_story_1792332852911.jpg"
+        ]
       }
     ]
   },
@@ -728,6 +773,41 @@
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
         ]
+      },
+      {
+        "id": "s_1792330718840_zxdxi0",
+        "date": "2026-10-16",
+        "title": "花花美照集",
+        "content": "",
+        "cats": [
+          "cat002"
+        ],
+        "images": [
+          "images/cat002_story_1792330729578.jpg",
+          "images/cat002_story_1792331417909.jpg",
+          "images/cat002_story_1792331488719.jpg",
+          "images/cat002_story_1792331490870.jpg",
+          "images/cat002_story_1792331493235.jpg",
+          "images/cat002_story_1792331495813.jpg",
+          "images/cat002_story_1792331498417.jpg",
+          "images/cat002_story_1792331501533.jpg",
+          "images/cat002_story_1792331531905.jpg",
+          "images/cat002_story_1792331650919.jpg",
+          "images/cat002_story_1792331652573.jpg",
+          "images/cat002_story_1792331698843.jpg",
+          "images/cat002_story_1792331700858.jpg",
+          "images/cat002_story_1792331703538.jpg",
+          "images/cat002_story_1792331705965.jpg",
+          "images/cat002_story_1792331709016.jpg",
+          "images/cat002_story_1792331863220.jpg",
+          "images/cat002_story_1792331898803.jpg",
+          "images/cat002_story_1792331900427.jpg",
+          "images/cat002_story_1792331905814.jpg",
+          "images/cat002_story_1792331912676.jpg",
+          "images/cat002_story_1792331915431.jpg",
+          "images/cat002_story_1792331917957.jpg",
+          "images/cat002_story_1792331920179.jpg"
+        ]
       }
     ]
   },
@@ -850,6 +930,31 @@
           "images/cat003_story_1789311704513.jpg",
           "images/cat003_story_1789311726210.jpg",
           "images/cat003_story_1789311735179.jpg"
+        ]
+      },
+      {
+        "id": "s_1792330484718_nppkbq",
+        "date": "2026-10-16",
+        "title": "毛毛美照集",
+        "content": "",
+        "cats": [
+          "cat003"
+        ],
+        "images": [
+          "images/cat003_story_1792330495739.jpg",
+          "images/cat003_story_1792330509744.jpg",
+          "images/cat003_story_1792330518090.jpg",
+          "images/cat003_story_1792330962237.jpg",
+          "images/cat003_story_1792331020347.jpg",
+          "images/cat003_story_1792332102531.jpg",
+          "images/cat003_story_1792332104221.jpg",
+          "images/cat003_story_1792332106070.jpg",
+          "images/cat003_story_1792332108155.jpg",
+          "images/cat003_story_1792332459914.jpg",
+          "images/cat003_story_1792332589190.jpg",
+          "images/cat003_story_1792332593020.jpg",
+          "images/cat003_story_1792332878458.jpg",
+          "images/cat003_story_1792332881926.jpg"
         ]
       }
     ]
@@ -1037,6 +1142,30 @@
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
         ]
+      },
+      {
+        "id": "s_1792331982199_l9bi3o",
+        "date": "2026-10-16",
+        "title": "年年美照集",
+        "content": "",
+        "cats": [
+          "cat004"
+        ],
+        "images": [
+          "images/cat004_story_1792331991621.jpg",
+          "images/cat004_story_1792331993082.jpg",
+          "images/cat004_story_1792331995029.jpg",
+          "images/cat004_story_1792331997521.jpg",
+          "images/cat004_story_1792331999332.jpg",
+          "images/cat004_story_1792332001294.jpg",
+          "images/cat004_story_1792332043945.jpg",
+          "images/cat004_story_1792332047818.jpg",
+          "images/cat004_story_1792332075836.jpg",
+          "images/cat004_story_1792332822643.jpg",
+          "images/cat004_story_1792332826634.jpg",
+          "images/cat004_story_1792332833467.jpg",
+          "images/cat004_story_1792332836840.jpg"
+        ]
       }
     ]
   },
@@ -1214,6 +1343,30 @@
           "images/cat001_story_1789138743546.jpg",
           "images/cat001_story_1789138763013.jpg",
           "images/cat001_story_1789138789752.jpg"
+        ]
+      },
+      {
+        "id": "s_1792330288361_w2cttb",
+        "date": "2026-10-16",
+        "title": "卷卷美照集",
+        "content": "",
+        "cats": [
+          "cat005"
+        ],
+        "images": [
+          "images/cat005_story_1792330418110.jpg",
+          "images/cat005_story_1792330642646.jpg",
+          "images/cat005_story_1792330646502.jpg",
+          "images/cat005_story_1792330648324.jpg",
+          "images/cat005_story_1792330787339.jpg",
+          "images/cat005_story_1792330985065.jpg",
+          "images/cat005_story_1792331037303.jpg",
+          "images/cat005_story_1792331568955.jpg",
+          "images/cat005_story_1792331572648.jpg",
+          "images/cat005_story_1792331584309.jpg",
+          "images/cat005_story_1792331586202.jpg",
+          "images/cat005_story_1792331687885.jpg",
+          "images/cat005_story_1792331690235.jpg"
         ]
       }
     ]
@@ -1509,6 +1662,33 @@
         "images": [
           "images/cat009_story_1791214817953.jpg"
         ]
+      },
+      {
+        "id": "s_1792330601811_xt1v5s",
+        "date": "2026-10-16",
+        "title": "奶油美照集",
+        "content": "",
+        "cats": [
+          "cat009"
+        ],
+        "images": [
+          "images/cat009_story_1792330612365.jpg",
+          "images/cat009_story_1792330704164.jpg",
+          "images/cat009_story_1792330706803.jpg",
+          "images/cat009_story_1792330853669.jpg",
+          "images/cat009_story_1792330855632.jpg",
+          "images/cat009_story_1792330868344.jpg",
+          "images/cat009_story_1792330874179.jpg",
+          "images/cat009_story_1792331087676.jpg",
+          "images/cat009_story_1792331423261.jpg",
+          "images/cat009_story_1792331434380.jpg",
+          "images/cat009_story_1792331661546.jpg",
+          "images/cat009_story_1792331664168.jpg",
+          "images/cat009_story_1792331716784.jpg",
+          "images/cat009_story_1792331953975.jpg",
+          "images/cat009_story_1792331956827.jpg",
+          "images/cat009_story_1792331958720.jpg"
+        ]
       }
     ]
   },
@@ -1564,6 +1744,29 @@
           "images/cat010_story_1789311510576.jpg",
           "images/cat010_story_1789311520069.jpg",
           "images/cat010_story_1789311566202.jpg"
+        ]
+      },
+      {
+        "id": "s_1792330739559_2czt9i",
+        "date": "2026-10-16",
+        "title": "橘又白美照集",
+        "content": "",
+        "cats": [
+          "cat010"
+        ],
+        "images": [
+          "images/cat010_story_1792330756857.jpg",
+          "images/cat010_story_1792330764295.jpg",
+          "images/cat010_story_1792330896893.jpg",
+          "images/cat010_story_1792331059784.jpg",
+          "images/cat010_story_1792331062326.jpg",
+          "images/cat010_story_1792331064749.jpg",
+          "images/cat010_story_1792331067068.jpg",
+          "images/cat010_story_1792331439483.jpg",
+          "images/cat010_story_1792331441307.jpg",
+          "images/cat010_story_1792331677028.jpg",
+          "images/cat010_story_1792331679320.jpg",
+          "images/cat010_story_1792332308187.jpg"
         ]
       }
     ]
@@ -1891,6 +2094,25 @@
           "images/cat016_story_1790353370543.jpg",
           "images/cat016_story_1790353382236.jpg"
         ]
+      },
+      {
+        "id": "s_1792330826878_2d0390",
+        "date": "2026-10-16",
+        "title": "蛋蛋美照集",
+        "content": "",
+        "cats": [
+          "cat016"
+        ],
+        "images": [
+          "images/cat016_story_1792330839995.jpg",
+          "images/cat016_story_1792330878572.jpg",
+          "images/cat016_story_1792330881303.jpg",
+          "images/cat016_story_1792330883828.jpg",
+          "images/cat016_story_1792330886154.jpg",
+          "images/cat016_story_1792330888614.jpg",
+          "images/cat016_story_1792330905633.jpg",
+          "images/cat016_story_1792331382603.jpg"
+        ]
       }
     ]
   },
@@ -2094,7 +2316,7 @@
     "description": "",
     "story": "",
     "tags": [],
-    "status": "未知",
+    "status": "已绝育",
     "life": "在校",
     "firstSeen": "",
     "leftAt": "",
@@ -2300,6 +2522,42 @@
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
         ]
+      },
+      {
+        "id": "s_1792329641536_wacymi",
+        "date": "2026-10-16",
+        "title": "哈哈美照集合",
+        "content": "",
+        "cats": [
+          "cat019"
+        ],
+        "images": [
+          "images/cat019_story_1792329659377.jpg",
+          "images/cat019_story_1792329661039.jpg",
+          "images/cat019_story_1792329664674.jpg",
+          "images/cat019_story_1792329673802.jpg",
+          "images/cat019_story_1792329694852.jpg",
+          "images/cat019_story_1792329698901.jpg",
+          "images/cat019_story_1792329811735.jpg",
+          "images/cat019_story_1792329819733.jpg",
+          "images/cat019_story_1792329822740.jpg",
+          "images/cat019_story_1792329830302.jpg",
+          "images/cat019_story_1792329857433.jpg",
+          "images/cat019_story_1792329862952.jpg",
+          "images/cat019_story_1792329866726.jpg",
+          "images/cat019_story_1792329872568.jpg",
+          "images/cat019_story_1792329919113.jpg",
+          "images/cat019_story_1792329923767.jpg",
+          "images/cat019_story_1792329927689.jpg",
+          "images/cat019_story_1792329935436.jpg",
+          "images/cat019_story_1792329938753.jpg",
+          "images/cat019_story_1792329945506.jpg",
+          "images/cat019_story_1792329949111.jpg",
+          "images/cat019_story_1792330006988.jpg",
+          "images/cat019_story_1792330447893.jpg",
+          "images/cat019_story_1792330449931.jpg",
+          "images/cat019_story_1792330811380.jpg"
+        ]
       }
     ]
   },
@@ -2381,6 +2639,20 @@
           "images/cat020_story_1791214734663.jpg",
           "images/cat020_story_1791214743091.jpg",
           "images/cat020_story_1791214753068.jpg"
+        ]
+      },
+      {
+        "id": "s_1792332397753_agagoz",
+        "date": "2026-10-16",
+        "title": "小q美照集",
+        "content": "",
+        "cats": [
+          "cat020"
+        ],
+        "images": [
+          "images/cat020_story_1792332411992.jpg",
+          "images/cat020_story_1792332416809.jpg",
+          "images/cat020_story_1792332419284.jpg"
         ]
       }
     ]
@@ -2466,6 +2738,26 @@
           "images/cat021_story_1790006773738.jpg",
           "images/cat021_story_1790006782639.jpg",
           "images/cat021_story_1790006789844.jpg"
+        ]
+      },
+      {
+        "id": "s_1792330939329_2gcoyl",
+        "date": "2026-10-16",
+        "title": "笨笨美照集",
+        "content": "",
+        "cats": [
+          "cat021"
+        ],
+        "images": [
+          "images/cat021_story_1792330942909.jpg",
+          "images/cat021_story_1792332485313.jpg",
+          "images/cat021_story_1792332490452.jpg",
+          "images/cat021_story_1792332500082.jpg",
+          "images/cat021_story_1792332502151.jpg",
+          "images/cat021_story_1792332504191.jpg",
+          "images/cat021_story_1792332506124.jpg",
+          "images/cat021_story_1792332508650.jpg",
+          "images/cat021_story_1792332510799.jpg"
         ]
       }
     ]
@@ -2733,7 +3025,20 @@
     "leftAt": "2026年10月15日在花坛里发现已经去世,去世原因未知",
     "caretaker": "",
     "age": "1",
-    "events": [],
+    "events": [
+      {
+        "date": "2026-10-15",
+        "text": "乔乔在花坛被发现已经去世,疑似中毒去世,具体原因未知,乔乔晚安!",
+        "images": [
+          "images/cat032_event_1792330224139.jpg",
+          "images/cat032_event_1792330231269.jpg",
+          "images/cat032_event_1792330238143.jpg",
+          "images/cat032_event_1792330248826.jpg",
+          "images/cat032_event_1792330262155.jpg",
+          "images/cat032_event_1792330270342.jpg"
+        ]
+      }
+    ],
     "stories": [
       {
         "id": "s_1788188691251_qe83eb",
@@ -2958,6 +3263,20 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
+        ]
+      },
+      {
+        "id": "s_1792331550055_l75mn8",
+        "date": "2026-10-16",
+        "title": "囧囧美照集",
+        "content": "",
+        "cats": [
+          "cat033"
+        ],
+        "images": [
+          "images/cat033_story_1792331560133.jpg",
+          "images/cat033_story_1792331578679.jpg",
+          "images/cat033_story_1792331592921.jpg"
         ]
       }
     ]
@@ -3196,6 +3515,40 @@
           "images/cat036_story_1788502490216.jpg",
           "images/cat036_story_1788502501169.jpg"
         ]
+      },
+      {
+        "id": "s_1792330040427_eke476",
+        "date": "2026-10-16",
+        "title": "闯闯美照集",
+        "content": "",
+        "cats": [
+          "cat036"
+        ],
+        "images": [
+          "images/cat036_story_1792330052200.jpg",
+          "images/cat036_story_1792330054223.jpg",
+          "images/cat036_story_1792330056768.jpg",
+          "images/cat036_story_1792330059399.jpg",
+          "images/cat036_story_1792330063856.jpg",
+          "images/cat036_story_1792330065842.jpg",
+          "images/cat036_story_1792330079478.jpg",
+          "images/cat036_story_1792330081331.jpg",
+          "images/cat036_story_1792330091170.jpg",
+          "images/cat036_story_1792330096428.jpg",
+          "images/cat036_story_1792330100563.jpg",
+          "images/cat036_story_1792330103814.jpg",
+          "images/cat036_story_1792330461785.jpg",
+          "images/cat036_story_1792330463468.jpg",
+          "images/cat036_story_1792330470743.jpg",
+          "images/cat036_story_1792330625605.jpg",
+          "images/cat036_story_1792330627596.jpg",
+          "images/cat036_story_1792330799716.jpg",
+          "images/cat036_story_1792331051260.jpg",
+          "images/cat036_story_1792332473728.jpg",
+          "images/cat036_story_1792332646554.jpg",
+          "images/cat036_story_1792332648618.jpg",
+          "images/cat036_story_1792332653522.jpg"
+        ]
       }
     ]
   },
@@ -3311,6 +3664,21 @@
         ],
         "images": [
           "images/cat038_story_1791731378427.jpg"
+        ]
+      },
+      {
+        "id": "s_1792329963513_s8nzdd",
+        "date": "2026-10-16",
+        "title": "包包美照集",
+        "content": "",
+        "cats": [
+          "cat037"
+        ],
+        "images": [
+          "images/cat037_story_1792329973153.jpg",
+          "images/cat037_story_1792330594028.jpg",
+          "images/cat037_story_1792331095591.jpg",
+          "images/cat037_story_1792332445651.jpg"
         ]
       }
     ]
@@ -3559,6 +3927,32 @@
           "images/cat038_story_1792040866272.jpg",
           "images/cat038_story_1792040874024.jpg",
           "images/cat038_story_1792040877176.jpg"
+        ]
+      },
+      {
+        "id": "s_1792330016133_s8hm7l",
+        "date": "2026-10-16",
+        "title": "星星美照集",
+        "content": "",
+        "cats": [
+          "cat038"
+        ],
+        "images": [
+          "images/cat038_story_1792330027912.jpg",
+          "images/cat038_story_1792330030223.jpg",
+          "images/cat038_story_1792330582163.jpg",
+          "images/cat038_story_1792330774054.jpg",
+          "images/cat038_story_1792331730895.jpg",
+          "images/cat038_story_1792331739786.jpg",
+          "images/cat038_story_1792331743954.jpg",
+          "images/cat038_story_1792332025847.jpg",
+          "images/cat038_story_1792332028224.jpg",
+          "images/cat038_story_1792332030445.jpg",
+          "images/cat038_story_1792332251121.jpg",
+          "images/cat038_story_1792332253241.jpg",
+          "images/cat038_story_1792332254969.jpg",
+          "images/cat038_story_1792332258364.jpg",
+          "images/cat038_story_1792332452737.jpg"
         ]
       }
     ]
@@ -4582,7 +4976,7 @@
     "id": "cat067",
     "name": "史迪仔",
     "nickname": "小鸡毛",
-    "gender": "unknown",
+    "gender": "male",
     "color": "",
     "area": "",
     "lat": 21.678941,
@@ -4702,6 +5096,29 @@
           "images/cat067_story_1790604010762.jpg",
           "images/cat067_story_1790604047967.jpg",
           "images/cat067_story_1790604068926.jpg"
+        ]
+      },
+      {
+        "id": "s_1792329598837_9r03xu",
+        "date": "2026-10-16",
+        "title": "小鸡毛美照集",
+        "content": "",
+        "cats": [
+          "cat067"
+        ],
+        "images": [
+          "images/cat067_story_1792329616922.jpg",
+          "images/cat067_story_1792329619231.jpg",
+          "images/cat067_story_1792329621697.jpg",
+          "images/cat067_story_1792329624123.jpg",
+          "images/cat067_story_1792329627017.jpg",
+          "images/cat067_story_1792329629613.jpg",
+          "images/cat067_story_1792329631686.jpg",
+          "images/cat067_story_1792329988727.jpg",
+          "images/cat067_story_1792329992738.jpg",
+          "images/cat067_story_1792330433228.jpg",
+          "images/cat067_story_1792330562957.jpg",
+          "images/cat067_story_1792330565024.jpg"
         ]
       }
     ]
