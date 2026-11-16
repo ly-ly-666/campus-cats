@@ -4254,8 +4254,8 @@
   },
   {
     "id": "cat047",
-    "name": "小八(领养后改名为雪媚娘)",
-    "nickname": "八哥",
+    "name": "小八",
+    "nickname": "八哥,(领养后一段时间叫作雪媚娘)",
     "gender": "male",
     "color": "",
     "area": "一区门神",
@@ -4270,7 +4270,7 @@
     "story": "",
     "tags": [],
     "status": "已绝育",
-    "life": "已领养",
+    "life": "在校",
     "firstSeen": "",
     "leftAt": "",
     "caretaker": "",
@@ -4304,6 +4304,31 @@
           "images/cat047_story_1789311035424.jpg",
           "images/cat047_story_1789311093868.jpg",
           "images/cat047_story_1789311104329.jpg"
+        ]
+      },
+      {
+        "id": "s_1794795936396_56nh9l",
+        "date": "2026-11-16",
+        "title": "季节性刷新小八",
+        "content": "11月5日\n小八在花坛刷新(其实是因为领养后和原居民过不去,天天干架拆家,所以迫于无奈,又重返广油)\n(这一次我要夺回属于我的一切!)\n(由于一段时间没有更新,所以先附上小八美照吧)",
+        "cats": [
+          "cat047"
+        ],
+        "images": [
+          "images/cat047_story_1794796068477.jpg",
+          "images/cat047_story_1794796163177.jpg",
+          "images/cat047_story_1794796174216.jpg",
+          "images/cat047_story_1794796180302.jpg",
+          "images/cat047_story_1794796193470.jpg",
+          "images/cat047_story_1794796196697.jpg",
+          "images/cat047_story_1794796280398.jpg",
+          "images/cat047_story_1794796289089.jpg",
+          "images/cat047_story_1794796298904.jpg",
+          "images/cat047_story_1794796309082.jpg",
+          "images/cat047_story_1794796317610.jpg",
+          "images/cat047_story_1794796334471.jpg",
+          "images/cat047_story_1794796343906.jpg",
+          "images/cat047_story_1794796348136.jpg"
         ]
       }
     ]
