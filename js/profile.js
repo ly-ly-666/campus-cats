@@ -1,5 +1,5 @@
 // profile.js — 猫咪独立档案页
-import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox, initLightbox } from './config.js?v=20260904p';
+import { DEFAULT_PHOTO, collectStoryAlbumImages, openLightbox, initLightbox, catStatusKey } from './config.js?v=20261116c';
 import { mountLikeButton } from './likes.js?v=20260925b';
 import { mountRatingBox } from './ratings.js?v=20260926a';
 initLightbox();
@@ -152,6 +152,100 @@ function storyDisplayDate(s) {
   return d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
 }
 
+// 生活状态徽章：颜色 key 与地图 / 列表 / 排行 / 统计共用的 catStatusKey 对齐
+// （注意：猫对象的 status 是绝育状态，statusHistory[].status 才是生活状态）
+const STATUS_HISTORY_META = {
+  '在校': { key: 'present', icon: '🏫' },
+  '已领养': { key: 'adopted', icon: '🏠' },
+  '失踪': { key: 'missing', icon: '⚠️' },
+  '失踪已久': { key: 'missing-old', icon: '⚠️' },
+  '去喵星了': { key: 'past', icon: '🌈' },
+  // 仅用于时间线“当前”节点：leftAt 已填写但 life 不是去喵星时，地图/统计按过往处理
+  '过往': { key: 'past', icon: '📦' },
+};
+
+// 状态日期排序键：YYYY-MM → YYYYMM00（月精度排在同月的日精度之前；非法日期返回空）
+function statusDateKey(date) {
+  const m = String(date || '').trim().match(/^(\d{4})-(\d{2})(?:-(\d{2}))?$/);
+  if (!m) return '';
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return '';
+  if (m[3] === undefined) return m[1] + m[2] + '00';
+  const day = Number(m[3]);
+  if (day < 1 || day > 31) return '';
+  // 与 scripts/validate.mjs 一致：用 Date.UTC 回读，拒绝 2026-02-30 这类不存在的日期
+  const dt = new Date(Date.UTC(year, month - 1, day));
+  if (dt.getUTCFullYear() !== year || dt.getUTCMonth() !== month - 1 || dt.getUTCDate() !== day) return '';
+  return m[1] + m[2] + m[3];
+}
+
+// 过滤非法条目并按日期升序复制一份；不修改原数组，没有有效条目时返回空数组
+function normalizeStatusHistory(cat) {
+  if (!cat || !Array.isArray(cat.statusHistory)) return [];
+  const out = [];
+  cat.statusHistory.forEach(function (item) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return;
+    const status = String(item.status || '').trim();
+    const date = String(item.date || '').trim();
+    if (!STATUS_HISTORY_META[status] || !statusDateKey(date)) return;
+    out.push({
+      date: date,
+      status: status,
+      note: item.note == null ? '' : String(item.note),
+      sortKey: statusDateKey(date)
+    });
+  });
+  out.sort(function (a, b) {
+    return a.sortKey < b.sortKey ? -1 : (a.sortKey > b.sortKey ? 1 : 0);
+  });
+  return out;
+}
+
+function statusBadge(status, keyOverride) {
+  const meta = STATUS_HISTORY_META[status] || { key: 'past', icon: '🐾' };
+  const key = keyOverride || meta.key;
+  return '<span class="status-badge status-badge-' + key + '">' + meta.icon + ' ' + escapeHtml(status) + '</span>';
+}
+
+// 状态时间线：只有 statusHistory 有有效内容才渲染，旧数据页面保持原样
+function renderStatusTimeline(cat) {
+  const list = normalizeStatusHistory(cat);
+  if (!list.length) return '';
+  const rawLife = String(cat.life || '').trim();
+  // catStatusKey 把 leftAt 且非「去喵星了」的猫判为 past；时间线也要显示「过往」，
+  // 不能把最后一条「已领养/失踪」标成当前，否则头像无状态环、地图/统计却按过往算，互相矛盾。
+  const isPastByLeftAt = !!cat.leftAt && rawLife !== '去喵星了';
+  const currentDisplay = isPastByLeftAt ? '过往' : rawLife;
+  const currentKey = catStatusKey(cat);
+  const last = list[list.length - 1];
+  let html = '<section class="profile-section"><h3>🕓 状态时间线</h3><div class="status-timeline">';
+  list.forEach(function (item, i) {
+    // 最后一条刚好等于当前展示状态：直接标「当前」，不再重复追加节点
+    const isCurrent = !isPastByLeftAt && !!currentDisplay && item.status === currentDisplay && i === list.length - 1;
+    html += '<div class="status-tl-item' + (isCurrent ? ' status-current' : '') + '">'
+      + '<div class="status-tl-head">'
+      + '<span class="status-tl-date">' + escapeHtml(storyDateLabel(item.date)) + '</span>'
+      + statusBadge(item.status)
+      + (isCurrent ? '<span class="status-current-tag">当前</span>' : '')
+      + '</div>'
+      + (item.note ? '<div class="status-tl-note">' + escapeHtml(item.note) + '</div>' : '')
+      + '</div>';
+  });
+  // 历史还没记到当前状态：补一个「当前：...」节点，颜色取 catStatusKey（与地图/统计一致）
+  if (currentDisplay && last.status !== currentDisplay) {
+    html += '<div class="status-tl-item status-current">'
+      + '<div class="status-tl-head">'
+      + '<span class="status-tl-date">当前</span>'
+      + statusBadge(currentDisplay, currentKey)
+      + '</div>'
+      + (isPastByLeftAt && cat.leftAt ? '<div class="status-tl-note">' + escapeHtml(cat.leftAt) + '</div>' : '')
+      + '</div>';
+  }
+  html += '</div></section>';
+  return html;
+}
+
 function renderProfileStories(cat) {
   var stories = [];
   if (Array.isArray(cat.stories) && cat.stories.length) {
@@ -183,7 +277,9 @@ function render(cats, relations) {
   const cat = cats.find(function (c) { return c.id === id; });
   if (!cat) {
     document.getElementById('profile-header').style.display = 'none';
-    document.getElementById('profile-main').innerHTML = '<div class="not-found">找不到这只猫咪的档案 🐱</div>';
+    document.getElementById('profile-main').innerHTML =
+      '<div class="not-found">找不到这只猫咪的档案 🐱' +
+      '<div class="not-found-actions"><a class="back-link" href="./index.html">← 返回首页</a></div></div>';
     return;
   }
 
@@ -193,11 +289,12 @@ function render(cats, relations) {
   const past = (cat.life === '去喵星了' || cat.leftAt) ? '<span class="tag tag-past">离世' + (cat.leftAt ? ' ' + escapeHtml(cat.leftAt) : '') + '</span>' : '';
   const tags = (cat.tags || []).map(function (t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('');
   // 头像状态环：与地图/列表/排行榜一致（在校=橙、失踪=红、失踪已久=深红、已领养=绿）
-  const isPastCat = cat.life === '去喵星了' || !!cat.leftAt;
-  const lifeRing = cat.life === '失踪' ? ' ring-missing'
-    : cat.life === '失踪已久' ? ' ring-missing-old'
-    : cat.life === '已领养' ? ' ring-adopted'
-    : (cat.life === '在校' && !isPastCat) ? ' ring-present'
+  // 用 catStatusKey 判定，保证「已领养 + leftAt」这类组合在档案页与地图显示同一状态
+  const statusKey = catStatusKey(cat);
+  const lifeRing = statusKey === 'present' ? ' ring-present'
+    : statusKey === 'missing' ? ' ring-missing'
+    : statusKey === 'missing-old' ? ' ring-missing-old'
+    : statusKey === 'adopted' ? ' ring-adopted'
     : '';
 
   document.getElementById('profile-header').innerHTML = `
@@ -311,8 +408,8 @@ function render(cats, relations) {
 
   // 从排行榜点进来时，返回按钮回到排行榜标签页（而不是地图）
   const fromRank = new URLSearchParams(location.search).get('from') === 'rank';
-  const backHref = fromRank ? './index.html?tab=rank' : './index.html';
-  const backText = fromRank ? '← 返回排行榜' : '← 返回地图';
+  const backHref = fromRank ? './index.html?tab=rank' : './index.html?cat=' + encodeURIComponent(cat.id);
+  const backText = fromRank ? '← 返回排行榜' : '← 返回猫咪卡片';
 
   document.getElementById('profile-main').innerHTML = `
     <a class="back-link" href="${backHref}">${backText}</a>
@@ -323,6 +420,7 @@ function render(cats, relations) {
       <h3>📋 基本信息</h3>
       <div class="info-grid">${infoHtml}</div>
     </section>
+    ${renderStatusTimeline(cat)}
     <section class="profile-section rate-section">
       <button type="button" class="rate-toggle" aria-expanded="true">
         <span class="rate-toggle-title">⭐ 评分与评论</span>

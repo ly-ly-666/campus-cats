@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>照片墙 · 广油猫咪地图</title>
+  <meta name="description" content="沉浸式浏览广油猫咪地图里的校园猫咪照片，按猫咪、故事、相册和事件筛选。">
+  <meta name="theme-color" content="#0f1115">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css?v=47">
+  <style>
+    /* 照片墙独立深色主题 */
+    :root { color-scheme: dark; }
+    html, body { background: #0f1115; color: #f5f0e8; }
+    body { display: block; }
+
+    .wall-top {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(15, 17, 21, .9);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+    }
+    .wall-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px 8px;
+    }
+    .wall-title { font-size: 19px; font-weight: 800; color: #fbbf24; letter-spacing: .3px; }
+    .wall-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .wall-back {
+      margin-left: auto; flex-shrink: 0;
+      color: #fbbf24; text-decoration: none; font-size: 12px;
+      border: 1px solid rgba(251, 191, 36, .35);
+      background: rgba(251, 191, 36, .06);
+      padding: 7px 12px; border-radius: 999px;
+      transition: background .15s, border-color .15s;
+    }
+    .wall-back:hover { background: rgba(251, 191, 36, .16); border-color: rgba(251, 191, 36, .6); }
+    .wall-toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding: 8px 18px 10px;
+    }
+    .wall-search {
+      flex: 1 1 220px; max-width: 420px;
+      padding: 8px 13px; border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: rgba(255, 255, 255, .06);
+      color: #fff; font-size: 13px; font-family: inherit; outline: none;
+    }
+    .wall-search::placeholder { color: #6b7280; }
+    .wall-search:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .16); }
+    .wall-select {
+      padding: 8px 10px; border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: #151821; color: #e5e7eb;
+      font-size: 12px; font-family: inherit; max-width: 190px;
+    }
+    .wall-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+    .wall-filter {
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: transparent; color: #9ca3af;
+      font-size: 12px; font-family: inherit;
+      padding: 6px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .wall-filter:hover { border-color: rgba(251, 191, 36, .5); color: #fbbf24; }
+    .wall-filter.active { background: #f59e0b; border-color: #f59e0b; color: #111; font-weight: 700; }
+    .wall-count { font-size: 11px; color: #9ca3af; margin-left: auto; }
+
+    .wall-grid { column-count: 4; column-gap: 12px; padding: 14px 18px 30px; }
+    .wall-item {
+      break-inside: avoid; margin: 0 0 12px;
+      position: relative; overflow: hidden;
+      border-radius: 14px; border: 1px solid rgba(255, 255, 255, .08);
+      background: #171a21; cursor: zoom-in;
+      transition: border-color .16s, box-shadow .16s;
+    }
+    .wall-item:hover { border-color: rgba(251, 191, 36, .4); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); }
+    .wall-item:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+    .wall-item img {
+      display: block; width: 100%; height: auto;
+      background: #222; transition: transform .35s ease;
+    }
+    .wall-item:hover img { transform: scale(1.03); }
+    .wall-item.broken { display: none; }
+    .wall-cap {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 28px 10px 8px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, .78));
+      font-size: 11px; line-height: 1.45; color: #f3f4f6;
+      opacity: 0; transition: opacity .18s;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .wall-item:hover .wall-cap, .wall-item:focus-visible .wall-cap { opacity: 1; }
+    .wall-cap b { color: #fbbf24; font-weight: 700; }
+
+    .wall-empty { text-align: center; color: #9ca3af; padding: 80px 20px; font-size: 14px; }
+    .wall-more { display: flex; justify-content: center; padding: 4px 18px 56px; }
+    .wall-more button {
+      border: 1px solid rgba(251, 191, 36, .4);
+      background: rgba(251, 191, 36, .08);
+      color: #fbbf24; font-size: 13px; font-family: inherit;
+      padding: 9px 22px; border-radius: 999px; cursor: pointer;
+    }
+    .wall-more button:hover { background: rgba(251, 191, 36, .18); }
+
+    @media (max-width: 1100px) { .wall-grid { column-count: 3; } }
+    @media (max-width: 760px) {
+      .wall-header { padding: 8px 12px 6px; }
+      .wall-title { font-size: 16px; }
+      .wall-sub { display: none; }
+      .wall-back { padding: 6px 10px; font-size: 11px; }
+      .wall-toolbar { padding: 6px 12px 8px; gap: 6px; }
+      .wall-search { flex: 1 1 100%; max-width: none; padding: 7px 12px; font-size: 12px; }
+      .wall-select { flex: 0 0 auto; max-width: 125px; padding: 6px 8px; font-size: 11px; }
+      .wall-filters { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+      .wall-filters::-webkit-scrollbar { display: none; }
+      .wall-filter { flex: 0 0 auto; padding: 5px 9px; font-size: 11px; }
+      .wall-count { display: none; }
+      .wall-grid { column-count: 2; column-gap: 8px; padding: 10px 10px 24px; }
+      .wall-item { margin-bottom: 8px; border-radius: 10px; }
+      .wall-cap { opacity: 1; font-size: 10px; padding: 18px 7px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wall-top">
+    <header class="wall-header">
+      <div>
+        <div class="wall-title">📷 猫咪照片墙</div>
+        <div class="wall-sub">沉浸式欣赏校园猫咪的照片 · 点开可看大图</div>
+      </div>
+      <a class="wall-back" href="./index.html">← 返回地图</a>
+    </header>
+    <div class="wall-toolbar">
+      <input id="wall-search" class="wall-search" type="search" placeholder="🔍 搜索猫咪 / 故事 / 地点…" autocomplete="off" aria-label="搜索照片">
+      <select id="wall-cat" class="wall-select" aria-label="按猫咪筛选">
+        <option value="">全部猫咪</option>
+      </select>
+      <div class="wall-filters" role="group" aria-label="照片来源">
+        <button type="button" class="wall-filter active" data-source="all">全部</button>
+        <button type="button" class="wall-filter" data-source="story">📖 故事</button>
+        <button type="button" class="wall-filter" data-source="album">🖼️ 相册</button>
+        <button type="button" class="wall-filter" data-source="event">📅 事件</button>
+      </div>
+      <span class="wall-count" id="wall-count"></span>
+    </div>
+  </div>
+
+  <main id="wall-grid" class="wall-grid" aria-live="polite">
+    <div class="wall-empty">正在加载照片…</div>
+  </main>
+  <div class="wall-more" id="wall-more" hidden>
+    <button type="button" id="wall-more-btn">加载更多</button>
+  </div>
+  <div id="wall-error" class="wall-empty" hidden></div>
+
+  <script type="module" src="./js/gallery.js?v=20261116e"></script>
+</body>
+</html>

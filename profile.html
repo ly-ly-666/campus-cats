@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>猫咪档案</title>
-  <link rel="stylesheet" href="./style.css?v=40">
+  <link rel="stylesheet" href="./style.css?v=47">
   <style>
     .profile-header { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); padding: 28px 20px; text-align: center; border-bottom: 1px solid var(--border); }
     .profile-avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 6px 20px rgba(0,0,0,.12); margin-bottom: 12px; background: #ffd9a8; }
@@ -45,6 +45,21 @@
     .rate-host[hidden] { display: none !important; }
     .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--primary-dark); text-decoration: none; font-weight: 600; margin-bottom: 10px; }
     .not-found { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .not-found-actions { margin-top: 14px; }
+    /* 🕓 状态时间线：只有 statusHistory 有内容时才渲染（旧数据页面保持原样） */
+    .status-timeline { display: flex; flex-direction: column; gap: 12px; }
+    .status-tl-item { border-left: 3px solid var(--border); padding-left: 12px; }
+    .status-tl-item.status-current { border-left-color: var(--primary-dark); }
+    .status-tl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .status-tl-date { font-size: 12px; color: var(--muted); font-weight: 600; }
+    .status-tl-note { font-size: 13px; margin-top: 4px; line-height: 1.6; color: var(--text); white-space: pre-line; }
+    .status-current-tag { font-size: 10px; font-weight: 700; color: #fff; background: var(--primary-dark); border-radius: 999px; padding: 1px 7px; line-height: 1.6; }
+    .status-badge { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; border-radius: 999px; padding: 1px 9px; line-height: 1.6; white-space: nowrap; }
+    .status-badge-present { background: #f59e0b; }
+    .status-badge-missing { background: #dc2626; }
+    .status-badge-missing-old { background: #9f1239; }
+    .status-badge-adopted { background: #10b981; }
+    .status-badge-past { background: #9ca3af; }
   </style>
 </head>
 <body>
@@ -53,6 +68,6 @@
     <div class="loading">正在加载档案…</div>
   </main>
   <div id="toast" class="toast" role="status"></div>
-  <script type="module" src="./js/profile.js?v=20261016a"></script>
+  <script type="module" src="./js/profile.js?v=20261116d"></script>
 </body>
 </html>

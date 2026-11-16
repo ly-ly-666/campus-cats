@@ -37,8 +37,8 @@
   // 公开站代码清单：本地改了样式/脚本/页面也必须能一起推上去，
   // 否则会出现「本地端弄好了、网页端还是旧的」。（内容未变的文件会按 blob sha 自动跳过，不浪费请求）
   var CODE_FILES = [
-    'index.html', 'profile.html', 'style.css',
-    'js/config.js', 'js/main.js', 'js/map.js', 'js/ui.js', 'js/graph.js',
+    'index.html', 'gallery.html', 'profile.html', 'style.css',
+    'js/config.js', 'js/gallery.js', 'js/main.js', 'js/map.js', 'js/ui.js', 'js/graph.js',
     'js/profile.js', 'js/board.js', 'js/ratings.js', 'js/likes.js', 'js/admin.js',
     'local-admin.html', 'js/local-admin.js'
   ];
@@ -518,6 +518,8 @@
       cats: (_quickStory.cats || []).filter(Boolean),
       images: imgs
     };
+    var pc = pcClean(_quickStory.photoCats, imgs, draft.cats);
+    if (Object.keys(pc).length) draft.photoCats = pc;
     if (!Array.isArray(host.stories)) host.stories = [];
     var found = false;
     for (var j = 0; j < host.stories.length; j++) {
@@ -570,6 +572,78 @@
   });
 
   // ---------- 故事集展示顺序 ----------
+  var _soFilter = { q: '', mode: 'all' };
+  var _soOpenMonths = {};   // 月份折叠状态：key -> true=展开
+  var _soMonthsInit = false;
+
+  // 故事所属月份（优先 date；没有 date 时用 id 里的时间戳；都没有归到“未标日期”）
+  function storyMonthInfo(s) {
+    var raw = String((s && s.date) || '').trim();
+    var m = raw.match(/^(\d{4})(?:-(\d{1,2}))?/);
+    if (m) {
+      var y = m[1];
+      var mo = m[2] ? parseInt(m[2], 10) : 0;
+      if (mo >= 1 && mo <= 12) {
+        return { key: y + '-' + ('0' + mo).slice(-2), label: y + ' 年 ' + mo + ' 月' };
+      }
+      return { key: y, label: y + ' 年' };
+    }
+    var ts = storyTs(s);
+    if (ts) {
+      var d = new Date(ts);
+      return { key: d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2), label: d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月' };
+    }
+    return { key: 'unknown', label: '未标日期' };
+  }
+
+  // 卡片左上角的短日期：10-31 / 2026-10 / 未标日期
+  function storyShortDate(s) {
+    var raw = String((s && s.date) || '').trim();
+    var m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (m) return m[2] + '-' + m[3];
+    m = raw.match(/^(\d{4})-(\d{1,2})$/);
+    if (m) return raw;
+    if (raw) return raw;
+    var ts = storyTs(s);
+    if (ts) {
+      var d = new Date(ts);
+      return (d.getMonth() + 1) + '-' + d.getDate();
+    }
+    return '未标日期';
+  }
+
+  // 排序值：统一成 YYYYMMDD，日期字符串和 id 时间戳都按真实日期排
+  function storySortValue(s) {
+    var raw = String((s && s.date) || '').trim();
+    var m = raw.match(/^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/);
+    if (m) {
+      var y = parseInt(m[1], 10);
+      var mo = m[2] ? parseInt(m[2], 10) : 0;
+      var da = m[3] ? parseInt(m[3], 10) : 0;
+      return y * 10000 + mo * 100 + da;
+    }
+    var ts = storyTs(s);
+    if (ts) {
+      var d = new Date(ts);
+      return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    }
+    return 0;
+  }
+
+  // 搜索 / 筛选：置顶故事也参与筛选，避免“筛了 18 篇却看到不匹配的置顶卡”
+  function storyMatches(s, q, mode, catMap, isPinned) {
+    var linked = (s.cats || []).filter(function (cid) { return catMap[cid]; });
+    if (mode === 'pinned' && !isPinned) return false;
+    if (mode === 'multi' && linked.length <= 1) return false;
+    if (mode === 'imgs' && !(s.images && s.images.length)) return false;
+    if (!q) return true;
+    var hay = [s.title, s.content, s.date, linked.map(function (cid) { return catMap[cid].name; }).join(' ')].join(' ').toLowerCase();
+    return hay.indexOf(q) >= 0;
+  }
+
+  // 搜索/筛选变化后重渲染；月份展开状态保留
+  function applyStoryOrderFilter() { renderStoryOrder(); }
+
   function renderStoryOrder() {
     var box = $('story-order-list');
     if (!box) return;
@@ -581,15 +655,20 @@
       (Array.isArray(c.stories) ? c.stories : []).forEach(function (s) {
         if (!s || !s.id || storyMap[s.id]) return;
         var linked = (Array.isArray(s.cats) ? s.cats : []).filter(function (cid) { return catMap[cid]; });
-        storyMap[s.id] = { id: s.id, date: s.date || '', title: s.title || '', cats: linked.length ? linked : [c.id], images: Array.isArray(s.images) ? s.images : [] };
+        storyMap[s.id] = { id: s.id, date: s.date || '', title: s.title || '', content: s.content || '', cats: linked.length ? linked : [c.id], images: Array.isArray(s.images) ? s.images : [] };
       });
       if ((!Array.isArray(c.stories) || !c.stories.length) && c.story && String(c.story).trim()) {
         var lid = '__legacy_' + c.id;
-        storyMap[lid] = { id: lid, date: '', title: '', cats: [c.id], images: [] };
+        storyMap[lid] = { id: lid, date: '', title: '', content: c.story, cats: [c.id], images: [] };
       }
     });
     var stories = Object.keys(storyMap).map(function (id) { return storyMap[id]; });
-    if (!stories.length) { box.innerHTML = '<p class="hint" style="margin:0;">还没有任何故事，先给猫咪添加故事后再来置顶。</p>'; return; }
+    var cntEl = $('story-order-count');
+    if (!stories.length) {
+      box.innerHTML = '<p class="hint" style="margin:0;">还没有任何故事，先给猫咪添加故事后再来置顶。</p>';
+      if (cntEl) cntEl.textContent = '';
+      return;
+    }
     // 置顶配置（最多 3 篇）
     if (!Array.isArray(siteConfig.storyPinOrder)) siteConfig.storyPinOrder = [];
     var pin = siteConfig.storyPinOrder.filter(function (id) { return storyMap[id]; });
@@ -612,41 +691,96 @@
       renderStoryOrder();
       autoSave('故事置顶');
     }
-    // 预览顺序：置顶在前（按置顶顺序），其余按日期（无日期按上传时间）从新到旧
     var pinSet = {};
     pin.forEach(function (id) { pinSet[id] = true; });
-    var rest = stories.filter(function (s) { return !pinSet[s.id]; }).sort(function (a, b) { return storyTs(b) - storyTs(a); });
-    var ordered = pin.map(function (id) { return storyMap[id]; }).concat(rest);
-    var numMap = {}; ordered.forEach(function (s, i) { numMap[s.id] = i + 1; });
+    var rest = stories.filter(function (s) { return !pinSet[s.id]; }).sort(function (a, b) { return storySortValue(b) - storySortValue(a); });
+    var pinStories = pin.map(function (id) { return storyMap[id]; });
+    var q = String(_soFilter.q || '').trim().toLowerCase();
+    var mode = _soFilter.mode || 'all';
+    var pinnedMatches = pinStories.filter(function (s) { return storyMatches(s, q, mode, catMap, true); });
+    var restMatches = rest.filter(function (s) { return storyMatches(s, q, mode, catMap, false); });
 
-    box.innerHTML = '<div class="so-legend">' + (pin.length ? '已置顶 <b style="color:#e11d48;">' + pin.length + '/3</b> 篇，固定显示在最前；其余故事自动按日期（无日期按上传时间）从新到旧排列。' : '点击故事右侧「📌 置顶」把它固定到最前（最多 3 篇）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。') + '</div>' + ordered.map(function (s) {
+    // 按月份分组（月份内保持从新到旧）
+    var groups = {};
+    restMatches.forEach(function (s) {
+      var mi = storyMonthInfo(s);
+      if (!groups[mi.key]) groups[mi.key] = { key: mi.key, label: mi.label, items: [] };
+      groups[mi.key].items.push(s);
+    });
+    var monthKeys = Object.keys(groups).sort(function (a, b) {
+      if (a === 'unknown') return 1;
+      if (b === 'unknown') return -1;
+      return b.localeCompare(a);
+    });
+    // 第一次打开只展开最新月份；搜索/筛选时自动展开所有命中月份
+    if (!_soMonthsInit) {
+      _soMonthsInit = true;
+      if (monthKeys.length) _soOpenMonths[monthKeys[0]] = true;
+    }
+    if (q || mode !== 'all') {
+      monthKeys.forEach(function (k) { _soOpenMonths[k] = true; });
+    }
+
+    function cardHtml(s) {
       var pIdx = pin.indexOf(s.id);
       var pinned = pIdx >= 0;
       var isLegacy = String(s.id).indexOf('__legacy_') === 0;
-      var dateTxt = s.date ? '<span class="so-story-date">🗓 ' + esc(String(s.date)) + '</span>' : '';
-      var titleTxt = (s.title && String(s.title).trim()) ? esc(s.title) : '<span class="so-story-null">（无标题）</span>';
       var linked = (s.cats || []).filter(function (cid) { return catMap[cid]; });
-      var catsTxt = linked.length > 1 ? '<span class="so-story-cats">🐾 ' + linked.map(function (cid) { return esc(catMap[cid].name); }).join('、') + '</span>' : '';
-      var pinBtn = pinned
-        ? '<button type="button" class="btn btn-sm so-pin on" data-id="' + esc(s.id) + '" title="取消置顶">📌 置顶 ' + (pIdx + 1) + '</button>'
-        : '<button type="button" class="btn btn-sm so-pin" data-id="' + esc(s.id) + '" title="置顶到最前">📌 置顶</button>';
+      var rawTitle = (s.title && String(s.title).trim()) ? String(s.title) : '';
+      var titleTxt = rawTitle ? esc(rawTitle) : '<span class="so-story-null">（无标题）</span>';
+      var catsTxt = linked.map(function (cid) { return '<span class="so-card-cat">🐾 ' + esc(catMap[cid].name) + '</span>'; }).join('');
+      var imgsTxt = s.images.length ? '<span class="so-card-img">🖼️ ' + s.images.length + '</span>' : '';
+      var pinBadge = pinned ? '<span class="so-card-pin">📌 ' + (pIdx + 1) + '</span>' : '';
       var pinMove = pinned
-        ? '<span style="display:flex;gap:4px;">' + (pIdx > 0 ? '<button type="button" class="btn btn-sm so-pin-up" data-id="' + esc(s.id) + '" title="置顶顺序上移">▲</button>' : '') + (pIdx < pin.length - 1 ? '<button type="button" class="btn btn-sm so-pin-down" data-id="' + esc(s.id) + '" title="置顶顺序下移">▼</button>' : '') + '</span>'
+        ? '<span class="so-move-group">' + (pIdx > 0 ? '<button type="button" class="so-move so-pin-up" data-id="' + esc(s.id) + '" title="置顶顺序上移">▲</button>' : '') + (pIdx < pin.length - 1 ? '<button type="button" class="so-move so-pin-down" data-id="' + esc(s.id) + '" title="置顶顺序下移">▼</button>' : '') + '</span>'
         : '';
-      var editBtn = isLegacy ? '' : '<button type="button" class="btn btn-sm so-edit" data-id="' + esc(s.id) + '" title="快速编辑这篇故事">✏️</button>';
-      return '<div class="so-item' + (pinned ? ' pinned' : '') + '"><div class="so-head">'
-        + '<span style="font-weight:700;color:#b45309;min-width:26px;">' + (pinned ? '📌' : '#' + numMap[s.id]) + '</span>'
-        + dateTxt + '<span class="so-story-title' + (isLegacy ? '' : ' editable') + '" style="flex:1;"' + (isLegacy ? '' : ' data-id="' + esc(s.id) + '" title="点击快速编辑"') + '>' + titleTxt + '</span>'
-        + catsTxt + pinMove + editBtn + pinBtn
-        + '</div></div>';
-    }).join('');
+      var editBtn = isLegacy ? '' : '<button type="button" class="so-act so-edit" data-id="' + esc(s.id) + '" title="快速编辑这篇故事">✏️ 编辑</button>';
+      var pinBtn = '<button type="button" class="so-act so-pin' + (pinned ? ' on' : '') + '" data-id="' + esc(s.id) + '" title="' + (pinned ? '取消置顶' : '置顶到最前') + '">' + (pinned ? '取消置顶' : '📌 置顶') + '</button>';
+      return '<div class="so-item' + (pinned ? ' pinned' : '') + '" data-pinned="' + (pinned ? '1' : '0') + '" data-multi="' + (linked.length > 1 ? '1' : '0') + '" data-imgs="' + (s.images.length ? '1' : '0') + '">' +
+        '<div class="so-card-top"><span class="so-card-date">📅 ' + esc(storyShortDate(s)) + '</span>' + pinBadge + '</div>' +
+        '<div class="so-card-title' + (isLegacy ? '' : ' editable') + '"' + (isLegacy ? '' : ' data-id="' + esc(s.id) + '"') + ' title="' + esc(rawTitle || '（无标题）') + '">' + titleTxt + '</div>' +
+        '<div class="so-card-meta">' + catsTxt + imgsTxt + '</div>' +
+        '<div class="so-card-actions">' + pinMove + editBtn + pinBtn + '</div>' +
+      '</div>';
+    }
+
+    var sections = [];
+    if (pinnedMatches.length) {
+      sections.push('<section class="so-pinned-section">' +
+        '<div class="so-section-head"><span class="so-section-title">📌 置顶</span><span class="so-section-count">' + pinnedMatches.length + ' / 3</span><span class="so-section-hint">固定显示在公开站最前</span></div>' +
+        '<div class="so-grid">' + pinnedMatches.map(cardHtml).join('') + '</div>' +
+      '</section>');
+    }
+    monthKeys.forEach(function (k) {
+      var g = groups[k];
+      var open = !!_soOpenMonths[k];
+      sections.push('<section class="so-month' + (open ? '' : ' collapsed') + '" data-month="' + esc(k) + '">' +
+        '<button type="button" class="so-month-head" data-so-month="' + esc(k) + '"><span class="so-month-caret">' + (open ? '▾' : '▸') + '</span><span class="so-month-title">' + esc(g.label) + '</span><span class="so-month-count">' + g.items.length + ' 篇</span></button>' +
+        '<div class="so-month-body"><div class="so-grid">' + g.items.map(cardHtml).join('') + '</div></div>' +
+      '</section>');
+    });
+    box.innerHTML = sections.length ? sections.join('') : '<p class="hint" style="margin:0;">没有匹配的故事</p>';
+
     box.querySelectorAll('.so-pin').forEach(function (b) { b.addEventListener('click', function () { pinStory(b.dataset.id); }); });
     box.querySelectorAll('.so-pin-up').forEach(function (b) { b.addEventListener('click', function () { movePin(pin.indexOf(b.dataset.id), pin.indexOf(b.dataset.id) - 1); }); });
     box.querySelectorAll('.so-pin-down').forEach(function (b) { b.addEventListener('click', function () { movePin(pin.indexOf(b.dataset.id), pin.indexOf(b.dataset.id) + 1); }); });
     box.querySelectorAll('.so-edit').forEach(function (b) { b.addEventListener('click', function () { openQuickStoryEdit(b.dataset.id); }); });
-    box.querySelectorAll('.so-story-title.editable').forEach(function (b) { b.addEventListener('click', function () { openQuickStoryEdit(b.dataset.id); }); });
+    box.querySelectorAll('.so-card-title.editable').forEach(function (b) { b.addEventListener('click', function () { openQuickStoryEdit(b.dataset.id); }); });
+    box.querySelectorAll('[data-so-month]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var sec = b.closest('.so-month');
+        if (!sec) return;
+        var key = b.dataset.soMonth;
+        var willCollapse = !sec.classList.contains('collapsed');
+        sec.classList.toggle('collapsed', willCollapse);
+        var caret = b.querySelector('.so-month-caret');
+        if (caret) caret.textContent = willCollapse ? '▸' : '▾';
+        _soOpenMonths[key] = !willCollapse;
+      });
+    });
+    var total = pinnedMatches.length + restMatches.length;
+    if (cntEl) cntEl.textContent = '显示 ' + total + ' / ' + stories.length + ' 篇' + (pinnedMatches.length ? ' · 置顶 ' + pinnedMatches.length + ' 篇' : '');
   }
-
 
   // ---------- 渲染 ----------
   function normalizeCats() {
@@ -684,7 +818,9 @@
 
       box.innerHTML = filtered.map(function (c) {
         var photo = c.photo || 'images/placeholder.svg';
-        var fallback = photo.indexOf('placeholder') >= 0 ? '' : '<span class="fallback">🐱</span>';
+        // 兜底 🐱 无条件输出但默认隐藏（CSS display:none）：图片加载成功就一直藏着，
+        // 加载失败时 onerror 把 img 隐藏、把 span 显示出来。同时保证 img.nextElementSibling 永远存在。
+        var fallback = '<span class="fallback">🐱</span>';
         var past = c.leftAt ? '<span style="color:#9ca3af">（过往）</span>' : '';
         var hidden = c.visible === false;
         function statusBadge(c) {
@@ -694,12 +830,13 @@
           return '';
         }
         return '<div class="catcard' + (hidden ? ' off' : '') + '">' +
-          '<div class="th"><img src="' + photo + '" alt="" onerror="this.style.opacity=0">' + fallback + '</div>' +
+          '<div class="th" data-cat-photos="' + esc(c.id) + '" title="点击管理故事照片归属"><img src="' + photo + '" alt="" onload="this.nextElementSibling.style.display=\'none\'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' + fallback + '</div>' +
           '<div class="bd">' +
           '<div class="nm">' + esc(c.name) + ' <span style="color:#94a3b8;font-size:12px;font-weight:400">#' + esc(c.id) + '</span>' + (c.nickname ? '<span class="nick">（' + esc(c.nickname) + '）</span>' : '') + past + statusBadge(c) + (hidden ? ' <span class="off-badge">🚫 已隐藏</span>' : '') + '</div>' +
           '<div class="meta">' + (c.gender === 'male' ? '公' : (c.gender === 'female' ? '母' : '未知')) + ' · 绝育:' + esc(c.status || '未知') + ' · ' + esc(c.life || '在校') + ' · 📍 ' + esc(c.area || '') + '</div>' +
           '<div class="meta">' + (c.firstSeen ? '出现于 ' + c.firstSeen : '') + '</div>' +
           '<div class="ops"><button class="btn btn-sm" data-edit-id="' + c.id + '">编辑</button>' +
+          '<button class="btn btn-sm" data-photos-id="' + c.id + '" title="点击照片快速设置故事照片归属">📷 照片</button>' +
           '<button class="btn btn-sm" data-toggle-id="' + c.id + '">' + (hidden ? '👁️ 恢复展示' : '🚫 隐藏') + '</button>' +
           '<button class="btn btn-sm btn-danger" data-del-id="' + c.id + '">删除</button></div>' +
           '</div></div>';
@@ -710,6 +847,12 @@
           var idx = cats.findIndex(function (x) { return x.id === b.dataset.editId; });
           if (idx >= 0) openCatModal(idx);
         });
+      });
+      box.querySelectorAll('[data-cat-photos]').forEach(function (el) {
+        el.addEventListener('click', function () { openCatPhotos(el.dataset.catPhotos); });
+      });
+      box.querySelectorAll('[data-photos-id]').forEach(function (b) {
+        b.addEventListener('click', function () { openCatPhotos(b.dataset.photosId); });
       });
       box.querySelectorAll('[data-toggle-id]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -915,6 +1058,22 @@
   function openModal(id) { $(id).classList.add('open'); }
   function closeModal(id) { $(id).classList.remove('open'); }
 
+  // 猫咪编辑弹窗的分页：基本信息 / 故事 / 事件
+  function switchCatTab(key) {
+    var modal = $('cat-modal');
+    if (!modal) return;
+    modal.querySelectorAll('.modal-tab').forEach(function (b) {
+      var on = b.dataset.catTab === key;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    modal.querySelectorAll('.cat-tab-pane').forEach(function (p) {
+      p.classList.toggle('active', p.dataset.catPane === key);
+    });
+    var body = modal.querySelector('.modal-body');
+    if (body) body.scrollTop = 0;
+  }
+
   function openCatModal(idx) {
     editIdx = idx;
     var c = idx < 0 ? null : cats[idx];
@@ -959,6 +1118,7 @@
     }
     var banner = $('cat-status-banner');
     if (banner) { banner.innerHTML = statusBanner; banner.style.display = statusBanner ? '' : 'none'; }
+    switchCatTab('basic');
     openModal('cat-modal');
     validateCatForm();
   }
@@ -969,6 +1129,8 @@
       return '<div class="album-item"><img src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'">' +
         '<button class="del" data-idx="' + idx + '">×</button></div>';
     }).join('');
+    var cnt = $('album-count');
+    if (cnt) cnt.textContent = album.length + ' 张';
     $('album-list').querySelectorAll('.del').forEach(function (b) {
       b.addEventListener('click', function () {
         var c = cats[editIdx];
@@ -984,6 +1146,8 @@
   var _evtImgTarget = -1;    // 当前要往哪个事件里加图（索引）
   var _pendingStories = [];
   var _storyImgTarget = -1;
+  var STORY_PAGE_SIZE = 10;                  // 猫咪故事 tab 每批显示条数
+  var _storyVisibleCount = STORY_PAGE_SIZE;  // 当前显示到第几条（打开猫咪弹窗时重置）
 
   function renderEvents(events) {
     _pendingEvents = (events || []).map(function (ev) {
@@ -1002,6 +1166,8 @@
   function refreshEvents() {
     var box = $('events-list');
     if (!box) return;
+    var evBadge = $('cat-event-count');
+    if (evBadge) evBadge.textContent = _pendingEvents.length;
     if (!_pendingEvents.length) {
       box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有事件，点下方「添加事件」记录（如：绝育、救助、新照）。</p>';
       return;
@@ -1055,15 +1221,19 @@
   function renderStories(stories) {
     var hostId = (editIdx >= 0 && cats[editIdx]) ? cats[editIdx].id : '';
     _pendingStories = (stories || []).map(function (s) {
-      return {
+      var item = {
         id: s.id || ('s_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
         date: s.date || '',
         title: s.title || '',
         content: s.content || '',
         images: (s.images || []).map(function (img) { return { path: img }; }),
-        cats: (Array.isArray(s.cats) && s.cats.length) ? s.cats.slice() : (hostId ? [hostId] : [])
+        cats: (Array.isArray(s.cats) && s.cats.length) ? s.cats.slice() : (hostId ? [hostId] : []),
+        photoCats: (s.photoCats && typeof s.photoCats === 'object' && !Array.isArray(s.photoCats)) ? JSON.parse(JSON.stringify(s.photoCats)) : {}
       };
+      pcNormalize(item);
+      return item;
     });
+    _storyVisibleCount = STORY_PAGE_SIZE;   // 每次打开猫咪弹窗，故事 tab 先只显示前 10 篇
     refreshStories();
   }
   // 故事排序时间：优先用 date 字段（YYYY-MM[-DD]），否则回退到 id 里的时间戳
@@ -1082,6 +1252,468 @@
     for (var i = 0; i < cats.length; i++) if (cats[i].id === id) return cats[i];
     return null;
   }
+
+  // ---------- 故事配图的猫咪归属（photoCats） ----------
+  // story.photoCats = { "images/xxx.jpg": ["cat001", "cat002"] }
+  // - 没有这个键 = 共享给故事关联的所有猫（老数据行为，不写冗余配置）
+  // - 空数组 [] = 明确不进任何猫的相册（合影 / 周边 / 风景图等）
+  // - 有猫 id = 只进这些猫的档案相册
+  function pcHas(obj, key) { return Object.prototype.hasOwnProperty.call(obj || {}, key); }
+  function pcImageKey(im) {
+    if (typeof im === 'string') return im;
+    return im ? (im.path || im.dataUrl || '') : '';
+  }
+  function pcCats(s) { return (s && Array.isArray(s.cats) ? s.cats : []).filter(Boolean); }
+  // null = 共享（没有显式配置）；数组 = 显式归属（可能是 []）
+  function pcList(s, src) {
+    if (!s || !s.photoCats || !pcHas(s.photoCats, src)) return null;
+    var v = s.photoCats[src];
+    return Array.isArray(v) ? v : [];
+  }
+  // 清洗配置：删除已不存在的图片；取消关联的猫从归属里剔除；全选回到“共享”；保留显式 []
+  function pcClean(photoCats, imagePaths, catIds) {
+    var out = {};
+    if (!photoCats || typeof photoCats !== 'object' || Array.isArray(photoCats)) return out;
+    var imgSet = {}, catSet = {};
+    (imagePaths || []).forEach(function (p) { if (p) imgSet[p] = 1; });
+    (catIds || []).forEach(function (cid) { catSet[cid] = 1; });
+    Object.keys(photoCats).forEach(function (src) {
+      if (!imgSet[src]) return;
+      var v = photoCats[src];
+      if (!Array.isArray(v)) return;
+      if (v.length === 0) { out[src] = []; return; }
+      var inter = [];
+      v.forEach(function (cid) { if (catSet[cid] && inter.indexOf(cid) < 0) inter.push(cid); });
+      if (!inter.length) return; // 原来关联的猫都被取消了 → 回到共享
+      if (inter.length === (catIds || []).length) return; // 全选 = 共享，不写冗余配置
+      out[src] = inter;
+    });
+    return out;
+  }
+  function pcNormalize(s) {
+    if (!s) return;
+    var imgs = (s.images || []).map(pcImageKey).filter(Boolean);
+    var cleaned = pcClean(s.photoCats, imgs, pcCats(s));
+    if (Object.keys(cleaned).length) s.photoCats = cleaned; else delete s.photoCats;
+  }
+  function pcCatName(cid) { var cc = catById(cid); return cc ? cc.name : cid; }
+  // 图片当前所在分组：shared = 共享（无显式配置）、none = 不进相册、cat:<id> = 只进这只猫、multi:<ids> = 多猫组合
+  function pcGroupKey(s, src) {
+    var list = pcList(s, src);
+    if (list === null) return 'shared';
+    if (!list.length) return 'none';
+    if (list.length === 1) return 'cat:' + list[0];
+    return 'multi:' + list.slice().sort().join(',');
+  }
+  function pcGroupLabel(s, key) {
+    var catsArr = pcCats(s);
+    if (key === 'shared') return catsArr.length === 1 ? pcCatName(catsArr[0]) + '（默认）' : '共享（所有关联猫）';
+    if (key === 'none') return '不进任何猫咪相册';
+    if (key.indexOf('cat:') === 0) return pcCatName(key.slice(4));
+    if (key.indexOf('multi:') === 0) return '多猫：' + key.slice(6).split(',').map(pcCatName).join('、');
+    return key;
+  }
+  function pcGroupKeys(s) {
+    var catsArr = pcCats(s);
+    var keys = ['shared'];
+    if (catsArr.length > 1) catsArr.forEach(function (cid) { keys.push('cat:' + cid); });
+    var seen = {};
+    (s.images || []).forEach(function (im) {
+      var k = pcGroupKey(s, pcImageKey(im));
+      if (k.indexOf('multi:') === 0 && !seen[k]) { seen[k] = 1; keys.push(k); }
+    });
+    keys.push('none');
+    return keys;
+  }
+  // 把一张图移动到指定分组；shared 会删除显式配置（回到默认共享）
+  function pcMovePhoto(s, src, group) {
+    if (!s || !src || !group) return;
+    var catsArr = pcCats(s);
+    if (!s.photoCats || typeof s.photoCats !== 'object' || Array.isArray(s.photoCats)) s.photoCats = {};
+    if (group === 'shared') {
+      delete s.photoCats[src];
+    } else if (group === 'none') {
+      s.photoCats[src] = [];
+    } else if (group.indexOf('cat:') === 0) {
+      var cid = group.slice(4);
+      if (catsArr.indexOf(cid) < 0) return;
+      s.photoCats[src] = [cid];
+    } else if (group.indexOf('multi:') === 0) {
+      var ids = group.slice(6).split(',').filter(function (id) { return catsArr.indexOf(id) >= 0; });
+      if (!ids.length) return;
+      s.photoCats[src] = ids;
+    } else {
+      return;
+    }
+    pcNormalize(s);
+  }
+  function pcMoveAll(s, group) {
+    if (!s || !group) return;
+    (s.images || []).forEach(function (im) { var src = pcImageKey(im); if (src) pcMovePhoto(s, src, group); });
+  }
+  function pcRemoveImage(s, src) {
+    if (!s || !src) return;
+    var idx = -1;
+    (s.images || []).forEach(function (im, i) { if (pcImageKey(im) === src) idx = i; });
+    if (idx >= 0) s.images.splice(idx, 1);
+    if (s.photoCats) delete s.photoCats[src];
+  }
+  // 生成「相册分组」面板：每个分组一个名字 + 下面的照片，照片可拖动换组
+  function pcBoxHtml(s, ctx, si) {
+    var catsArr = pcCats(s);
+    var imgs = (s.images || []).map(function (im, j) { return { src: pcImageKey(im), j: j }; }).filter(function (it) { return it.src; });
+    if (!catsArr.length || !imgs.length) return '';
+    pcNormalize(s);
+    var keys = pcGroupKeys(s);
+    var byGroup = {};
+    keys.forEach(function (k) { byGroup[k] = []; });
+    imgs.forEach(function (it) {
+      var k = pcGroupKey(s, it.src);
+      if (!byGroup[k]) k = 'shared';
+      byGroup[k].push(it);
+    });
+    var options = '<option value="">选择分组…</option>' + keys.map(function (k) {
+      return '<option value="' + esc(k) + '">' + esc(pcGroupLabel(s, k)) + '</option>';
+    }).join('');
+    var sections = keys.map(function (key) {
+      var list = byGroup[key] || [];
+      var isCat = key.indexOf('cat:') === 0;
+      var cid = isCat ? key.slice(4) : '';
+      var avatar = '';
+      if (isCat) {
+        var cc = catById(cid);
+        avatar = '<img class="pc-avatar" src="' + esc(thumbUrl(cc && cc.photo)) + '" alt="" onerror="this.style.visibility=\'hidden\'">';
+      }
+      var thumbs = list.map(function (it) {
+        return '<div class="pcd-thumb" draggable="true" data-pc-src="' + esc(it.src) + '" title="点击选择归属猫咪，或直接拖到其他分组">' +
+          '<img src="' + esc(it.src) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+          '<button type="button" class="pcd-del" data-pc-del="' + esc(it.src) + '" title="从故事中删除这张图">×</button>' +
+        '</div>';
+      }).join('');
+      return '<section class="pc-group' + (thumbs ? '' : ' empty') + '" data-pc-group="' + esc(key) + '">' +
+        '<div class="pc-group-head" data-pc-group-head="' + esc(key) + '" title="点击照片可多选归属；也可以直接拖到这里">' + avatar +
+          '<b>' + esc(pcGroupLabel(s, key)) + '</b>' +
+          '<span class="pc-count">' + list.length + ' 张</span>' +
+          '<span class="pc-drop-hint">拖到这里</span>' +
+        '</div>' +
+        (thumbs ? '<div class="pc-group-body">' + thumbs + '</div>' : '') +
+      '</section>';
+    }).join('');
+    return '<div class="photo-groups" data-pc-box="1" data-pc-ctx="' + ctx + '" data-si="' + si + '">' +
+      '<div class="pc-head"><b>🎯 相册分组</b><span class="hint">点击照片可多选归属猫咪，也可以直接拖动缩略图。没单独分组的照片默认所有关联猫共享。</span></div>' +
+      '<div class="pc-toolbar">' +
+        '<button type="button" class="btn btn-sm" data-pc-reset="1" data-pc-ctx="' + ctx + '" data-si="' + si + '">全部恢复共享</button>' +
+        '<span class="pc-bulk-label">全部移到：</span>' +
+        '<select class="pc-bulk-select" data-pc-ctx="' + ctx + '" data-si="' + si + '">' + options + '</select>' +
+        '<button type="button" class="btn btn-sm" data-pc-bulk-apply="1" data-pc-ctx="' + ctx + '" data-si="' + si + '">应用</button>' +
+      '</div>' +
+      sections +
+    '</div>';
+  }
+
+  // 点击照片 → 弹出「归属到哪些猫咪」多选框。比拖动更直观，也支持一张图进多只猫。
+  var _photoAssign = null;
+
+  function ensurePhotoAssignPop() {
+    var pop = document.getElementById('photo-assign-pop');
+    if (pop) return pop;
+    pop = document.createElement('div');
+    pop.id = 'photo-assign-pop';
+    pop.className = 'photo-assign-pop';
+    pop.hidden = true;
+    pop.innerHTML = '<div class="pap-head"><b>归属到哪些猫咪的相册？</b><button type="button" id="pap-close" aria-label="关闭">×</button></div>' +
+      '<div class="pap-sub">可多选；全选 = 所有关联猫共享；全不选 = 不进任何猫咪相册。</div>' +
+      '<div class="pap-chips" id="pap-chips"></div>' +
+      '<div class="pap-state" id="pap-state"></div>' +
+      '<div class="pap-actions">' +
+        '<button type="button" class="btn btn-sm" id="pap-all">全选关联猫</button>' +
+        '<button type="button" class="btn btn-sm" id="pap-none">不进任何相册</button>' +
+        '<button type="button" class="btn btn-sm btn-primary" id="pap-apply">应用</button>' +
+      '</div>';
+    document.body.appendChild(pop);
+    pop.addEventListener('click', function (e) { e.stopPropagation(); });
+    pop.querySelector('#pap-close').addEventListener('click', closePhotoAssign);
+    pop.querySelector('#pap-all').addEventListener('click', function () {
+      if (!_photoAssign) return;
+      _photoAssign.selected = new Set(pcCats(_photoAssign.story));
+      renderPhotoAssignChips();
+    });
+    pop.querySelector('#pap-none').addEventListener('click', function () {
+      if (!_photoAssign) return;
+      _photoAssign.selected = new Set();
+      renderPhotoAssignChips();
+    });
+    pop.querySelector('#pap-apply').addEventListener('click', applyPhotoAssign);
+    return pop;
+  }
+
+  function papStateText() {
+    if (!_photoAssign) return '';
+    var catsArr = pcCats(_photoAssign.story);
+    var sel = catsArr.filter(function (cid) { return _photoAssign.selected.has(cid); });
+    if (!sel.length) return '当前：不进任何猫咪相册';
+    if (sel.length === catsArr.length) return catsArr.length === 1 ? '当前：' + pcCatName(catsArr[0]) + '（默认）' : '当前：共享给所有关联猫';
+    return '当前：仅进 ' + sel.map(pcCatName).join('、');
+  }
+
+  function renderPhotoAssignChips() {
+    var pop = ensurePhotoAssignPop();
+    if (!_photoAssign) return;
+    var catsArr = pcCats(_photoAssign.story);
+    var box = pop.querySelector('#pap-chips');
+    box.innerHTML = catsArr.map(function (cid) {
+      var cc = catById(cid);
+      var on = _photoAssign.selected.has(cid);
+      return '<button type="button" class="pap-chip' + (on ? ' on' : '') + '" data-cat="' + esc(cid) + '">' + esc(cc ? cc.name : cid) + '</button>';
+    }).join('');
+    box.querySelectorAll('.pap-chip').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!_photoAssign) return;
+        var cid = b.dataset.cat;
+        if (_photoAssign.selected.has(cid)) _photoAssign.selected.delete(cid);
+        else _photoAssign.selected.add(cid);
+        renderPhotoAssignChips();
+      });
+    });
+    var state = pop.querySelector('#pap-state');
+    if (state) state.textContent = papStateText();
+  }
+
+  function openPhotoAssign(el, src, story, ctx, si) {
+    if (!el || !src || !story) return;
+    var catsArr = pcCats(story);
+    if (!catsArr.length) return;
+    var cur = pcList(story, src);
+    var selected = cur === null ? catsArr.slice() : cur.slice();
+    _photoAssign = { story: story, src: src, ctx: ctx, si: Number(si), selected: new Set(selected) };
+    var pop = ensurePhotoAssignPop();
+    renderPhotoAssignChips();
+    pop.hidden = false;
+    var r = el.getBoundingClientRect();
+    var pw = Math.min(320, window.innerWidth - 20);
+    var left = Math.max(10, Math.min(r.left, window.innerWidth - pw - 10));
+    var top = r.bottom + 8;
+    var ph = pop.offsetHeight || 220;
+    if (top + ph > window.innerHeight - 10) top = Math.max(10, r.top - ph - 8);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    pop.style.width = pw + 'px';
+    pop.style.right = 'auto';
+    pop.style.bottom = 'auto';
+    if (window.innerWidth < 600) {
+      pop.style.left = '10px';
+      pop.style.right = '10px';
+      pop.style.width = 'auto';
+      pop.style.top = 'auto';
+      pop.style.bottom = '10px';
+    }
+  }
+
+  function closePhotoAssign() {
+    var pop = document.getElementById('photo-assign-pop');
+    if (pop) pop.hidden = true;
+    _photoAssign = null;
+  }
+
+  function applyPhotoAssign() {
+    if (!_photoAssign) return;
+    var s = _photoAssign.story;
+    var catsArr = pcCats(s);
+    var sel = catsArr.filter(function (cid) { return _photoAssign.selected.has(cid); });
+    if (!s.photoCats || typeof s.photoCats !== 'object' || Array.isArray(s.photoCats)) s.photoCats = {};
+    // 全选 = 共享（不写显式配置）；全不选 = 空数组；其余 = 只进选中的猫
+    if (sel.length === catsArr.length && catsArr.length) delete s.photoCats[_photoAssign.src];
+    else s.photoCats[_photoAssign.src] = sel;
+    pcNormalize(s);
+    // 从「按猫咪看照片」改的归属，要同步到所有关联猫的故事副本；
+    // 故事编辑器里的操作走原有的 save / syncStoryLinks 链路，不在这里重复。
+    if (_photoAssign.ctx === 'catPhotos') {
+      var prefIdx = (cats || []).findIndex(function (c) { return c.id === _catPhotosId; });
+      syncStoryLinks(prefIdx);
+      syncOpenStoryDrafts(s);
+    }
+    var ctx = _photoAssign.ctx;
+    var si = _photoAssign.si;
+    closePhotoAssign();
+    pcRefresh(ctx, si);
+  }
+
+  // ---------- 按猫咪查看故事照片并快速归属 ----------
+  var _catPhotosId = null;
+  function pcInCat(s, src, catId) {
+    var list = pcList(s, src);
+    return list === null || list.indexOf(catId) >= 0;
+  }
+  function pcAssignedLabel(s, src) {
+    var list = pcList(s, src);
+    if (list === null) return '共享（所有关联猫）';
+    if (!list.length) return '不进任何猫咪相册';
+    return '仅进：' + list.map(pcCatName).join('、');
+  }
+  function openCatPhotos(catId) {
+    var target = catById(catId);
+    if (!target) return;
+    _catPhotosId = catId;
+    renderCatPhotos();
+    openModal('cat-photos-modal');
+  }
+  // 猫咪照片视图改的是 cats 里某一份故事副本；同步到所有关联猫的副本，
+  // 并同步猫咪/故事编辑弹窗里尚未保存的草稿，避免点「保存」时把归属覆盖回去。
+  function syncOpenStoryDrafts(s) {
+    if (!s || !s.id) return;
+    function applyDraft(d) {
+      if (!d || d.id !== s.id) return;
+      var imgs = (d.images || []).map(pcImageKey).filter(Boolean);
+      var pc = pcClean(s.photoCats, imgs, (d.cats || []).filter(Boolean));
+      if (Object.keys(pc).length) d.photoCats = pc; else delete d.photoCats;
+    }
+    (Array.isArray(_pendingStories) ? _pendingStories : []).forEach(applyDraft);
+    if (_quickStory) applyDraft(_quickStory);
+  }
+  function renderCatPhotos() {
+    var target = catById(_catPhotosId);
+    var listEl = $('cat-photos-list');
+    var nameEl = $('cat-photos-name');
+    var summaryEl = $('cat-photos-summary');
+    if (!target || !listEl) return;
+    if (nameEl) nameEl.textContent = target.name || target.id;
+    var seen = {};
+    var items = [];
+    (target.stories || []).forEach(function (s) {
+      if (!s || !s.id || seen[s.id]) return;
+      seen[s.id] = 1;
+      (s.images || []).forEach(function (src) {
+        if (src) items.push({ story: s, src: src, title: s.title || '', date: s.date || '' });
+      });
+    });
+    if (!items.length) {
+      if (summaryEl) summaryEl.innerHTML = '共 <b>0</b> 张故事照片';
+      listEl.innerHTML = '<p class="hint" style="margin:0;">这只猫还没有带图的故事。先在「故事」tab 里给故事加配图，再回来设置归属。</p>';
+      return;
+    }
+    var withIdx = items.map(function (it, i) { return { it: it, i: i }; });
+    var inCat = [], notIn = [];
+    withIdx.forEach(function (x) {
+      if (pcInCat(x.it.story, x.it.src, target.id)) inCat.push(x);
+      else notIn.push(x);
+    });
+    if (summaryEl) {
+      summaryEl.innerHTML = '共 <b>' + items.length + '</b> 张故事照片 · 在本猫相册 <b>' + inCat.length + '</b> 张' + (notIn.length ? ' · <b style="color:#b91c1c;">不在本猫相册 ' + notIn.length + ' 张</b>' : '');
+    }
+    function cardHtml(x) {
+      var it = x.it;
+      var title = it.title || '（无标题）';
+      var notInCat = !pcInCat(it.story, it.src, target.id);
+      return '<div class="cat-photo-card' + (notInCat ? ' not-in' : '') + '" data-cat-photo-idx="' + x.i + '" title="点击设置这张照片进哪些猫咪的相册">' +
+        '<img src="' + esc(thumbUrl(it.src)) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+        '<div class="cat-photo-meta">' +
+          '<div class="cat-photo-title" title="' + esc(title) + '">' + esc(title) + '</div>' +
+          (it.date ? '<div>🗓 ' + esc(it.date) + '</div>' : '') +
+          '<span class="cat-photo-state">' + esc(pcAssignedLabel(it.story, it.src)) + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+    var html = '';
+    if (notIn.length) {
+      html += '<section class="cat-photos-section not-in"><h4>⚠️ 不在「' + esc(target.name) + '」相册（' + notIn.length + '）</h4><div class="cat-photos-grid">' + notIn.map(cardHtml).join('') + '</div></section>';
+    }
+    if (inCat.length) {
+      html += '<section class="cat-photos-section"><h4>✅ 在本猫相册（' + inCat.length + '）</h4><div class="cat-photos-grid">' + inCat.map(cardHtml).join('') + '</div></section>';
+    }
+    listEl.innerHTML = html;
+    listEl.querySelectorAll('[data-cat-photo-idx]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var it = items[Number(el.dataset.catPhotoIdx)];
+        if (!it) return;
+        openPhotoAssign(el, it.src, it.story, 'catPhotos', 0);
+      });
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!_photoAssign) return;
+    if (e.target.closest('#photo-assign-pop')) return;
+    closePhotoAssign();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && _photoAssign) closePhotoAssign();
+  });
+
+  function pcBind(root, getStory) {
+    if (!root) return;
+    var ctx = root.dataset.pcCtx;
+    var si = Number(root.dataset.si);
+    function refresh() { pcRefresh(ctx, si); }
+    root.querySelectorAll('.pcd-thumb').forEach(function (el) {
+      el.addEventListener('dragstart', function (e) {
+        e.dataTransfer.setData('text/plain', el.dataset.pcSrc);
+        e.dataTransfer.effectAllowed = 'move';
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', function () { el.classList.remove('dragging'); });
+      el.addEventListener('click', function (e) {
+        if (e.target.closest('.pcd-del')) return;
+        e.stopPropagation();
+        openPhotoAssign(el, el.dataset.pcSrc, getStory(), ctx, si);
+      });
+    });
+    root.querySelectorAll('.pc-group').forEach(function (g) {
+      g.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        g.classList.add('over');
+      });
+      g.addEventListener('dragleave', function (e) {
+        if (e.relatedTarget && g.contains(e.relatedTarget)) return;
+        g.classList.remove('over');
+      });
+      g.addEventListener('drop', function (e) {
+        e.preventDefault();
+        g.classList.remove('over');
+        var src = e.dataTransfer ? e.dataTransfer.getData('text/plain') : '';
+        if (!src) return;
+        var s = getStory();
+        if (!s) return;
+        pcMovePhoto(s, src, g.dataset.pcGroup);
+        refresh();
+      });
+    });
+    root.querySelectorAll('.pcd-del').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var s = getStory();
+        if (!s) return;
+        pcRemoveImage(s, b.dataset.pcDel);
+        refresh();
+      });
+    });
+    var reset = root.querySelector('[data-pc-reset]');
+    if (reset) reset.addEventListener('click', function () {
+      var s = getStory();
+      if (!s) return;
+      if (s.photoCats) delete s.photoCats;
+      refresh();
+    });
+    var apply = root.querySelector('[data-pc-bulk-apply]');
+    if (apply) apply.addEventListener('click', function () {
+      var s = getStory();
+      var sel = root.querySelector('.pc-bulk-select');
+      if (!s || !sel || !sel.value) return;
+      pcMoveAll(s, sel.value);
+      refresh();
+    });
+  }
+  function pcRefresh(ctx, si) {
+    if (ctx === 'catPhotos') { renderCatPhotos(); return; }
+    var body = document.querySelector(ctx === 'quick' ? '#story-edit-modal .modal-body' : '#cat-modal .modal-body');
+    var top = body ? body.scrollTop : window.scrollY;
+    if (ctx === 'quick') renderQuickStoryEditor();
+    else refreshStories();
+    if (body) body.scrollTop = top;
+    else window.scrollTo(0, top);
+  }
   function storiesResultsBox(si) {
     var box = $('stories-editor');
     return box ? box.querySelector('.story-cat-results[data-si="' + si + '"]') : null;
@@ -1092,6 +1724,7 @@
     var k = arr.indexOf(cid);
     if (k >= 0) arr.splice(k, 1); else arr.push(cid);
     if (!arr.length && editIdx >= 0 && cats[editIdx]) arr.push(cats[editIdx].id);
+    pcNormalize(_pendingStories[si]);
     refreshStories();
     if (_pendingStories[si] && _pendingStories[si]._search) renderStoryCatResults(si);
   }
@@ -1117,8 +1750,15 @@
   function refreshStories() {
     var box = $('stories-editor');
     if (!box) return;
-    if (!_pendingStories.length) { box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有多篇故事，点下方「添加故事」来创建。</p>'; return; }
-    box.innerHTML = '<div class="story-sort-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" class="btn btn-sm" id="btn-story-sort" title="按故事日期先后自动排序（早的在前）">⏰ 按时间排序</button><span class="hint" style="margin:0;">▲▼ 也可手动拖动顺序</span></div>' + _pendingStories.map(function (s, i) {
+    var stBadge = $('cat-story-count');
+    if (stBadge) stBadge.textContent = _pendingStories.length;
+    var stMoreWrap = $('cat-story-more-wrap');
+    if (!_pendingStories.length) {
+      box.innerHTML = '<p class="hint" style="margin:4px 0 0 0;">还没有多篇故事，点下方「添加故事」来创建。</p>';
+      if (stMoreWrap) stMoreWrap.style.display = 'none';
+      return;
+    }
+    var htmls = _pendingStories.map(function (s, i) {
       var imgs = (s.images || []).map(function (im, j) {
         var src = im.path || im.dataUrl || '';
         return '<div class="thumb-wrap"><img class="thumb" src="' + esc(src) + '" alt="" onerror="this.style.display=\'none\'"><button class="del" data-si="' + i + '" data-img="' + j + '">×</button></div>';
@@ -1134,6 +1774,8 @@
       if (s.date) summaryParts.push('<span class="story-summary-date">🗓 ' + esc(s.date) + '</span>');
       summaryParts.push((s.title && String(s.title).trim()) ? '<span class="story-summary-title">' + esc(s.title) + '</span>' : '<span class="story-summary-null">（无标题）</span>');
       if (s.images && s.images.length) summaryParts.push('<span class="story-summary-imgs">🖼️ ' + s.images.length + ' 图</span>');
+      var groupHtml = pcBoxHtml(s, 'stories', i);
+      var imagesHtml = groupHtml ? '' : ('<div class="story-imgs">' + imgs + '</div>');
       var bodyHtml = '<div class="story-body">' +
         '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="story-date" data-si="' + i + '" value="' + esc(s.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick" data-si="' + i + '" data-off="2">前天</button><button type="button" class="btn btn-sm btn-story-quick-clear" data-si="' + i + '">清空</button></div></div>' +
         '<input type="text" class="story-title" data-si="' + i + '" placeholder="📝 故事标题" value="' + esc(s.title) + '">' +
@@ -1144,10 +1786,17 @@
           '<div class="story-cat-results" data-si="' + i + '"></div>' +
         '</div>' +
         '<div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" data-story-img="' + i + '">🖼️ 加截图</button><button type="button" class="btn btn-sm" data-story-paste="' + i + '" style="margin-left:4px">📋 粘贴截图</button></div>' +
-        '<div class="story-imgs">' + imgs + '</div></div>';
+        imagesHtml + groupHtml + '</div>';
       return '<div class="story-edit-item' + (collapsed ? ' collapsed' : '') + '" data-story-idx="' + i + '"><div class="story-header"><button type="button" class="btn-story-collapse" data-si="' + i + '" title="' + (collapsed ? '展开' : '收起') + '">' + (collapsed ? '▸' : '▾') + '</button><span class="story-num">#' + (i + 1) + '</span><span class="story-summary' + (collapsed ? '' : ' is-open') + '">' + summaryParts.join('') + '</span><div class="story-move-btns">' + (i > 0 ? '<button type="button" class="btn-story-up" data-si="' + i + '" title="上移">▲</button>' : '') + (i < _pendingStories.length - 1 ? '<button type="button" class="btn-story-down" data-si="' + i + '" title="下移">▼</button>' : '') + '</div><button type="button" class="btn btn-sm btn-danger btn-del-story" data-si="' + i + '">删除</button></div>' +
         (collapsed ? '' : bodyHtml) + '</div>';
-    }).join('');
+    });
+    // 只渲染前 _storyVisibleCount 篇；data-si 仍是 _pendingStories 的真实下标（全量 map 后再 slice）
+    var stTotal = _pendingStories.length;
+    var stShown = Math.min(_storyVisibleCount, stTotal);
+    box.innerHTML = '<div class="story-sort-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><button type="button" class="btn btn-sm" id="btn-story-sort" title="按故事日期先后自动排序（早的在前）">⏰ 按时间排序</button><span class="hint" style="margin:0;">▲▼ 也可手动拖动顺序</span></div>' + htmls.slice(0, stShown).join('');
+    if (stMoreWrap) stMoreWrap.style.display = stShown < stTotal ? '' : 'none';
+    var stMoreBtn = $('cat-story-more');
+    if (stMoreBtn) stMoreBtn.textContent = stShown < stTotal ? '显示更多（还有 ' + (stTotal - stShown) + ' 篇）' : '';
     box.querySelectorAll('.story-date').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].date = ip.value; }); });
     box.querySelectorAll('.btn-story-quick').forEach(function (b) { b.addEventListener('click', function () { var si = Number(b.dataset.si); _pendingStories[si].date = daysAgoDate(Number(b.dataset.off)); refreshStories(); }); });
     box.querySelectorAll('.btn-story-quick-clear').forEach(function (b) { b.addEventListener('click', function () { var si = Number(b.dataset.si); _pendingStories[si].date = ''; refreshStories(); }); });
@@ -1173,10 +1822,23 @@
     box.querySelectorAll('.story-content').forEach(function (ip) { ip.addEventListener('input', function () { _pendingStories[Number(ip.dataset.si)].content = ip.value; }); });
     box.querySelectorAll('.btn-del-story').forEach(function (b) { b.addEventListener('click', function () { _pendingStories.splice(Number(b.dataset.si), 1); refreshStories(); }); });
     box.querySelectorAll('.btn-story-up').forEach(function (b) { b.addEventListener('click', function () { var idx = Number(b.dataset.si); if (idx <= 0) return; var tmp = _pendingStories[idx]; _pendingStories[idx] = _pendingStories[idx - 1]; _pendingStories[idx - 1] = tmp; refreshStories(); }); });
-    box.querySelectorAll('.btn-story-down').forEach(function (b) { b.addEventListener('click', function () { var idx = Number(b.dataset.si); if (idx >= _pendingStories.length - 1) return; var tmp = _pendingStories[idx]; _pendingStories[idx] = _pendingStories[idx + 1]; _pendingStories[idx + 1] = tmp; refreshStories(); }); });
+    box.querySelectorAll('.btn-story-down').forEach(function (b) { b.addEventListener('click', function () { var idx = Number(b.dataset.si); if (idx >= _pendingStories.length - 1) return; var tmp = _pendingStories[idx]; _pendingStories[idx] = _pendingStories[idx + 1]; _pendingStories[idx + 1] = tmp; if (idx + 1 >= _storyVisibleCount) _storyVisibleCount = Math.min(_pendingStories.length, idx + 2); refreshStories(); }); });
     box.querySelectorAll('[data-story-img]').forEach(function (b) { b.addEventListener('click', function () { _storyImgTarget = Number(b.dataset.storyImg); $('f-story-img').click(); }); });
     box.querySelectorAll('[data-story-paste]').forEach(function (b) { b.addEventListener('click', function () { _storyImgTarget = Number(b.dataset.storyPaste); setPasteMode(4); }); });
-    box.querySelectorAll('.del[data-img]').forEach(function (b) { b.addEventListener('click', function () { _pendingStories[Number(b.dataset.si)].images.splice(Number(b.dataset.img), 1); refreshStories(); }); });
+    box.querySelectorAll('.photo-groups').forEach(function (pb) {
+      var psi = Number(pb.dataset.si);
+      pcBind(pb, function () { return _pendingStories[psi]; });
+    });
+    box.querySelectorAll('.del[data-img]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var s = _pendingStories[Number(b.dataset.si)];
+        var j = Number(b.dataset.img);
+        var src = pcImageKey(s && s.images ? s.images[j] : null);
+        if (src && s.photoCats) delete s.photoCats[src];
+        if (s) s.images.splice(j, 1);
+        refreshStories();
+      });
+    });
     var sortBtn = box.querySelector('#btn-story-sort');
     if (sortBtn) sortBtn.addEventListener('click', function () {
       _pendingStories.sort(function (a, b) { return storyTs(a) - storyTs(b); });
@@ -1190,7 +1852,11 @@
   }
   function getStories() {
     return _pendingStories.map(function (s) {
-      return { id: s.id || '', date: s.date || '', title: s.title || '', content: s.content || '', cats: (Array.isArray(s.cats) ? s.cats : []).filter(Boolean), images: (s.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean) };
+      var imgs = (s.images || []).map(function (im) { return im.path || im.dataUrl || ''; }).filter(Boolean);
+      var out = { id: s.id || '', date: s.date || '', title: s.title || '', content: s.content || '', cats: (Array.isArray(s.cats) ? s.cats : []).filter(Boolean), images: imgs };
+      var pc = pcClean(s.photoCats, imgs, out.cats);
+      if (Object.keys(pc).length) out.photoCats = pc;
+      return out;
     }).filter(function (s) { return s.title || s.content || s.images.length; });
   }
   // 跨猫同步故事：每个故事在它关联的每只猫的 stories 里各保留一份（同 id 同内容），
@@ -1260,6 +1926,7 @@
       content: hostStory.content || '',
       cats: (Array.isArray(hostStory.cats) && hostStory.cats.length) ? hostStory.cats.slice() : [cats[host].id],
       images: (hostStory.images || []).map(function (p) { return { path: p }; }),
+      photoCats: (hostStory.photoCats && typeof hostStory.photoCats === 'object' && !Array.isArray(hostStory.photoCats)) ? JSON.parse(JSON.stringify(hostStory.photoCats)) : {},
       _search: ''
     };
     renderQuickStoryEditor();
@@ -1274,6 +1941,7 @@
     var k = arr.indexOf(cid);
     if (k >= 0) arr.splice(k, 1); else arr.push(cid);
     if (!arr.length && _quickStoryHost >= 0 && cats[_quickStoryHost]) arr.push(cats[_quickStoryHost].id);
+    pcNormalize(_quickStory);
     renderQuickStoryEditor();
     if (_quickStory && _quickStory._search) renderQuickStoryCatResults();
   }
@@ -1308,17 +1976,25 @@
       if (!cc) return '';
       return '<span class="story-cat-chip on" data-cat="' + esc(cid) + '" title="点击取消关联「' + esc(cc.name) + '」">' + esc(cc.name) + ' <b class="chip-x">×</b></span>';
     }).join('');
-    box.innerHTML = '<div class="story-edit-item"><div class="story-body">' +
-      '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="story-date qs" value="' + esc(s.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="2">前天</button><button type="button" class="btn btn-sm btn-story-quick-clear">清空</button></div></div>' +
-      '<input type="text" class="story-title" placeholder="📝 故事标题" value="' + esc(s.title) + '">' +
-      '<textarea class="story-content" rows="10" placeholder="在这里写故事内容，像写 Word 文档一样，自然段落换行即可…">' + esc(s.content) + '</textarea>' +
-      '<div class="field" style="margin-top:4px;"><label>关联猫咪（一个故事可关联多只，搜索后点击结果添加/取消）</label>' +
-        '<div class="story-cat-selected">' + selChips + '</div>' +
-        '<div class="story-cat-search-row"><input type="text" class="story-cat-search" placeholder="🔍 输入猫名 / 外号搜索…" value="' + esc(s._search || '') + '" autocomplete="off"></div>' +
-        '<div class="story-cat-results"></div>' +
+    var groupHtml = pcBoxHtml(s, 'quick', 0);
+    var imagesHtml = groupHtml ? '' : ('<div class="story-imgs">' + imgs + '</div>');
+    box.innerHTML = '<div class="story-edit-item"><div class="story-body qs-layout">' +
+      '<div class="qs-main">' +
+        '<div class="field" style="margin-top:4px;"><label>日期（选填）</label><div class="story-date-row"><input type="date" class="story-date qs" value="' + esc(s.date || '') + '"><button type="button" class="btn btn-sm btn-story-quick" data-off="0">今天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="1">昨天</button><button type="button" class="btn btn-sm btn-story-quick" data-off="2">前天</button><button type="button" class="btn btn-sm btn-story-quick-clear">清空</button></div></div>' +
+        '<input type="text" class="story-title" placeholder="📝 故事标题" value="' + esc(s.title) + '">' +
+        '<textarea class="story-content" rows="10" placeholder="在这里写故事内容，像写 Word 文档一样，自然段落换行即可…">' + esc(s.content) + '</textarea>' +
+        '<div class="field" style="margin-top:10px;"><label>关联猫咪（一个故事可关联多只，搜索后点击结果添加/取消）</label>' +
+          '<div class="story-cat-selected">' + selChips + '</div>' +
+          '<div class="story-cat-search-row"><input type="text" class="story-cat-search" placeholder="🔍 输入猫名 / 外号搜索…" value="' + esc(s._search || '') + '" autocomplete="off"></div>' +
+          '<div class="story-cat-results"></div>' +
+        '</div>' +
       '</div>' +
-      '<div class="field" style="margin-top:4px;"><label>配图</label><button type="button" class="btn btn-sm" id="qs-add-img">🖼️ 加截图</button><button type="button" class="btn btn-sm" id="qs-paste-img" style="margin-left:4px">📋 粘贴截图</button></div>' +
-      '<div class="story-imgs">' + imgs + '</div>' +
+      '<div class="qs-side">' +
+        '<div class="field" style="margin-top:0;"><label>配图</label>' +
+          '<div class="row" style="margin-top:6px;gap:6px;"><button type="button" class="btn btn-sm" id="qs-add-img">🖼️ 加截图</button><button type="button" class="btn btn-sm" id="qs-paste-img">📋 粘贴截图</button></div>' +
+        '</div>' +
+        imagesHtml + groupHtml +
+      '</div>' +
     '</div></div>';
     var dateIp = box.querySelector('.story-date.qs');
     if (dateIp) dateIp.addEventListener('input', function () { _quickStory.date = dateIp.value; });
@@ -1336,7 +2012,17 @@
     if (addBtn) addBtn.addEventListener('click', function () { $('f-quick-story-img').click(); });
     var pasteBtn = box.querySelector('#qs-paste-img');
     if (pasteBtn) pasteBtn.addEventListener('click', function () { setPasteMode(4); });
-    box.querySelectorAll('.del[data-qimg]').forEach(function (b) { b.addEventListener('click', function () { _quickStory.images.splice(Number(b.dataset.qimg), 1); renderQuickStoryEditor(); }); });
+    var pcBox = box.querySelector('.photo-groups');
+    if (pcBox) pcBind(pcBox, function () { return _quickStory; });
+    box.querySelectorAll('.del[data-qimg]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var j = Number(b.dataset.qimg);
+        var src = pcImageKey(_quickStory && _quickStory.images ? _quickStory.images[j] : null);
+        if (src && _quickStory.photoCats) delete _quickStory.photoCats[src];
+        _quickStory.images.splice(j, 1);
+        renderQuickStoryEditor();
+      });
+    });
     if (s._search) renderQuickStoryCatResults();
   }
   async function onQuickStoryImgChange() {
@@ -1362,16 +2048,23 @@
     if (!_quickStory || _quickStoryHost < 0) return;
     var host = cats[_quickStoryHost];
     var finalImgs = [];
+    var pairs = {}; // 旧 key（dataUrl / 旧路径）→ 最终路径，用于迁移 photoCats
     for (var i = 0; i < (_quickStory.images || []).length; i++) {
       var im = _quickStory.images[i];
+      var oldKey = pcImageKey(im);
       if (im.dataUrl && im.dataUrl.indexOf('data:') === 0) {
         var ext = (im.dataUrl.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png';
         var p = IMAGES_DIR + '/' + host.id + '_story_' + Date.now() + '_' + i + '.' + ext;
         await writeImageFileWithThumb(p, im.dataUrl);
         finalImgs.push(p);
+        if (oldKey) pairs[oldKey] = p;
         log('✅ 已保存故事截图：' + p, 'ok');
       } else {
-        finalImgs.push(im.path || im.dataUrl || '');
+        var p2 = im.path || im.dataUrl || '';
+        if (p2) {
+          finalImgs.push(p2);
+          if (oldKey) pairs[oldKey] = p2;
+        }
       }
     }
     finalImgs = finalImgs.filter(Boolean);
@@ -1383,6 +2076,13 @@
       cats: (_quickStory.cats || []).filter(Boolean),
       images: finalImgs
     };
+    // 把归属配置里的旧 key 换成实际保存后的路径（粘贴的 dataUrl 会生成新文件）
+    var pcRaw = {};
+    if (_quickStory.photoCats && typeof _quickStory.photoCats === 'object' && !Array.isArray(_quickStory.photoCats)) {
+      Object.keys(_quickStory.photoCats).forEach(function (k) { pcRaw[pairs[k] || k] = _quickStory.photoCats[k]; });
+    }
+    var pc = pcClean(pcRaw, finalImgs, draft.cats);
+    if (Object.keys(pc).length) draft.photoCats = pc;
     if (!Array.isArray(host.stories)) host.stories = [];
     var found = false;
     for (var j = 0; j < host.stories.length; j++) {
@@ -2122,6 +2822,7 @@
   async function saveCat() {
     if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
     if (!validateCatForm()) {
+      switchCatTab('basic');
       var hint = $('form-valid-hint');
       if (hint) { hint.className = 'form-valid-hint show'; hint.innerHTML = '❌ 没填的必填项已高亮：<b>' + REQUIRED_CAT_FORM.filter(function (r) { return $(r.id) && $(r.id).classList.contains('invalid'); }).map(function (r) { return r.label; }).join('、') + '</b>'; }
       log('❌ 有必填项没填，请补全后再保存（已高亮标出）', 'err');
@@ -2175,12 +2876,31 @@
       for (var si = 0; si < cat.stories.length; si++) {
         var sv = cat.stories[si]; if (!sv.images || !sv.images.length) continue;
         var finalImgs = [];
+        var imgPairs = {}; // 旧 key（dataUrl / 旧路径）→ 最终路径，用于迁移 photoCats
         for (var sj = 0; sj < sv.images.length; sj++) {
           var sim = sv.images[sj];
-          if (sim.indexOf('data:') === 0) { var ext = (sim.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png'; var p = IMAGES_DIR + '/' + id + '_story_' + Date.now() + '_' + sj + '.' + ext; await writeImageFileWithThumb(p, sim); finalImgs.push(p); log('✅ 已保存故事截图：' + p, 'ok'); }
-          else { finalImgs.push(sim); }
+          if (sim.indexOf('data:') === 0) {
+            var ext = (sim.match(/^data:image\/([a-zA-Z0-9]+);/) || [])[1] || 'png';
+            var p = IMAGES_DIR + '/' + id + '_story_' + Date.now() + '_' + sj + '.' + ext;
+            await writeImageFileWithThumb(p, sim);
+            finalImgs.push(p);
+            imgPairs[sim] = p;
+            log('✅ 已保存故事截图：' + p, 'ok');
+          } else {
+            finalImgs.push(sim);
+            imgPairs[sim] = sim;
+          }
         }
         sv.images = finalImgs;
+        // 图片路径从 dataUrl 变成落盘路径后，photoCats 的键也要一起迁移，否则归属会丢失且校验失败
+        if (sv.photoCats && typeof sv.photoCats === 'object' && !Array.isArray(sv.photoCats)) {
+          var pcRaw = {};
+          Object.keys(sv.photoCats).forEach(function (k) { pcRaw[imgPairs[k] || k] = sv.photoCats[k]; });
+          var pc = pcClean(pcRaw, finalImgs, (sv.cats || []).filter(Boolean));
+          if (Object.keys(pc).length) sv.photoCats = pc; else delete sv.photoCats;
+        } else if (sv.photoCats !== undefined) {
+          delete sv.photoCats;
+        }
       }
     }
     if (!cat.stories || !cat.stories.length) delete cat.stories;
@@ -2648,6 +3368,167 @@
     return btoa(unescape(encodeURIComponent(str)));
   }
 
+  // ---------- 图片放大查看器 ----------
+  // 管理端自带一套轻量放大层：公开站的 openLightbox 在 js/config.js 里是 ES module，
+  // 而 local-admin.js 是经典脚本，不能 import，只能另写一份（保持本文件的 var / function 风格）。
+  // 单击放大的图片：猫卡缩略图 / 头像预览 / 相册 / 扁平故事图 / 事件图 / 小知识图 / 表情图
+  var AL_CLICK_SEL = [
+    '#cats-list .catcard .th img',
+    '#f-preview.show',
+    '#album-list .album-item img',
+    '#stories-editor .story-imgs .thumb',
+    '#events-list .ev-imgs .thumb',
+    '#quick-story-editor .story-imgs .thumb',
+    '#knowledge-editor .story-imgs .thumb',
+    '#sticker-list .story-imgs .thumb',
+    '#sticker-editor .sticker-admin-items .thumb'
+  ].join(',');
+  // 相册分组看板：单击是「选中 / 拖动换组」（pcBind 的 click），所以只能双击放大
+  var AL_DBLCLICK_SEL = [
+    '#stories-editor .photo-groups .pcd-thumb img',
+    '#quick-story-editor .photo-groups .pcd-thumb img'
+  ].join(',');
+  // 图集划分：[容器, 容器内参与放大的图片]。同一容器内的图可以上一张 / 下一张。
+  // 必须按 id 限定作用域：四个编辑器共用 .stories-editor 类，否则会把不同弹窗的图混成一个图集。
+  var AL_SCOPES = [
+    ['#cats-list .catcard', '.th img'],
+    ['#album-list', '.album-item img'],
+    ['#stories-editor .story-imgs', '.thumb'],
+    ['#stories-editor .photo-groups', '.pcd-thumb img'],
+    ['#events-list .ev-imgs', '.thumb'],
+    ['#quick-story-editor .story-imgs', '.thumb'],
+    ['#quick-story-editor .photo-groups', '.pcd-thumb img'],
+    ['#knowledge-editor .story-imgs', '.thumb'],
+    ['#sticker-list .kl-item', '.story-imgs .thumb'],
+    ['#sticker-editor .sticker-admin-items', '.sticker-admin-row .thumb']
+  ];
+  var _alList = [];           // 当前图集（DOM 里的 img 节点）
+  var _alIdx = 0;             // 当前看第几张
+  var _alPrevOverflow = '';   // 打开前的 body overflow，关闭时还原
+
+  function alIsOpen() {
+    var box = $('admin-lightbox');
+    return !!(box && box.classList.contains('open'));
+  }
+  // 坏图 / 占位图不参与图集：src 为空、placeholder.svg、以及 onerror 后被隐藏的图
+  function alUsable(img) {
+    if (!img) return false;
+    var src = img.currentSrc || img.getAttribute('src') || '';
+    if (!src || src.indexOf('placeholder.svg') >= 0) return false;
+    if (img.style.display === 'none' || img.style.visibility === 'hidden' || img.style.opacity === '0') return false;
+    return true;
+  }
+  function alGalleryFor(img) {
+    if (img.id === 'f-preview') return [img];   // 头像预览只有一张，没有上一张 / 下一张
+    for (var i = 0; i < AL_SCOPES.length; i++) {
+      var root = img.closest(AL_SCOPES[i][0]);
+      if (!root) continue;
+      var nodes = root.querySelectorAll(AL_SCOPES[i][1]);
+      var list = [];
+      for (var k = 0; k < nodes.length; k++) { if (alUsable(nodes[k])) list.push(nodes[k]); }
+      return list;
+    }
+    return alUsable(img) ? [img] : [];
+  }
+  // 说明文字：去掉目录和 query；内存里的 data: 图还没有落盘
+  function alCaption(src) {
+    if (src.indexOf('data:') === 0) return '未保存的图片（保存后才写入 images/）';
+    var clean = src.split('?')[0].split('#')[0];
+    return clean.slice(clean.lastIndexOf('/') + 1);
+  }
+  function alRender() {
+    var img = _alList[_alIdx];
+    if (!img) return;
+    var big = $('admin-lightbox-img');
+    var idxEl = $('admin-lightbox-index');
+    var capEl = $('admin-lightbox-caption');
+    var prevBtn = $('admin-lightbox-prev');
+    var nextBtn = $('admin-lightbox-next');
+    var single = _alList.length <= 1;
+    if (big) { big.src = img.currentSrc || img.src; big.alt = img.getAttribute('alt') || ''; }
+    if (idxEl) { idxEl.textContent = single ? '' : (_alIdx + 1) + ' / ' + _alList.length; idxEl.style.display = single ? 'none' : 'block'; }
+    if (prevBtn) prevBtn.style.display = single ? 'none' : '';
+    if (nextBtn) nextBtn.style.display = single ? 'none' : '';
+    if (capEl) capEl.textContent = alCaption(img.currentSrc || img.src);
+  }
+  function alOpen(img) {
+    var box = $('admin-lightbox');
+    if (!box) return;
+    var list = alGalleryFor(img);
+    if (!list.length) return;
+    _alList = list;
+    _alIdx = Math.max(0, list.indexOf(img));
+    _alPrevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';   // 放大时锁住底下的滚动
+    box.classList.add('open');
+    box.setAttribute('aria-hidden', 'false');
+    alRender();
+    var closeBtn = $('admin-lightbox-close');
+    if (closeBtn) closeBtn.focus();
+  }
+  function alMove(delta) {
+    if (_alList.length <= 1) return;
+    _alIdx = (_alIdx + delta + _alList.length) % _alList.length;   // 循环切换，与公开站一致
+    alRender();
+  }
+  function alClose() {
+    var box = $('admin-lightbox');
+    if (!box) return;
+    box.classList.remove('open');
+    box.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = _alPrevOverflow || '';
+    var big = $('admin-lightbox-img');
+    if (big) big.removeAttribute('src');
+    _alList = [];
+    _alIdx = 0;
+  }
+  function bindAdminLightbox() {
+    var box = $('admin-lightbox');
+    if (!box || box._bound) return;
+    box._bound = true;
+    var closeBtn = $('admin-lightbox-close');
+    if (closeBtn) closeBtn.addEventListener('click', function (e) { e.stopPropagation(); alClose(); });
+    var prevBtn = $('admin-lightbox-prev');
+    if (prevBtn) prevBtn.addEventListener('click', function (e) { e.stopPropagation(); alMove(-1); });
+    var nextBtn = $('admin-lightbox-next');
+    if (nextBtn) nextBtn.addEventListener('click', function (e) { e.stopPropagation(); alMove(1); });
+    // 点遮罩空白处关闭：只认根节点本身（e.detail<=1 挡掉双击的第二下）
+    box.addEventListener('click', function (e) { if (e.target === box && e.detail <= 1) alClose(); });
+    // 滚轮不穿透去滚动底下的弹窗内容
+    box.addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
+
+    // 单击放大：事件委托。删除按钮 / 输入框 / 分组头像一律不放大
+    document.addEventListener('click', function (e) {
+      if (!e.target || !e.target.closest) return;
+      if (alIsOpen()) return;
+      if (e.target.closest('#admin-lightbox')) return;
+      if (e.target.closest('button, .del, .pcd-del, .pcd-sel, .pc-avatar, input, select, textarea')) return;
+      var img = e.target.closest('img');
+      if (!img || !img.matches(AL_CLICK_SEL) || !alUsable(img)) return;
+      e.preventDefault();
+      alOpen(img);
+    });
+    // 双击放大：只给相册分组看板（单击是选中、拖动是换组，绝不能抢掉）
+    document.addEventListener('dblclick', function (e) {
+      if (!e.target || !e.target.closest) return;
+      if (alIsOpen()) return;
+      if (e.target.closest('#admin-lightbox')) return;
+      if (e.target.closest('button, .pcd-del, .pcd-sel, .pc-avatar, input, select, textarea')) return;
+      var img = e.target.closest('img');
+      if (!img || !img.matches(AL_DBLCLICK_SEL) || !alUsable(img)) return;
+      e.preventDefault();
+      alOpen(img);
+    });
+    // 键盘：ESC 关闭、← → 切换（capture 阶段，免得被输入框或其他快捷键先吃掉）
+    document.addEventListener('keydown', function (e) {
+      if (!alIsOpen()) return;
+      var key = e.key;
+      if (key === 'Escape' || key === 'Esc') { e.preventDefault(); e.stopPropagation(); alClose(); return; }
+      if (key === 'ArrowLeft') { e.preventDefault(); alMove(-1); return; }
+      if (key === 'ArrowRight') { e.preventDefault(); alMove(1); }
+    }, true);
+  }
+
   // ---------- 事件绑定 ----------
   function bind() {
     initTagInput();
@@ -2670,6 +3551,40 @@
     $('btn-push').addEventListener('click', pushToGitHub);
     var saveOrderBtn = $('btn-save-story-order');
     if (saveOrderBtn) saveOrderBtn.addEventListener('click', saveAll);
+    // 故事集搜索 / 筛选 / 月份展开收起：只在这里绑定一次（列表内部每次 render 重建）
+    var soSearch = $('story-order-search');
+    if (soSearch) {
+      var onSoSearch = function () {
+        _soFilter.q = soSearch.value || '';
+        applyStoryOrderFilter();
+      };
+      soSearch.addEventListener('input', onSoSearch);
+      soSearch.addEventListener('search', onSoSearch);
+    }
+    document.querySelectorAll('.so-filter').forEach(function (b) {
+      b.addEventListener('click', function () {
+        _soFilter.mode = b.dataset.soFilter || 'all';
+        document.querySelectorAll('.so-filter').forEach(function (x) { x.classList.toggle('active', x === b); });
+        applyStoryOrderFilter();
+      });
+    });
+    function setAllStoryMonths(open) {
+      document.querySelectorAll('#story-order-list .so-month').forEach(function (sec) {
+        sec.classList.toggle('collapsed', !open);
+        var caret = sec.querySelector('.so-month-caret');
+        if (caret) caret.textContent = open ? '▾' : '▸';
+        _soOpenMonths[sec.dataset.month] = open;
+      });
+    }
+    var soExpandAll = $('so-expand-all');
+    if (soExpandAll) soExpandAll.addEventListener('click', function () { setAllStoryMonths(true); });
+    var soCollapseAll = $('so-collapse-all');
+    if (soCollapseAll) soCollapseAll.addEventListener('click', function () { setAllStoryMonths(false); });
+    var catStoryMore = $('cat-story-more');
+    if (catStoryMore) catStoryMore.addEventListener('click', function () {
+      _storyVisibleCount = Math.min(_pendingStories.length, _storyVisibleCount + STORY_PAGE_SIZE);
+      refreshStories();
+    });
     $('btn-add').addEventListener('click', function () { openCatModal(-1); });
     if ($('btn-rel-add')) $('btn-rel-add').addEventListener('click', function () { addRelation(); });
     if ($('rel-type')) $('rel-type').addEventListener('change', updateRelLabels);
@@ -2683,6 +3598,9 @@
     });
     $('f-cancel').addEventListener('click', function () { closeModal('cat-modal'); setPasteMode(0); });
     $('cat-close').addEventListener('click', function () { closeModal('cat-modal'); });
+    document.querySelectorAll('#cat-modal .modal-tab').forEach(function (b) {
+      b.addEventListener('click', function () { switchCatTab(b.dataset.catTab); });
+    });
     $('f-del').addEventListener('click', function () {
       if (editIdx < 0) { closeModal('cat-modal'); return; }
       if (!confirm('确定删除「' + cats[editIdx].name + '」？')) return;
@@ -2694,9 +3612,19 @@
     $('btn-avatar').addEventListener('click', function () { $('f-avatar').click(); });
     $('f-avatar').addEventListener('change', onAvatarChange);
     $('btn-album-add').addEventListener('click', function () { $('f-album').click(); });
+    var btnCatPhotos = $('btn-cat-photos');
+    if (btnCatPhotos) btnCatPhotos.addEventListener('click', function () {
+      if (editIdx < 0 || !cats[editIdx]) { log('请先保存这只猫，再管理故事照片归属', 'warn'); return; }
+      openCatPhotos(cats[editIdx].id);
+    });
+    var catPhotosClose = $('cat-photos-close');
+    if (catPhotosClose) catPhotosClose.addEventListener('click', function () { closeModal('cat-photos-modal'); });
+    var catPhotosDone = $('cat-photos-done');
+    if (catPhotosDone) catPhotosDone.addEventListener('click', function () { closeModal('cat-photos-modal'); });
     $('btn-story-add').addEventListener('click', function () {
       if (!dirHandle) { log('❌ 请先选择项目文件夹', 'err'); return; }
       _pendingStories.push({ id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), title: '', content: '', images: [], cats: (editIdx >= 0 && cats[editIdx]) ? [cats[editIdx].id] : [] });
+      _storyVisibleCount = _pendingStories.length;   // 新故事在末尾，展开到能看见它
       refreshStories();
     });
     $('f-story-img').addEventListener('change', onStoryImgChange);
@@ -3174,6 +4102,8 @@
     // 全局监听 Ctrl+V
     document.addEventListener('paste', function (e) {
       if (pasteTarget === 0) return;
+      // 正在放大看图时不往遮罩后面加图（否则图集里的节点和列表状态会对不上）
+      if (alIsOpen()) return;
       var qsOpen = $('story-edit-modal') && $('story-edit-modal').classList.contains('open');
       var kOpen = $('knowledge-edit-modal') && $('knowledge-edit-modal').classList.contains('open');
       var sOpen = $('sticker-edit-modal') && $('sticker-edit-modal').classList.contains('open');
@@ -3194,6 +4124,7 @@
     $('crop-close').addEventListener('click', cancelCrop);
     $('cat-modal').addEventListener('click', function (e) { if (e.target === $('cat-modal')) closeModal('cat-modal'); });
     $('crop-modal').addEventListener('click', function (e) { if (e.target === $('crop-modal')) cancelCrop(); });
+    bindAdminLightbox();
   }
 
   // ---------- 工作台导航 ----------

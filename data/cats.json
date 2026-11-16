@@ -503,7 +503,12 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
-        ]
+        ],
+        "photoCats": {
+          "images/cat002_story_1792041993023.jpg": [
+            "cat002"
+          ]
+        }
       },
       {
         "id": "s_1792330527048_l4xynw",
@@ -790,7 +795,12 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
-        ]
+        ],
+        "photoCats": {
+          "images/cat002_story_1792041993023.jpg": [
+            "cat002"
+          ]
+        }
       },
       {
         "id": "s_1792330718840_zxdxi0",
@@ -1173,7 +1183,12 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
-        ]
+        ],
+        "photoCats": {
+          "images/cat002_story_1792041993023.jpg": [
+            "cat002"
+          ]
+        }
       },
       {
         "id": "s_1792331982199_l9bi3o",
@@ -2553,7 +2568,12 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
-        ]
+        ],
+        "photoCats": {
+          "images/cat002_story_1792041993023.jpg": [
+            "cat002"
+          ]
+        }
       },
       {
         "id": "s_1792329641536_wacymi",
@@ -3197,7 +3217,12 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
-        ]
+        ],
+        "photoCats": {
+          "images/cat002_story_1792041993023.jpg": [
+            "cat002"
+          ]
+        }
       }
     ]
   },
@@ -3312,7 +3337,12 @@
           "images/cat002_story_1792042433296.jpg",
           "images/cat002_story_1792042441139.jpg",
           "images/cat002_story_1792042448853.jpg"
-        ]
+        ],
+        "photoCats": {
+          "images/cat002_story_1792041993023.jpg": [
+            "cat002"
+          ]
+        }
       },
       {
         "id": "s_1792331550055_l75mn8",

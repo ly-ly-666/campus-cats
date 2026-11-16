@@ -129,6 +129,8 @@ body { display: flex; flex-direction: column; }
 /* 标语，放在宣传条标题「这里油只喵 · 油喵地图」右侧 */
 .cat-promo-motto { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 8px; }
 
+.tab-bar-wrap { position: relative; width: 100%; min-width: 0; }
+
 .tab-bar {
   display: flex;
   gap: 6px;
@@ -144,6 +146,43 @@ body { display: flex; flex-direction: column; }
   padding-bottom: 2px;
 }
 .tab-bar::-webkit-scrollbar { display: none; }
+
+/* 标签栏可横向滚动时：右侧渐变 + 呼吸箭头，提示「还能往右滑」 */
+.tab-scroll-hint {
+  position: absolute; right: -4px; top: 0; bottom: 2px; width: 38px;
+  display: none; align-items: center; justify-content: center;
+  border: none; padding: 0 0 2px 12px; cursor: pointer;
+  background: linear-gradient(to right, rgba(255,247,237,0) 0%, rgba(255,247,237,.82) 38%, #fff7ed 100%);
+  color: #b45309; font-size: 22px; font-weight: 700; line-height: 1;
+  z-index: 3;
+}
+.tab-bar-wrap.can-right .tab-scroll-hint-right { display: flex; }
+.tab-scroll-hint span { display: inline-block; animation: tab-hint-nudge 1.7s ease-in-out infinite; }
+@keyframes tab-hint-nudge {
+  0%, 100% { transform: translateX(0); opacity: .55; }
+  50% { transform: translateX(3px); opacity: 1; }
+}
+.tab-bar-wrap::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 2px; width: 26px;
+  pointer-events: none; z-index: 3; opacity: 0; transition: opacity .15s;
+  background: linear-gradient(to left, rgba(255,247,237,0), rgba(255,247,237,.9));
+}
+.tab-bar-wrap.can-left::before { opacity: 1; }
+
+/* 左箭头 / 拖动 */
+.tab-scroll-hint-left {
+  left: -4px; right: auto; justify-content: flex-start;
+  padding: 0 12px 2px 0;
+  background: linear-gradient(to left, rgba(255,247,237,0) 0%, rgba(255,247,237,.82) 62%, #fff7ed 100%);
+}
+.tab-bar-wrap.can-left .tab-scroll-hint-left { display: flex; }
+.tab-scroll-hint-left span { animation-name: tab-hint-nudge-left; }
+@keyframes tab-hint-nudge-left {
+  0%, 100% { transform: translateX(0); opacity: .55; }
+  50% { transform: translateX(-3px); opacity: 1; }
+}
+.tab-bar { cursor: grab; user-select: none; touch-action: pan-x pan-y; }
+.tab-bar.dragging { cursor: grabbing; }
 
 .tab-btn {
   border: 1px solid transparent;
@@ -405,6 +444,38 @@ body { display: flex; flex-direction: column; }
 .modal-name { font-size: 20px; font-weight: 700; }
 .modal-tags { display: flex; gap: 6px; margin-top: 6px; }
 .modal-desc { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+
+/* 弹窗首屏「查看完整档案」卡片式 CTA：图标 + 标题 + 说明 + 箭头 */
+.modal-profile-link {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 12px 14px; margin: 2px 0 12px;
+  border: 1px solid #fdba74; border-radius: 12px;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: var(--primary-dark); text-decoration: none;
+  font-weight: 600; line-height: 1.4; min-height: 52px;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.modal-profile-link:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(217,119,6,.18); }
+.modal-profile-link:active { transform: scale(.99); }
+.modal-profile-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.mpl-icon { font-size: 20px; line-height: 1; flex: 0 0 auto; }
+.mpl-text { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.mpl-text b { font-size: 14px; color: var(--text); font-weight: 700; }
+.mpl-text small { font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+.mpl-arrow { margin-left: auto; flex: 0 0 auto; color: var(--primary); font-weight: 700; transition: transform .15s ease; }
+.modal-profile-link:hover .mpl-arrow { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  .modal-profile-link, .mpl-arrow { transition: none; }
+}
+/* 弹窗次要操作（信息有误？更正）：style.css 没有全局 .btn，这里只在弹窗内补基础外观 */
+.modal-secondary-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 12px; }
+.modal-secondary-actions .btn {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px;
+  background: #fff; color: var(--text); font-family: inherit; font-size: 13px;
+  cursor: pointer;
+}
+.modal-secondary-actions .btn:hover { background: #fff7ed; border-color: #fdba74; }
+.modal-secondary-actions .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .modal-info {
   border-top: 1px solid var(--border);
@@ -876,18 +947,57 @@ html.splash-skip .splash-overlay { display: none; }
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
 }
 .map-legend-toggle {
+  position: relative;
   border: 1px solid #e5e0d8; border-radius: 999px; cursor: pointer;
   background: #fff; color: #b45309; font-size: 13px; font-weight: 600;
   padding: 8px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
 }
 .map-legend-toggle:hover { background: #fff7ed; }
+/* 有筛选（部分状态被隐藏）时：橙色描边 + 右上角小圆点，收起图例也看得出 */
+.map-legend-toggle.filtered { border-color: #f59e0b; background: #fff7ed; }
+.map-legend-toggle.filtered::after {
+  content: ''; position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #f97316; box-shadow: 0 0 0 2px #fff;
+}
 .map-legend-body {
   background: #fff; border: 1px solid var(--border); border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0,0,0,.16); padding: 8px 12px;
-  display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.16); padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 200px; max-height: min(70vh, 340px); overflow-y: auto;
 }
 .map-legend-body[hidden] { display: none; }
-.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); white-space: nowrap; }
+.map-legend-hint { font-size: 11px; color: var(--muted); line-height: 1.5; padding: 0 2px 2px; }
+.legend-filter-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px 4px; }
+.legend-filter-all {
+  border: 1px solid var(--border); border-radius: 999px; background: #fff;
+  color: var(--primary-dark); font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 3px 12px; cursor: pointer; white-space: nowrap;
+}
+.legend-filter-all:hover { background: #fff7ed; border-color: #fdba74; }
+.legend-filter-all.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.legend-filter-count { font-size: 11px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.legend-filter {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 5px 7px; border: 1px solid transparent; border-radius: 8px;
+  background: none; font-family: inherit; font-size: 13px; color: var(--text);
+  text-align: left; white-space: nowrap; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, opacity .15s ease;
+}
+.legend-filter:hover { background: #faf6ef; }
+.legend-filter.active { background: #fff7ed; border-color: #fdba74; }
+/* 未选中的状态降透明度 + 去掉彩色圆环，一眼看出哪些猫被隐藏 */
+.legend-filter:not(.active) { opacity: .5; }
+.legend-filter:not(.active) .legend-swatch { filter: grayscale(1); animation: none; }
+.legend-filter .legend-swatch { width: 18px; height: 18px; }
+.legend-filter:focus-visible, .legend-filter-all:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.legend-count {
+  margin-left: auto; min-width: 20px; padding: 0 6px; text-align: center;
+  font-size: 11px; font-weight: 700; color: #b45309;
+  background: #fff; border: 1px solid #fed7aa; border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.legend-filter:not(.active) .legend-count { color: var(--muted); background: #f3f4f6; border-color: #e5e7eb; }
 .legend-swatch {
   width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
   border: 2px solid #fff; background: #ffd9a8;
@@ -913,9 +1023,9 @@ html.splash-skip .splash-overlay { display: none; }
   font-size: 12px; font-weight: 700; padding: 1px 6px; margin-left: 4px;
 }
 @media (max-width: 768px) {
-  /* 标签一行 3 个（共 6 个＝2 行），等宽网格 */
-  .tab-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
-  .tab-btn { text-align: center; white-space: nowrap; padding: 8px 2px; font-size: 12px; }
+  /* 手机端标签栏：单行横向滚动（不换行、不拆成两行），点击后由 ui.js 自动滚进视口 */
+  .tab-bar { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; overflow-y: hidden; justify-content: flex-start; }
+  .tab-btn { text-align: center; white-space: nowrap; padding: 7px 12px; font-size: 12px; }
   /* 手机端：搜索按钮移到顶部居中，搜索框向下展开；底部留给「猫咪列表」和「反馈」 */
   .map-search { top: 10px; left: 50%; transform: translateX(-50%); bottom: auto; flex-direction: column; align-items: center; gap: 6px; }
   .map-search-toggle { height: 36px; padding: 0 12px; font-size: 12px; }
@@ -927,25 +1037,29 @@ html.splash-skip .splash-overlay { display: none; }
 
 /* ---------- 手机端适配：压缩顶部区块，让地图更大 ---------- */
 @media (max-width: 600px) {
-  .app-header { padding: 6px 10px 4px; gap: 4px; }
+  .app-header { padding: 6px 10px 4px; gap: 5px; }
   .app-title { font-size: 14px; }
   .cat-promo-motto { font-size: 10px; margin-left: 6px; }
-  .tab-btn { padding: 7px 2px; font-size: 12px; }
-  /* 宣传条：压成一行，只留图标+标题（描述与下方站点声明重复故隐藏，省空间让地图更大） */
-  .cat-promo { padding: 6px 12px; }
-  .cat-promo-inner { gap: 8px; }
-  .cat-promo-logo { width: 28px; height: 28px; font-size: 16px; }
-  .cat-promo-title { font-size: 12px; }
-  .cat-promo-desc { display: none; }
-  /* 手机端也显示官方账号，让「这里油只喵」在顶部易被看到（紧凑版） */
-  .cat-promo-accounts { padding: 4px 8px; }
-  .cat-promo-tag { padding: 1px 6px; font-size: 10px; }
-  .cat-promo-name { font-size: 11px; }
+  .tab-btn { padding: 7px 11px; font-size: 12px; }
+  /* 宣传条：压成一行细条，只留图标+标题（描述、口号、账号胶囊都移到「加入我们」面板，省空间让地图更大） */
+  .cat-promo { padding: 6px 10px; }
+  .cat-promo-inner { flex-wrap: nowrap; gap: 6px; }
+  .cat-promo-logo { width: 26px; height: 26px; font-size: 15px; box-shadow: none; }
+  .cat-promo-text { flex: 1 1 auto; min-width: 0; }
+  .cat-promo-title { font-size: 12px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-promo-motto, .cat-promo-desc, .cat-promo-accounts { display: none; }
   /* 站点声明再压薄 */
-  .site-disclaimer { padding: 2px 12px; }
+  .site-disclaimer { padding: 1px 10px; }
   .site-disclaimer-summary { font-size: 10px; }
-  /* 统计条压缩 */
-  .site-stats { font-size: 11px; padding: 2px 10px; gap: 10px; }
+  /* 统计条：单行横向滚动，避免 3 个胶囊换到第二行（width:100% 防止 nowrap 内容把页面撑宽） */
+  .site-stats {
+    width: 100%; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+    gap: 4px; padding: 5px 10px; font-size: 11px;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .site-stats::-webkit-scrollbar { display: none; }
+  .stat-item { flex: 0 0 auto; padding: 2px 5px; white-space: nowrap; }
+  .stat-item b { font-size: 13px; }
 }
 
 /* ---------- 点赞（Netlify 计数） ---------- */

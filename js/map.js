@@ -1,12 +1,12 @@
 // map.js — 地图模块（Leaflet 初始化与圆形猫咪标记）
-import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS, MAP_BOUNDS_SW, MAP_BOUNDS_NE } from './config.js?v=20260904g';
+import { CAMPUS_CENTER, DEFAULT_ZOOM, MAX_ZOOM, DEFAULT_PHOTO, TILE_PROVIDERS, MAP_BOUNDS_SW, MAP_BOUNDS_NE, catStatusKey } from './config.js?v=20261116c';
 const IMG_CACHE_BUST = 'v1'; // 固定版本，浏览器可正常缓存
 function photoUrl(src) {
   if (!src) return DEFAULT_PHOTO;
   if (/^https?:/i.test(src) || /\?v=/.test(src)) return src;
   return src + '?v=' + IMG_CACHE_BUST;
 }
-import { showToast, thumbUrl, gentleLeftAt } from './ui.js?v=20261016e';
+import { showToast, thumbUrl, gentleLeftAt } from './ui.js?v=20261116c';
 
 let currentProviderIdx = 0;
 let tileErrors = 0;
@@ -45,8 +45,12 @@ function addTileLayer(map) {
 function createCatIcon(cat) {
   // 圆形标记：显示真实头像（缓存已固定，浏览器可正常缓存），加载失败时兜底显示名字首字
   const initial = (cat.name || '?')[0];
-  const isPast = cat.life === '去喵星了' || cat.leftAt ? true : false;
-  const lifeRing = cat.life === '失踪' ? ' ring-missing' : (cat.life === '失踪已久' ? ' ring-missing-old' : (cat.life === '已领养' ? ' ring-adopted' : (cat.life === '在校' && !isPast ? ' ring-present' : '')));
+  const status = catStatusKey(cat);
+  const isPast = status === 'past';
+  const lifeRing = status === 'missing' ? ' ring-missing'
+    : (status === 'missing-old' ? ' ring-missing-old'
+    : (status === 'adopted' ? ' ring-adopted'
+    : (status === 'present' && !isPast ? ' ring-present' : '')));
   const hasPhoto = !!cat.photo && cat.photo.indexOf('placeholder') < 0;
   const imgHtml = hasPhoto
     ? `<img class="cat-marker-img" src="${thumbUrl(cat.photo)}" alt="" onerror="this.style.display='none';this.parentElement.classList.add('marker-fallback');">`
@@ -90,11 +94,14 @@ export function initMap(containerId, cats, onCatClick) {
   addTileLayer(map);
 
   const catById = new Map(cats.map((c) => [c.id, c]));
+  // 记录标记与状态，供图例筛选显示/隐藏（map.js 内部使用，不暴露到全局）
+  map._catMarkers = [];
 
   cats.forEach((cat) => {
     if (typeof cat.lat !== 'number' || typeof cat.lng !== 'number') return;
     const marker = L.marker([cat.lat, cat.lng], { icon: createCatIcon(cat) })
       .addTo(map);
+    map._catMarkers.push({ marker, status: catStatusKey(cat) });
 
     const gentleLeft = gentleLeftAt(cat);
     const popupLines = [
@@ -113,6 +120,21 @@ export function initMap(containerId, cats, onCatClick) {
   });
 
   return map;
+}
+
+/**
+ * 按状态筛选地图标记：active 是允许显示的状态集合（present/missing/missing-old/adopted/past）。
+ * 被隐藏的标记只是从地图移除，仍保留在 map._catMarkers 里，重新选中状态即可恢复。
+ */
+export function setMapStatusFilter(map, active) {
+  if (!map || !Array.isArray(map._catMarkers)) return;
+  const allowed = active instanceof Set ? active : new Set(active);
+  map._catMarkers.forEach(({ marker, status }) => {
+    const shouldShow = allowed.has(status);
+    const isShown = map.hasLayer(marker);
+    if (shouldShow && !isShown) marker.addTo(map);
+    else if (!shouldShow && isShown) map.removeLayer(marker);
+  });
 }
 /**
  * 地图内搜索：按 名字/外号/毛色/区域 模糊搜索猫咪，选中后 flyTo 定位并打开标记气泡。
@@ -144,9 +166,6 @@ export function initMapSearch(map, cats) {
   });
 
   const markers = new Map(); // cat.id -> marker
-  cats.forEach((c) => {
-    const m = map.eachLayer ? null : null;
-  });
   // 收集地图上已有的标记（带 data-cat-id）
   map.eachLayer((layer) => {
     if (layer && layer.options && layer.options.icon) {
@@ -182,9 +201,19 @@ export function initMapSearch(map, cats) {
   function doSearch(q) {
     const s = (q || '').trim().toLowerCase();
     if (!s) { resultsEl.hidden = true; resultsEl.innerHTML = ''; return; }
-    const list = cats.filter((c) => catHaystack(c).indexOf(s) >= 0).slice(0, 8);
+    const list = cats.filter((c) => {
+      if (catHaystack(c).indexOf(s) < 0) return false;
+      // 只返回地图上真正可见的猫：没有标记（无坐标）或已被状态筛选隐藏的都不进结果
+      const m = markers.get(c.id);
+      return !!m && map.hasLayer(m);
+    }).slice(0, 8);
     renderResults(list);
   }
+
+  // 状态筛选变化时由 main.js 调用：下拉还开着就按新的可见范围重算结果
+  map._refreshSearch = function () {
+    if (!resultsEl.hidden && input.value.trim()) doSearch(input.value);
+  };
 
   input.addEventListener('input', () => doSearch(input.value));
   input.addEventListener('focus', () => { if (input.value.trim()) doSearch(input.value); });
@@ -195,6 +224,12 @@ export function initMapSearch(map, cats) {
     const cat = cats.find((c) => c.id === btn.dataset.id);
     if (!cat) return;
     const marker = markers.get(cat.id);
+    if (!marker || !map.hasLayer(marker)) {
+      // 结果可能是筛选变化前渲染的：点已隐藏的猫给个明确提示，而不是看起来点击失灵
+      showToast('这只猫已被当前筛选隐藏');
+      closeBox();
+      return;
+    }
     if (map && typeof map.flyTo === 'function' && typeof cat.lat === 'number') {
       map.flyTo([cat.lat, cat.lng], 19, { duration: 0.8 });
       if (marker) setTimeout(() => marker.openPopup(), 850);

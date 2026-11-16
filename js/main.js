@@ -1,9 +1,10 @@
 // main.js — 入口模块（装配并启动应用）
-import { initMap, initMapSearch } from './map.js?v=20261016e';
-import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20261016e';
-import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline, renderStickers } from './ui.js?v=20261016e';
+import { initMap, initMapSearch, setMapStatusFilter } from './map.js?v=20261116c';
+import { initGraph, resizeGraph, panGraph, zoomGraph, resetGraphView } from './graph.js?v=20261116c';
+import { renderCatList, showModal, bindTabs, initCorrection, bindCatPanel, closeCatPanel, updateStats, bindJoin, initLightbox, renderEventsTimeline, renderStoriesTimeline, renderSubmitBanner, renderKnowledgeTimeline, renderRankTimeline, renderStickers } from './ui.js?v=20261116c';
+import { catStatusKey } from './config.js?v=20261116c';
 import { bulkLikeStats } from './likes.js?v=20260925b';
-import { initBoard } from './board.js?v=20261016e';
+import { initBoard } from './board.js?v=20261116c';
 
 // 数据加载（原 data.js，内联以省一次请求）。全部使用相对路径，保证子路径部署下也能正确加载。
 // 不带 ?v=时间戳：那会让浏览器每次都重新下载（cats.json 约 135KB）。
@@ -95,7 +96,7 @@ function dismissSplash() {
   }, minWait);
 }
 
-// 圈圈状态图例：展开/收起（默认收起，不遮挡地图主干）
+// 圈圈状态图例 + 地图状态筛选：展开/收起（默认收起，不遮挡地图主干）
 function bindMapLegend() {
   const toggle = document.getElementById('map-legend-toggle');
   const body = document.getElementById('map-legend-body');
@@ -104,8 +105,128 @@ function bindMapLegend() {
     const expanded = toggle.getAttribute('aria-expanded') === 'true';
     toggle.setAttribute('aria-expanded', String(!expanded));
     body.hidden = expanded;
-    toggle.textContent = expanded ? '🔍 圈圈含义' : '✕ 收起图例';
+    toggle.textContent = expanded ? '🎛️ 筛选 / 图例' : '✕ 收起筛选';
   });
+}
+
+// 地图状态筛选：按钮可多选，隐藏/显示对应状态的猫咪标记
+function initMapStatusFilter(map, cats) {
+  const buttons = Array.from(document.querySelectorAll('[data-status-filter]'));
+  if (!buttons.length) return;
+  const keys = ['present', 'missing', 'missing-old', 'adopted', 'past'];
+  const active = new Set(keys);
+  const counts = { present: 0, missing: 0, 'missing-old': 0, adopted: 0, past: 0 };
+  (cats || []).forEach((c) => {
+    // 只统计真正会出现在地图上的猫（有经纬度才有标记），保证「显示 N 只」= 标记数
+    if (typeof c.lat !== 'number' || typeof c.lng !== 'number') return;
+    const k = catStatusKey(c);
+    if (Object.prototype.hasOwnProperty.call(counts, k)) counts[k]++;
+  });
+  document.querySelectorAll('[data-count]').forEach((el) => {
+    el.textContent = String(counts[el.dataset.count] || 0);
+  });
+  const countEl = document.getElementById('legend-filter-count');
+  const toggle = document.getElementById('map-legend-toggle');
+  const totalShown = keys.reduce((sum, k) => sum + counts[k], 0);
+
+  function apply() {
+    if (map) setMapStatusFilter(map, active);
+    let shown = 0;
+    keys.forEach((k) => { if (active.has(k)) shown += counts[k]; });
+    const allOn = active.size === keys.length;
+    buttons.forEach((b) => {
+      const k = b.dataset.statusFilter;
+      const on = k === 'all' ? allOn : active.has(k);
+      b.classList.toggle('active', on);
+      // 读屏/键盘用户也能知道当前筛选状态
+      if (k === 'all') b.setAttribute('aria-pressed', String(allOn));
+      else b.setAttribute('aria-pressed', String(on));
+    });
+    if (countEl) countEl.textContent = active.size === 0 ? '已隐藏全部猫咪' : '显示 ' + shown + ' 只';
+    if (toggle) {
+      toggle.classList.toggle('filtered', !allOn);
+      toggle.title = allOn ? '查看地图状态筛选' : '有筛选：已隐藏 ' + (totalShown - shown) + ' 只';
+    }
+    // 筛选变化后，已展开的搜索结果按新可见范围重算（map.js 内注册）
+    if (map && typeof map._refreshSearch === 'function') map._refreshSearch();
+  }
+
+  buttons.forEach((b) => {
+    b.addEventListener('click', () => {
+      const k = b.dataset.statusFilter;
+      if (k === 'all') {
+        // 「全部」是开关：已全选时再点=全部取消，否则=全部恢复
+        if (active.size === keys.length) active.clear();
+        else keys.forEach((x) => active.add(x));
+      } else if (active.has(k)) active.delete(k);
+      else active.add(k);
+      apply();
+    });
+  });
+  apply();
+}
+
+// 标签栏横向滚动提示：两侧渐变 + 呼吸箭头，点击滚动；鼠标可拖拽
+function initTabBarScrollHint() {
+  const wrap = document.getElementById('tab-bar-wrap');
+  const bar = wrap && wrap.querySelector('.tab-bar');
+  const hintRight = document.getElementById('tab-scroll-hint');
+  const hintLeft = document.getElementById('tab-scroll-hint-left');
+  if (!wrap || !bar) return;
+  const update = () => {
+    const max = bar.scrollWidth - bar.clientWidth;
+    wrap.classList.toggle('can-right', max > 4 && bar.scrollLeft < max - 4);
+    wrap.classList.toggle('can-left', bar.scrollLeft > 4);
+  };
+  const scrollDir = (dir) => {
+    // 内置浏览器里 smooth scrollBy 可能不生效，直接瞬时滚动最稳
+    const max = bar.scrollWidth - bar.clientWidth;
+    const amount = Math.max(160, bar.clientWidth * 0.7);
+    bar.scrollLeft = dir > 0 ? Math.min(max, bar.scrollLeft + amount) : Math.max(0, bar.scrollLeft - amount);
+    update();
+  };
+  if (hintRight) hintRight.addEventListener('click', () => scrollDir(1));
+  if (hintLeft) hintLeft.addEventListener('click', () => scrollDir(-1));
+
+  // 鼠标按住拖动横向滚动；触屏仍走浏览器原生滑动
+  let dragging = false;
+  let moved = false;
+  let startX = 0;
+  let startScroll = 0;
+  bar.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX; startScroll = bar.scrollLeft;
+    bar.classList.add('dragging');
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 4) { moved = true; bar.classList.add('dragged'); }
+    if (!moved) return;
+    if (e.cancelable) e.preventDefault();
+    bar.scrollLeft = startScroll - dx;
+  }, { passive: false });
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    bar.classList.remove('dragging');
+    if (moved) {
+      setTimeout(() => { bar.classList.remove('dragged'); moved = false; }, 0);
+    }
+    update();
+  };
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+  // 拖动结束后拦截这一次 click，避免误触标签
+  bar.addEventListener('click', (e) => {
+    if (moved) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+
+  bar.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  setTimeout(update, 80);
+  setTimeout(update, 600);
 }
 
 // 本地预览提示：管理端点「👀 预览公开站效果」会带 ?preview=1 打开本地 index.html，
@@ -164,7 +285,7 @@ async function boot() {
   let map = null;
   try {
     map = initMap('map', cats, (cat) => showModal(cat, cats, relations));
-    if (map) { initMapSearch(map, cats); bindMapLegend(); }
+    if (map) initMapSearch(map, cats);
   } catch (e) {
     console.error('地图初始化失败', e);
     if (typeof L === 'undefined') {
@@ -172,6 +293,9 @@ async function boot() {
       return;
     }
   }
+  // 图例筛选不依赖地图是否初始化成功：计数、按钮状态与搜索跟随筛选始终可用
+  bindMapLegend();
+  initMapStatusFilter(map, cats);
 
   // 关系图：延迟加载 ECharts（不在首屏同步阻塞）
   let graphInitDone = false;
@@ -217,6 +341,8 @@ async function boot() {
       },
       onTabShow: (key) => {
         if (key === 'rank') renderRankTimeline(cats);
+        // 从其他标签切回地图时重新测量容器（隐藏期间尺寸可能变化）
+        if (key === 'map' && map) setTimeout(() => map.invalidateSize(), 80);
       }
     }
   );
@@ -230,6 +356,22 @@ async function boot() {
     if (tabKey) {
       const tabBtn = document.querySelector('.tab-bar [data-tab="' + tabKey + '"]');
       if (tabBtn) tabBtn.click();
+    }
+  } catch (e) {}
+
+  // 从档案页点「返回猫咪卡片」会带上 ?cat=catNNN，这里直接打开这只猫的详情卡片
+  try {
+    const deepCatId = new URLSearchParams(location.search).get('cat');
+    if (deepCatId) {
+      const deepCat = cats.find((c) => c.id === deepCatId);
+      if (deepCat) {
+        showModal(deepCat, cats, relations);
+        // 打开后清掉 ?cat（保留 tab 等其它参数），刷新页面不会反复弹出同一只猫
+        const sp = new URLSearchParams(location.search);
+        sp.delete('cat');
+        const qs = sp.toString();
+        history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      }
     }
   } catch (e) {}
 
@@ -284,8 +426,13 @@ async function boot() {
     });
   }
 
-  // 窗口尺寸变化时调整关系图
-  window.addEventListener('resize', () => resizeGraph());
+  // 窗口尺寸变化时调整关系图 + 重新测量地图（否则 Leaflet 保留旧尺寸，右侧会出现灰边）
+  let mapResizeTimer = null;
+  window.addEventListener('resize', () => {
+    resizeGraph();
+    if (mapResizeTimer) clearTimeout(mapResizeTimer);
+    mapResizeTimer = setTimeout(() => { if (map) map.invalidateSize(); }, 150);
+  });
 
   // 更正信息入口
   initCorrection(cats, siteConfig || {});
@@ -301,4 +448,5 @@ async function boot() {
   dismissSplash();
 }
 
+initTabBarScrollHint();
 boot();

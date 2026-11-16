@@ -16,6 +16,17 @@ export const MAX_ZOOM = 20;
 // 照片缺失时的默认占位图路径（相对路径，兼容子路径部署）
 export const DEFAULT_PHOTO = 'images/placeholder.svg';
 
+// 猫咪状态分组：地图筛选、统计条、标记状态环共用同一套判定。
+// present=在校 / missing=失踪 / missing-old=失踪已久 / adopted=已领养 / past=去喵星或已离开
+export function catStatusKey(cat) {
+  if (!cat) return 'present';
+  if (cat.life === '去喵星了' || cat.leftAt) return 'past';
+  if (cat.life === '失踪') return 'missing';
+  if (cat.life === '失踪已久') return 'missing-old';
+  if (cat.life === '已领养') return 'adopted';
+  return 'present';
+}
+
 // 地图瓦片源列表（按顺序回退，首项为默认首选）。
 // ★ 高德：国内直连快、带中文标注、无需 Key（非官方接口，应急/演示用，正式项目建议改用天地图，见 README）；
 //   OSM / CARTO：适合境外访问，国内网络常超时。
@@ -104,7 +115,18 @@ export function collectStoryAlbumImages(cat, cats) {
       const shown = linked.length ? linked : [c.id];
       if (shown.indexOf(cat.id) < 0) return;
       const t = s.title || '';
-      s.images.forEach((src) => add(src, t));
+      // 故事内图片可按猫咪分配（photoCats: 图片路径 → 猫咪 id 数组）：
+      // - 没写这个字段 / 这张图没有键 = 老数据，共享给故事关联的所有猫（保持原行为）
+      // - 有键且包含当前猫 = 进当前猫的相册；不包含 = 不进
+      // - 空数组 [] = 明确不进任何猫的相册（合影、周边图等）
+      const pc = (s.photoCats && typeof s.photoCats === 'object' && !Array.isArray(s.photoCats)) ? s.photoCats : null;
+      s.images.forEach((src) => {
+        if (pc && Object.prototype.hasOwnProperty.call(pc, src)) {
+          const assigned = Array.isArray(pc[src]) ? pc[src] : [];
+          if (assigned.indexOf(cat.id) < 0) return;
+        }
+        add(src, t);
+      });
     });
   });
   return out;

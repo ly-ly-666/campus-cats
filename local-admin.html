@@ -59,16 +59,19 @@
     .comment-admin-row .cm-time { font-size: 11px; color: var(--muted); }
     .comment-admin-row .cm-body { font-size: 13px; color: var(--text); margin: 5px 0 7px; line-height: 1.5; word-break: break-word; white-space: pre-wrap; }
 
-    .catcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 8px; }
-    .catcard { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
-    .catcard .th { height: 140px; background: #f0ebe2; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    /* 猫咪卡片：紧凑横向卡片（左侧方形缩略图 + 右侧信息）。
+       图区固定 104×104 正方形，猫头像原图是 480×480 方形，1:1 完整显示、不再被裁成横幅。 */
+    .catcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); gap: 10px; margin-top: 8px; }
+    .catcard { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    .catcard .th { width: 104px; height: 104px; flex: 0 0 104px; border-radius: 10px; background: #f0ebe2; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
     .catcard .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .catcard .th .fallback { position: absolute; font-size: 48px; }
-    .catcard .bd { padding: 10px; }
+    /* 占位 🐱 默认不显示：图片加载成功一直隐藏，加载失败时由 onerror 改成 flex 显示 */
+    .catcard .th .fallback { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-size: 42px; }
+    .catcard .bd { flex: 1; min-width: 0; padding: 0; }
     .catcard .nm { font-weight: 700; font-size: 14px; }
     .catcard .nick { color: var(--muted); font-size: 12px; margin-left: 4px; }
     .catcard .meta { font-size: 12px; color: var(--muted); margin: 4px 0; }
-    .catcard .ops { display: flex; gap: 6px; margin-top: 6px; }
+    .catcard .ops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     /* 已隐藏的猫咪：公开站不展示，这里置灰提醒 */
     .catcard.off { background: #f7f5f2; }
     .catcard.off .th img { filter: grayscale(1); opacity: .5; }
@@ -156,6 +159,81 @@
     .stories-editor .story-edit-item .story-imgs .thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
     .stories-editor .story-edit-item .story-imgs .thumb-wrap { position: relative; }
     .stories-editor .story-edit-item .story-imgs .thumb-wrap .del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; }
+    /* 故事配图的相册分组（photoCats）：每个分组一个名字 + 下面照片，拖动换组 */
+    .photo-groups { margin-top: 8px; border: 1px dashed #e8c79a; background: #fffbf2; border-radius: 10px; padding: 8px 10px; }
+    .photo-groups .pc-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 13px; color: var(--text); }
+    .photo-groups .pc-head .hint { font-size: 11px; line-height: 1.6; }
+    .photo-groups .pc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 7px 0 4px; }
+    .photo-groups .pc-toolbar .btn { padding: 3px 9px; font-size: 11px; border-radius: 999px; }
+    .photo-groups .pc-bulk-label { font-size: 11px; color: var(--muted); }
+    .photo-groups .pc-bulk-select { padding: 3px 6px; border: 1px solid var(--border); border-radius: 7px; font-size: 11px; background: #fff; color: var(--text); max-width: 190px; }
+    .photo-groups .pc-group { border: 1px solid #f0e2cd; background: #fff; border-radius: 8px; margin-top: 6px; overflow: hidden; transition: border-color .12s, box-shadow .12s, background .12s; }
+    .photo-groups .pc-group.over { border-color: #f97316; background: #fff7ed; box-shadow: 0 0 0 2px rgba(249,115,22,.15); }
+    .photo-groups .pc-group-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid #f3e6d2; background: #fffdf8; cursor: pointer; user-select: none; }
+    .photo-groups .pc-group-head:hover { background: #fff7ed; }
+    .photo-groups .pc-group.empty .pc-group-head { border-bottom: none; }
+    .photo-groups .pc-group.empty { border-style: dashed; background: #fffdf8; }
+    .photo-groups .pc-group-head b { font-size: 12px; color: #7c4a12; }
+    .photo-groups .pc-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+    .photo-groups .pc-count { font-size: 10px; color: #b45309; background: #ffedd5; padding: 1px 6px; border-radius: 999px; flex-shrink: 0; }
+    .photo-groups .pc-drop-hint { margin-left: auto; font-size: 10px; color: #c2b3a0; }
+    .photo-groups .pc-group.over .pc-drop-hint { color: #f97316; font-weight: 600; }
+    .photo-groups .pc-group-body { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; min-height: 30px; }
+    .photo-groups .pc-empty { font-size: 10px; color: #c2b3a0; border: 1px dashed #ead9c2; border-radius: 6px; padding: 4px 8px; width: 100%; text-align: center; }
+    .photo-groups .pcd-thumb { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: grab; background: #f5f2ed; }
+    .photo-groups .pcd-thumb:active { cursor: grabbing; }
+    .photo-groups .pcd-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-groups .pcd-thumb.sel { outline: 3px solid #f97316; outline-offset: 1px; }
+    .photo-groups .pcd-thumb.dragging { opacity: .4; }
+    .photo-groups .pcd-sel { display: none; position: absolute; left: 3px; bottom: 3px; width: 16px; height: 16px; border-radius: 50%; background: #f97316; color: #fff; font-size: 11px; line-height: 16px; text-align: center; }
+    .photo-groups .pcd-thumb.sel .pcd-sel { display: block; }
+    .photo-groups .pcd-del { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(220,38,38,.9); color: #fff; font-size: 11px; line-height: 1; cursor: pointer; }
+    /* 点击照片快速归属：多选猫咪弹层 */
+    .photo-assign-pop { position: fixed; z-index: 100000; background: #fff; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 48px rgba(60, 40, 20, .26); padding: 12px 14px; }
+    .photo-assign-pop .pap-head { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--primary-dark); }
+    .photo-assign-pop .pap-head b { flex: 1; }
+    .photo-assign-pop .pap-head button { border: none; background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 2px; }
+    .photo-assign-pop .pap-sub { font-size: 11px; color: var(--muted); line-height: 1.6; margin: 4px 0 8px; }
+    .photo-assign-pop .pap-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .photo-assign-pop .pap-chip { border: 1px solid var(--border); background: #fff; color: #8a7a66; font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+    .photo-assign-pop .pap-chip:hover { background: #fff7ed; }
+    .photo-assign-pop .pap-chip.on { background: #f59e0b; border-color: #f59e0b; color: #fff; font-weight: 600; }
+    .photo-assign-pop .pap-state { font-size: 11px; color: #b45309; margin: 8px 0; min-height: 16px; }
+    .photo-assign-pop .pap-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .photo-assign-pop .pap-actions .btn { padding: 4px 9px; font-size: 11px; border-radius: 999px; }
+
+    /* 猫咪故事照片归属弹窗：从猫卡 / 猫咪档案进入 */
+    #cat-photos-modal .modal-panel { display: flex; flex-direction: column; padding: 0; max-height: 92vh; overflow: hidden; border-radius: 16px; max-width: 1100px; width: 100%; box-shadow: 0 24px 80px rgba(60, 40, 20, .28); }
+    #cat-photos-modal .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 22px 14px; flex-shrink: 0; background: linear-gradient(135deg, #fff7ed, #ffedd5); border-bottom: 1px solid #f3e2c9; }
+    #cat-photos-modal .modal-head-text h3 { margin: 0; font-size: 18px; color: #7c2d12; }
+    #cat-photos-modal .modal-close { position: static; flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #f3d2a4; background: rgba(255, 255, 255, .72); color: #b45309; font-size: 20px; line-height: 1; cursor: pointer; }
+    #cat-photos-modal .modal-close:hover { background: #fff; }
+    #cat-photos-modal .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 22px 20px; background: #fbf8f3; }
+    #cat-photos-modal .modal-actions { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 12px; padding: 12px 22px; margin: 0; background: #fff; border-top: 1px solid var(--border); }
+    #cat-photos-modal .modal-actions .btn { flex: none; min-width: 92px; }
+    .cat-photos-summary { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+    .cat-photos-summary b { color: #b45309; }
+    .cat-photos-section { margin-top: 14px; }
+    .cat-photos-section h4 { font-size: 13px; color: #7c2d12; margin: 0 0 8px; }
+    .cat-photos-section.not-in h4 { color: #b91c1c; }
+    .cat-photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .cat-photo-card { border: 1px solid var(--border); border-radius: 12px; background: #fff; padding: 8px; cursor: pointer; transition: border-color .12s, box-shadow .12s, transform .12s; }
+    .cat-photo-card:hover { border-color: #f59e0b; box-shadow: 0 4px 14px rgba(245, 158, 11, .16); transform: translateY(-1px); }
+    .cat-photo-card.not-in { border-color: #fca5a5; background: #fff7f7; }
+    .cat-photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; display: block; background: #f5f2ed; }
+    .cat-photo-meta { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .cat-photo-title { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cat-photo-state { display: inline-block; margin-top: 4px; font-size: 10px; color: #b45309; background: #ffedd5; border-radius: 6px; padding: 1px 6px; }
+    .cat-photo-card.not-in .cat-photo-state { background: #fee2e2; color: #b91c1c; }
+    .catcard .th { cursor: pointer; }
+    .catcard .th::after { content: '📷 照片归属'; position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); background: rgba(0, 0, 0, .55); color: #fff; font-size: 9px; padding: 2px 7px; border-radius: 999px; opacity: 0; transition: opacity .15s; pointer-events: none; white-space: nowrap; }
+    .catcard .th:hover::after { opacity: 1; }
+    @media (max-width: 720px) {
+      #cat-photos-modal .modal-panel { max-height: 100vh; border-radius: 0; }
+      #cat-photos-modal .modal-head { padding: 12px 14px; }
+      #cat-photos-modal .modal-body { padding: 12px 14px 16px; }
+      #cat-photos-modal .modal-actions { padding: 10px 14px; }
+    }
     .stories-editor .story-move-btns { display: flex; gap: 4px; }
     .stories-editor .story-move-btns button { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
     .stories-editor .story-move-btns button:hover { background: #fff7ed; }
@@ -190,21 +268,88 @@
     .stories-editor .story-title { width: 100%; padding: 10px 12px; font-size: 17px; font-weight: 700; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; margin-top: 8px; background: #fff; }
     .stories-editor .story-title:focus, .stories-editor .story-content:focus { outline: 2px solid #fde68a; border-color: var(--primary); }
     .stories-editor .story-content { width: 100%; min-height: 220px; padding: 12px 14px; font-size: 14px; line-height: 1.9; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; resize: vertical; margin-top: 8px; background: #fff; }
+    .story-more-row { display: flex; justify-content: center; margin-top: 10px; }
 
     /* ---------- 故事集展示顺序列表 ---------- */
-    .so-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: #fffdf9; }
-    .so-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+    .so-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .so-page-head h2 { margin: 0; }
+    .so-page-head .hint { margin: 2px 0 0; max-width: 640px; }
+    .story-order-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 10px; }
+    .story-order-toolbar .hint { margin: 0; }
+    .story-order-search { flex: 1 1 260px; min-width: 180px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; font-family: inherit; background: #fff; color: var(--text); }
+    .story-order-search:focus { outline: 2px solid #fde68a; border-color: var(--primary); }
+    .story-order-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+    .so-filter { font-family: inherit; padding: 5px 11px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--muted); font-size: 12px; cursor: pointer; }
+    .so-filter:hover { background: #fff7ed; }
+    .so-filter.active { background: #fff7ed; border-color: #fdba74; color: #b45309; font-weight: 600; }
+    .story-order-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 10px; align-items: stretch; }
+    .story-order-list > .hint { grid-column: 1 / -1; }
+    .so-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: #fffdf9; display: flex; flex-direction: column; }
+    .story-order-list .so-item { margin-bottom: 0; height: 100%; }
+    .so-head { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px; padding: 8px 10px; }
+    .so-num { font-weight: 700; color: #b45309; min-width: 30px; flex-shrink: 0; }
+    .so-main { flex: 1 1 0; min-width: 0; }
+    .so-title-line { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+    .so-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .so-ops { flex: 1 0 100%; display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .so-pin-move { display: inline-flex; gap: 2px; }
     .so-stories { border-top: 1px dashed var(--border); padding: 6px 10px 8px 36px; display: flex; flex-direction: column; gap: 4px; background: #fff; }
     .so-story { display: flex; align-items: baseline; gap: 8px; font-size: 12px; flex-wrap: wrap; }
     .so-story-date { color: var(--muted); background: #f3efe6; border-radius: 6px; padding: 1px 6px; font-size: 11px; flex-shrink: 0; }
-    .so-story-title { color: var(--text); font-weight: 600; }
+    .so-story-title { color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+    .so-story-title.editable { cursor: pointer; }
+    .so-story-title.editable:hover { color: #b45309; }
     .so-story-null { color: var(--muted); font-style: italic; font-weight: 400; }
     .so-story-cats { color: #d97706; font-size: 11px; }
+    .so-story-imgs { color: #d97706; font-size: 11px; }
     .so-legend { font-size: 12px; color: var(--muted); background: #fbf7f0; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.6; }
     .so-item.pinned { border-color: #fecaca; background: #fff5f5; }
     .so-pin { border: 1px solid var(--border); background: #fff; color: #b45309; cursor: pointer; font-size: 12px; border-radius: 999px; padding: 3px 10px; }
     .so-pin:hover { background: #fff7ed; }
     .so-pin.on { background: #e11d48; border-color: #e11d48; color: #fff; font-weight: 600; }
+
+    /* ---------- 故事集：按月份分组的卡片 ---------- */
+    .so-sort-note { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 2px 0 10px; }
+    .so-sort-actions { display: flex; gap: 6px; }
+    .so-sort-actions button { border: 1px solid var(--border); background: #fff; color: var(--muted); font-size: 11px; padding: 3px 9px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+    .so-sort-actions button:hover { background: #fff7ed; color: #b45309; }
+    .story-order-list { display: flex; flex-direction: column; gap: 14px; }
+    .so-pinned-section { background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 10px 12px; }
+    .so-section-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .so-section-title { font-size: 14px; font-weight: 700; color: #b45309; }
+    .so-section-count { font-size: 11px; color: #b45309; background: #fef3c7; border-radius: 999px; padding: 1px 8px; }
+    .so-section-hint { margin-left: auto; font-size: 11px; color: #a16207; }
+    .so-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 10px; align-items: stretch; }
+    .so-month { border: 1px solid var(--border); border-radius: 14px; background: #fff; overflow: hidden; }
+    .so-month-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; border: none; background: #fffdf9; cursor: pointer; font-family: inherit; text-align: left; color: var(--text); }
+    .so-month-head:hover { background: #fff7ed; }
+    .so-month-caret { width: 14px; font-size: 12px; color: #b45309; flex-shrink: 0; }
+    .so-month-title { font-size: 14px; font-weight: 700; }
+    .so-month-count { margin-left: auto; font-size: 11px; color: #b45309; background: #ffedd5; border-radius: 999px; padding: 1px 8px; }
+    .so-month-body { padding: 10px; border-top: 1px solid #f3e6d2; }
+    .so-month.collapsed .so-month-body { display: none; }
+    .so-item { border: 1px solid var(--border); border-radius: 12px; background: #fffdf9; padding: 10px 12px; min-height: 150px; margin-bottom: 0; overflow: visible; display: flex; flex-direction: column; }
+    .so-item.pinned { border-color: #fcd34d; background: #fffdf5; }
+    .so-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .so-card-date { font-size: 11px; color: var(--muted); background: #f3efe6; border-radius: 6px; padding: 1px 6px; }
+    .so-card-pin { font-size: 11px; color: #b45309; background: #fef3c7; border-radius: 6px; padding: 1px 6px; font-weight: 700; }
+    .so-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 39px; overflow-wrap: anywhere; }
+    .so-card-title.editable { cursor: pointer; }
+    .so-card-title.editable:hover { color: #b45309; }
+    .so-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+    .so-card-cat { font-size: 11px; color: #b45309; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 0 6px; }
+    .so-card-img { font-size: 11px; color: #d97706; }
+    .so-card-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; border-top: 1px dashed #f3e6d2; }
+    .so-act { border: 1px solid var(--border); background: #fff; color: #8a7a66; font-size: 11px; padding: 3px 8px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+    .so-act:hover { background: #fff7ed; color: #b45309; }
+    .so-act.so-pin.on { background: #fef3c7; border-color: #fcd34d; color: #b45309; font-weight: 600; }
+    .so-move-group { display: inline-flex; gap: 3px; }
+    .so-move { width: 22px; height: 22px; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--muted); font-size: 10px; cursor: pointer; }
+    .so-move:hover { background: #fff7ed; color: #b45309; }
+    @media (max-width: 720px) {
+      .so-grid { grid-template-columns: 1fr; }
+      .so-section-hint { width: 100%; margin-left: 0; }
+    }
 
     /* ---------- 猫咪小知识列表 ---------- */
     .knowledge-list { display: flex; flex-direction: column; gap: 8px; }
@@ -259,6 +404,165 @@
     }
     .like-row-name { font-weight: 600; color: #7c2d12; }
     .like-row-count { color: #ea580c; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* ---------- 弹窗 UI 优化：固定头/尾 + 内容区滚动、猫咪分页、故事双栏 ---------- */
+    #cat-modal .modal-panel,
+    #story-edit-modal .modal-panel,
+    #knowledge-edit-modal .modal-panel,
+    #sticker-edit-modal .modal-panel {
+      display: flex; flex-direction: column;
+      padding: 0; max-height: 92vh; overflow: hidden;
+      border-radius: 16px;
+      box-shadow: 0 24px 80px rgba(60, 40, 20, .28);
+    }
+    #cat-modal .modal-head,
+    #story-edit-modal .modal-head,
+    #knowledge-edit-modal .modal-head,
+    #sticker-edit-modal .modal-head {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+      padding: 16px 22px 14px; flex-shrink: 0;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border-bottom: 1px solid #f3e2c9;
+    }
+    .modal-head-text h3 { margin: 0; font-size: 18px; color: #7c2d12; }
+    .modal-sub { margin: 4px 0 0; font-size: 12px; color: #a16207; }
+    #cat-modal .modal-close,
+    #story-edit-modal .modal-close,
+    #knowledge-edit-modal .modal-close,
+    #sticker-edit-modal .modal-close {
+      position: static; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #f3d2a4; background: rgba(255, 255, 255, .72);
+      color: #b45309; font-size: 20px; line-height: 1; cursor: pointer;
+    }
+    #cat-modal .modal-close:hover,
+    #story-edit-modal .modal-close:hover,
+    #knowledge-edit-modal .modal-close:hover,
+    #sticker-edit-modal .modal-close:hover { background: #fff; }
+    .modal-tabs {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      padding: 8px 22px 0; flex-shrink: 0;
+      border-bottom: 1px solid var(--border); background: #fffdf9;
+    }
+    .modal-tab {
+      border: 1px solid transparent; border-bottom: none;
+      background: transparent; color: var(--muted);
+      padding: 8px 14px; border-radius: 10px 10px 0 0;
+      font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .modal-tab:hover { background: #fff7ed; color: #b45309; }
+    .modal-tab.active { background: #fff; border-color: var(--border); color: #b45309; font-weight: 700; margin-bottom: -1px; }
+    .tab-badge { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 999px; background: #ffedd5; color: #b45309; font-size: 10px; font-weight: 700; }
+    .modal-body {
+      flex: 1 1 auto; min-height: 0; overflow-y: auto;
+      padding: 16px 22px 20px; background: #fbf8f3;
+    }
+    .modal-body::-webkit-scrollbar { width: 10px; }
+    .modal-body::-webkit-scrollbar-thumb { background: #e3d5c2; border-radius: 999px; border: 3px solid #fbf8f3; }
+    #cat-modal .modal-actions,
+    #story-edit-modal .modal-actions,
+    #knowledge-edit-modal .modal-actions,
+    #sticker-edit-modal .modal-actions {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 22px; margin: 0;
+      background: #fff; border-top: 1px solid var(--border);
+      box-shadow: 0 -6px 18px rgba(80, 60, 30, .06);
+    }
+    #cat-modal .modal-actions .btn,
+    #story-edit-modal .modal-actions .btn,
+    #knowledge-edit-modal .modal-actions .btn,
+    #sticker-edit-modal .modal-actions .btn { flex: none; min-width: 92px; }
+    .modal-actions-btns { display: flex; gap: 8px; margin-left: auto; }
+
+    /* 猫咪编辑：左侧媒体卡 + 右侧表单卡片 */
+    .cat-basic-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; align-items: start; }
+    .media-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 14px; position: sticky; top: 0; }
+    .media-card-head { font-size: 13px; font-weight: 700; color: var(--primary-dark); margin-bottom: 10px; }
+    .avatar-wrap { position: relative; width: 160px; height: 160px; margin: 0 auto 10px; }
+    #cat-modal .avatar-wrap .photo-preview { width: 160px; height: 160px; border-radius: 16px; object-fit: cover; background: #f0ebe2; border: 1px solid var(--border); display: none; margin: 0; }
+    #cat-modal .avatar-wrap .photo-preview.show { display: block; }
+    .avatar-empty { position: absolute; inset: 0; border: 1px dashed #e3cfb2; border-radius: 16px; display: flex; align-items: center; justify-content: center; text-align: center; color: #b9a88f; font-size: 12px; line-height: 1.6; background: #fffdf8; }
+    .avatar-wrap:has(.photo-preview.show) .avatar-empty { display: none; }
+    .media-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .media-actions .btn { font-size: 11px; padding: 5px 9px; }
+    .album-head { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px; font-size: 12px; color: var(--primary-dark); font-weight: 600; }
+    #cat-modal .media-card .album-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 210px; overflow-y: auto; margin-top: 4px; }
+    #cat-modal .media-card .album-grid .album-item img { height: 72px; border-radius: 8px; object-fit: cover; }
+    .form-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .form-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+    .form-card-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .form-card-head h4 { font-size: 13px; color: #7c2d12; margin: 0; }
+    .form-card-head .hint { font-size: 11px; }
+    .form-card .grid3 { gap: 10px 12px; }
+    .form-card .field label { font-size: 11px; color: #8a7a66; }
+    .form-card .field input, .form-card .field select, .form-card .field textarea { background: #fffdfb; }
+    .form-card .field input:focus, .form-card .field select:focus, .form-card .field textarea:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .15); }
+    .cat-tab-pane { display: none; }
+    .cat-tab-pane.active { display: block; }
+    #cat-modal .stories-editor .story-edit-item { padding: 12px; border-radius: 12px; }
+    #cat-modal .stories-editor .story-edit-item .story-header { gap: 8px; }
+    #cat-modal .stories-editor .story-edit-item .story-summary-title { max-width: 460px; }
+    .form-valid-hint { font-size: 12px; color: var(--muted); }
+    .form-valid-hint.show { padding: 6px 10px; border-radius: 8px; background: #fff7ed; color: #b45309; }
+    .form-valid-hint.show.ok { background: #ecfdf5; color: #047857; }
+
+    /* 故事编辑：左侧文字 + 右侧相册分组 */
+    .qs-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 16px; align-items: start; }
+    .qs-main, .qs-side { min-width: 0; }
+    .qs-side { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
+    .qs-side .photo-groups { margin-top: 0; border: none; background: transparent; padding: 0; }
+    .qs-main .story-content { min-height: 220px; }
+
+    @media (max-width: 980px) {
+      .cat-basic-grid, .qs-layout { grid-template-columns: 1fr; }
+      .media-card { position: static; }
+      #cat-modal .media-card .album-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .modal-bg { padding: 0; }
+      #cat-modal .modal-panel, #story-edit-modal .modal-panel,
+      #knowledge-edit-modal .modal-panel, #sticker-edit-modal .modal-panel { max-height: 100vh; border-radius: 0; }
+      #cat-modal .modal-head, #story-edit-modal .modal-head,
+      #knowledge-edit-modal .modal-head, #sticker-edit-modal .modal-head { padding: 12px 14px; }
+      .modal-tabs { padding: 6px 14px 0; }
+      .modal-body { padding: 12px 14px 16px; }
+      #cat-modal .modal-actions, #story-edit-modal .modal-actions,
+      #knowledge-edit-modal .modal-actions, #sticker-edit-modal .modal-actions { padding: 10px 14px; flex-wrap: wrap; }
+      .modal-actions-btns { width: 100%; }
+      #cat-modal .modal-actions .btn, #story-edit-modal .modal-actions .btn,
+      #knowledge-edit-modal .modal-actions .btn, #sticker-edit-modal .modal-actions .btn { flex: 1; }
+    }
+
+    /* ---------- 图片放大查看层（管理端自带；公开站的 openLightbox 是 ES module，这里不能复用） ---------- */
+    /* 放在 body 下、层级压过 .modal-bg(2000) 和 #crop-modal(3000)，低于 .save-status(99999) */
+    #admin-lightbox { position: fixed; inset: 0; z-index: 4000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.82); overscroll-behavior: contain; user-select: none; }
+    #admin-lightbox.open { display: flex; }
+    #admin-lightbox-img { width: auto; height: auto; max-width: 92vw; max-height: 84vh; object-fit: contain; border-radius: 10px; background: #111; box-shadow: 0 10px 40px rgba(0,0,0,.5); cursor: default; display: block; }
+    #admin-lightbox-close { position: absolute; top: 14px; right: 16px; width: 38px; height: 38px; border: none; border-radius: 50%; background: rgba(255,255,255,.16); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #admin-lightbox-close:hover { background: rgba(255,255,255,.32); }
+    #admin-lightbox-prev, #admin-lightbox-next { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 64px; border: none; border-radius: 10px; background: rgba(0,0,0,.45); color: #fff; font-size: 26px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #admin-lightbox-prev { left: 14px; }
+    #admin-lightbox-next { right: 14px; }
+    #admin-lightbox-prev:hover, #admin-lightbox-next:hover { background: rgba(0,0,0,.72); }
+    #admin-lightbox-index { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.55); color: #fff; font-size: 12px; padding: 3px 12px; border-radius: 999px; }
+    #admin-lightbox-caption { position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%); max-width: 80vw; color: rgba(255,255,255,.82); font-size: 12px; text-align: center; word-break: break-all; }
+    /* 可点开放大的图片统一给 zoom-in 提示（分组看板 .pcd-thumb 保持 grab：它单击是选中、拖动是换组） */
+    #cats-list .catcard .th img,
+    #f-preview.show,
+    #album-list .album-item img,
+    #stories-editor .story-imgs .thumb,
+    #events-list .ev-imgs .thumb,
+    #quick-story-editor .story-imgs .thumb,
+    #knowledge-editor .story-imgs .thumb,
+    #sticker-list .story-imgs .thumb,
+    #sticker-editor .sticker-admin-items .thumb { cursor: zoom-in; }
+    /* 表情包这两处原来没有 .thumb 尺寸（事件/故事编辑器才有），补上稳定尺寸后放大热区才好点 */
+    #sticker-list .story-imgs { display: flex; flex-wrap: wrap; gap: 6px; }
+    #sticker-list .story-imgs .thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+    #sticker-editor .sticker-admin-items { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    #sticker-editor .sticker-admin-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; background: #fffdf9; }
+    #sticker-editor .sticker-admin-row .thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+    #sticker-editor .sticker-admin-row .sticker-label { flex: 1; min-width: 120px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -359,14 +663,32 @@
       <section class="page" data-page="stories">
         <div class="page-head"><h1>📖 故事集</h1></div>
         <div class="card">
-          <h2>故事置顶</h2>
-          <p class="hint">点击故事右侧「📌 置顶」把它固定到公开站故事集最前面（<b style="color:#e11d48;">最多 3 篇</b>）；未置顶的故事自动按日期（无日期按上传时间）从新到旧排列。置顶改动会<b>自动保存</b>，公开站刷新即可预览。</p>
-          <div id="story-order-list" class="story-order-list"></div>
-          <div class="row" style="margin-top:10px;">
+          <div class="so-page-head">
+            <div>
+              <h2>全部故事</h2>
+              <p class="hint">按月份分组，月份内从新到旧；📌 置顶后固定到公开站最前（最多 3 篇）。置顶改动会自动保存。</p>
+            </div>
             <button class="btn btn-primary" id="btn-save-story-order">💾 保存到本地</button>
-            <span class="hint" id="story-order-save-tip" style="align-self:center;">置顶会自动保存，也可点这里手动保存</span>
           </div>
-          <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用右侧 ▲▼ 调整先后；想换掉某篇，点「📌 置顶 N」取消后再置顶新的即可。</p>
+          <div class="story-order-toolbar">
+            <input id="story-order-search" type="search" class="story-order-search" placeholder="🔍 搜索故事标题 / 正文…" autocomplete="off">
+            <div class="story-order-filters">
+              <button type="button" class="so-filter active" data-so-filter="all">全部</button>
+              <button type="button" class="so-filter" data-so-filter="pinned">📌 已置顶</button>
+              <button type="button" class="so-filter" data-so-filter="multi">🐾 多猫</button>
+              <button type="button" class="so-filter" data-so-filter="imgs">🖼️ 有配图</button>
+            </div>
+            <span class="hint" id="story-order-count"></span>
+          </div>
+          <div class="so-sort-note">
+            <span>📅 按月份分组 · 月份内从新到旧；📌 置顶固定在最前</span>
+            <span class="so-sort-actions">
+              <button type="button" id="so-expand-all">全部展开</button>
+              <button type="button" id="so-collapse-all">全部收起</button>
+            </span>
+          </div>
+          <div id="story-order-list" class="story-order-list"></div>
+          <p class="hint" style="margin-top:8px;">💡 置顶的 3 篇可以用卡片上的 ▲▼ 调整先后；想换掉某篇，点「取消置顶」后再置顶新的即可。</p>
         </div>
 
         <div class="card" style="margin-top:14px;">
@@ -511,75 +833,115 @@
   <!-- 编辑弹窗 -->
   <div class="modal-bg" id="cat-modal">
     <div class="modal-panel">
-      <button class="modal-close" id="cat-close">×</button>
-      <h3 id="modal-title">编辑猫咪</h3>
-      <div id="cat-status-banner"></div>
-      <div class="field" style="margin-bottom:10px;">
-        <label>👁️ 网站展示</label>
-        <select id="f-visible" style="max-width:260px;">
-          <option value="1">✅ 展示（公开站正常显示这只猫）</option>
-          <option value="0">🚫 隐藏（公开站不显示它的全部内容）</option>
-        </select>
-        <p class="hint" style="margin:4px 0 0 0;">选「隐藏」后，这只猫的地图标记、猫咪列表、关系图、排行榜和档案页都不再出现在公开网站上；本地数据和图片会完整保留，随时改回「展示」即可恢复。</p>
-      </div>
-      <div class="field" style="margin-bottom:10px;">
-        <label>📷 头像</label>
-        <div class="row" style="margin-top:0;">
-          <button type="button" class="btn btn-sm" id="btn-avatar">🖼️ 选择头像</button>
-          <button type="button" class="btn btn-sm" id="btn-album-add">🖼️ 添加相册照片</button>
-          <button type="button" class="btn btn-sm" id="btn-paste" title="点这里后按 Ctrl+V 粘贴截图">📋 粘贴截图</button>
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3 id="modal-title">编辑猫咪</h3>
+          <p class="modal-sub">改完点右下角「保存」；图片会自动生成缩略图</p>
         </div>
-        <p class="hint" id="paste-hint" style="margin:4px 0 0 0;display:none;">已就绪，按 <b>Ctrl + V</b> 把剪贴板里的截图粘进来</p>
-        <input type="file" id="f-avatar" accept="image/*" style="display:none;">
-        <input type="file" id="f-album" accept="image/*" multiple style="display:none;">
-        <input type="file" id="f-event-img" accept="image/*" multiple style="display:none;">
-        <img id="f-preview" class="photo-preview" alt="头像预览">
-        <div class="album-grid" id="album-list"></div>
+        <button class="modal-close" id="cat-close" aria-label="关闭">×</button>
       </div>
-      <div class="grid3">
-        <div class="field"><label>名字 *</label><input id="f-name" placeholder="如：小白"></div>
-        <div class="field"><label>外号</label><input id="f-nickname" placeholder="白猪"></div>
-        <div class="field"><label>性别 *</label><select id="f-gender"><option value="unknown">未知</option><option value="male">公</option><option value="female">母</option></select></div>
+      <div class="modal-tabs" role="tablist" aria-label="编辑分类">
+        <button type="button" class="modal-tab active" data-cat-tab="basic" role="tab">📋 基本信息</button>
+        <button type="button" class="modal-tab" data-cat-tab="stories" role="tab">📖 故事 <b class="tab-badge" id="cat-story-count">0</b></button>
+        <button type="button" class="modal-tab" data-cat-tab="events" role="tab">📅 事件 <b class="tab-badge" id="cat-event-count">0</b></button>
       </div>
-      <div class="grid3" style="margin-top:10px;">
-        <div class="field"><label>毛色</label><input id="f-color" placeholder="白色混合橙色"></div>
-        <div class="field"><label>区域</label><input id="f-area" placeholder="图书馆东门"></div>
-        <div class="field"><label>绝育状态 *</label><select id="f-status"><option value="未知">未知</option><option>已绝育</option><option>未绝育</option></select></div>
-        <div class="field"><label>猫咪状态</label><select id="f-life"><option value="在校">在校</option><option value="已领养">已领养</option><option value="失踪">失踪</option><option value="失踪已久">失踪已久</option><option value="去喵星了">去喵星了（离世）</option></select></div>
-      </div>
-      <div class="grid3" style="margin-top:10px;">
-        <div class="field"><label>纬度 *</label><input id="f-lat" type="number" step="any" placeholder="21.6785"></div>
-        <div class="field"><label>经度 *</label><input id="f-lng" type="number" step="any" placeholder="110.9221"></div>
-        <div class="field"><label>出现时间（选填）</label><div class="row" style="margin-top:0;gap:4px;"><input id="f-firstY" type="number" min="1990" max="2100" placeholder="年" style="width:60px;"><span style="align-self:center;">-</span><input id="f-firstM" type="number" min="1" max="12" placeholder="月" style="width:50px;"><span style="align-self:center;">-</span><input id="f-firstD" type="number" min="1" max="31" placeholder="日" style="width:50px;"></div></div>
-      </div>
-      <div class="grid3" style="margin-top:10px;">
-        <div class="field"><label>离开时间</label><input id="f-leftAt" placeholder="过往才填"></div>
-        <div class="field"><label>照料人</label><input id="f-caretaker" placeholder="选填"></div>
-        <div class="field"><label>年龄（选填）</label><input id="f-age" placeholder="如：3年 / 大约4岁"></div>
-      </div>
-      <div class="field" style="margin-top:10px;"><label>简介</label><textarea id="f-desc" rows="2" placeholder="性格/特征"></textarea></div>
-      <div class="field" style="margin-top:10px;"><label>档案故事（旧版兼容）</label><textarea id="f-story" rows="3" placeholder="旧字段，展示时优先使用多篇故事"></textarea></div>
-      <div class="field" style="margin-top:10px;">
-        <label style="font-size:13px;color:var(--primary-dark);font-weight:600;">📖 多篇故事</label>
-        <div id="stories-editor" class="stories-editor"></div>
-        <button type="button" class="btn btn-sm" id="btn-story-add" style="margin-top:6px;">＋ 添加故事</button>
-        <input type="file" id="f-story-img" accept="image/*" multiple style="display:none;">
-      </div>
-      <div class="field" style="margin-top:10px;"><label>档案标签（选填，回车添加）</label><div id="f-tags-chips" class="tag-chips"></div><input id="f-tags-input" placeholder="输入标签后回车，如：活泼"></div>
+      <div class="modal-body">
+        <div id="cat-status-banner"></div>
 
-      <!-- 最近事件 -->
-      <div class="field" style="margin-top:14px;">
-        <label style="font-size:13px;color:var(--primary-dark);font-weight:600;">📅 最近事件（会在档案里按时间线展示）</label>
-        <div id="events-list"></div>
-        <button type="button" class="btn btn-sm" id="btn-event-add" style="margin-top:6px;">＋ 添加事件</button>
+        <div class="cat-tab-pane active" data-cat-pane="basic">
+          <div class="cat-basic-grid">
+            <aside class="media-card">
+              <div class="media-card-head">📷 头像与相册</div>
+              <div class="avatar-wrap">
+                <img id="f-preview" class="photo-preview" alt="头像预览">
+                <div class="avatar-empty" id="avatar-empty">还没有头像<br>点下面按钮选一张</div>
+              </div>
+              <div class="media-actions">
+                <button type="button" class="btn btn-sm" id="btn-avatar">🖼️ 选择头像</button>
+                <button type="button" class="btn btn-sm" id="btn-album-add">🖼️ 添加相册照片</button>
+                <button type="button" class="btn btn-sm" id="btn-paste" title="点这里后按 Ctrl+V 粘贴截图">📋 粘贴截图</button>
+                <button type="button" class="btn btn-sm" id="btn-cat-photos" title="点击照片快速设置故事照片归属">📷 故事照片归属</button>
+              </div>
+              <p class="hint" id="paste-hint" style="margin:6px 0 0 0;display:none;">已就绪，按 <b>Ctrl + V</b> 把剪贴板里的截图粘进来</p>
+              <div class="album-head"><span>相册</span><span class="hint" id="album-count">0 张</span></div>
+              <div class="album-grid" id="album-list"></div>
+              <input type="file" id="f-avatar" accept="image/*" style="display:none;">
+              <input type="file" id="f-album" accept="image/*" multiple style="display:none;">
+              <input type="file" id="f-event-img" accept="image/*" multiple style="display:none;">
+            </aside>
+
+            <div class="form-col">
+              <section class="form-card">
+                <div class="form-card-head"><h4>👁️ 网站展示</h4><span class="hint">控制这只猫是否出现在公开站</span></div>
+                <div class="field">
+                  <select id="f-visible" style="max-width:340px;">
+                    <option value="1">✅ 展示（公开站正常显示这只猫）</option>
+                    <option value="0">🚫 隐藏（公开站不显示它的全部内容）</option>
+                  </select>
+                  <p class="hint" style="margin:4px 0 0 0;">选「隐藏」后，地图标记、猫咪列表、关系图、排行榜和档案页都不再出现；本地数据和图片完整保留，改回「展示」即可恢复。</p>
+                </div>
+              </section>
+
+              <section class="form-card">
+                <div class="form-card-head"><h4>🐱 身份</h4><span class="hint">名字和性别是必填</span></div>
+                <div class="grid3">
+                  <div class="field"><label>名字 *</label><input id="f-name" placeholder="如：小白"></div>
+                  <div class="field"><label>外号</label><input id="f-nickname" placeholder="白猪"></div>
+                  <div class="field"><label>性别 *</label><select id="f-gender"><option value="unknown">未知</option><option value="male">公</option><option value="female">母</option></select></div>
+                  <div class="field"><label>毛色</label><input id="f-color" placeholder="白色混合橙色"></div>
+                  <div class="field"><label>区域</label><input id="f-area" placeholder="图书馆东门"></div>
+                  <div class="field"><label>档案标签</label><div id="f-tags-chips" class="tag-chips"></div><input id="f-tags-input" placeholder="输入标签后回车，如：活泼"></div>
+                </div>
+              </section>
+
+              <section class="form-card">
+                <div class="form-card-head"><h4>📍 状态与位置</h4><span class="hint">纬度 / 经度 / 绝育状态是必填</span></div>
+                <div class="grid3">
+                  <div class="field"><label>绝育状态 *</label><select id="f-status"><option value="未知">未知</option><option>已绝育</option><option>未绝育</option></select></div>
+                  <div class="field"><label>猫咪状态</label><select id="f-life"><option value="在校">在校</option><option value="已领养">已领养</option><option value="失踪">失踪</option><option value="失踪已久">失踪已久</option><option value="去喵星了">去喵星了（离世）</option></select></div>
+                  <div class="field"><label>纬度 *</label><input id="f-lat" type="number" step="any" placeholder="21.6785"></div>
+                  <div class="field"><label>经度 *</label><input id="f-lng" type="number" step="any" placeholder="110.9221"></div>
+                  <div class="field"><label>出现时间（选填）</label><div class="row" style="margin-top:0;gap:4px;"><input id="f-firstY" type="number" min="1990" max="2100" placeholder="年" style="width:60px;"><span style="align-self:center;">-</span><input id="f-firstM" type="number" min="1" max="12" placeholder="月" style="width:50px;"><span style="align-self:center;">-</span><input id="f-firstD" type="number" min="1" max="31" placeholder="日" style="width:50px;"></div></div>
+                  <div class="field"><label>离开时间</label><input id="f-leftAt" placeholder="过往才填"></div>
+                  <div class="field"><label>照料人</label><input id="f-caretaker" placeholder="选填"></div>
+                  <div class="field"><label>年龄（选填）</label><input id="f-age" placeholder="如：3年 / 大约4岁"></div>
+                </div>
+              </section>
+
+              <section class="form-card">
+                <div class="form-card-head"><h4>📝 档案文字</h4><span class="hint">会展示在档案页和详情弹窗里</span></div>
+                <div class="field" style="margin-top:8px;"><label>简介</label><textarea id="f-desc" rows="3" placeholder="性格/特征"></textarea></div>
+                <div class="field" style="margin-top:10px;"><label>档案故事（旧版兼容）</label><textarea id="f-story" rows="3" placeholder="旧字段，展示时优先使用多篇故事"></textarea></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div class="cat-tab-pane" data-cat-pane="stories">
+          <section class="form-card">
+            <div class="form-card-head"><h4>📖 多篇故事</h4><span class="hint">每篇故事可以关联多只猫；配图可拖到不同猫咪分组</span><button type="button" class="btn btn-primary btn-sm" id="btn-story-add" style="margin-left:auto;">＋ 添加故事</button></div>
+            <div id="stories-editor" class="stories-editor"></div>
+            <div class="story-more-row" id="cat-story-more-wrap" style="display:none;">
+              <button type="button" class="btn" id="cat-story-more">显示更多</button>
+            </div>
+            <input type="file" id="f-story-img" accept="image/*" multiple style="display:none;">
+          </section>
+        </div>
+
+        <div class="cat-tab-pane" data-cat-pane="events">
+          <section class="form-card">
+            <div class="form-card-head"><h4>📅 最近事件</h4><span class="hint">按时间线展示在档案页</span><button type="button" class="btn btn-primary btn-sm" id="btn-event-add" style="margin-left:auto;">＋ 添加事件</button></div>
+            <div id="events-list"></div>
+          </section>
+        </div>
       </div>
-
-      <div id="form-valid-hint" class="form-valid-hint"></div>
-
       <div class="modal-actions">
-        <button class="btn btn-primary" id="f-save">保存</button>
-        <button class="btn btn-danger" id="f-del">删除</button>
-        <button class="btn" id="f-cancel">取消</button>
+        <div id="form-valid-hint" class="form-valid-hint"></div>
+        <div class="modal-actions-btns">
+          <button class="btn btn-danger" id="f-del">删除</button>
+          <button class="btn" id="f-cancel">取消</button>
+          <button class="btn btn-primary" id="f-save">保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -587,13 +949,22 @@
   <!-- 故事快速编辑弹窗 -->
   <div class="modal-bg" id="story-edit-modal">
     <div class="modal-panel">
-      <button class="modal-close" id="story-edit-close">×</button>
-      <h3>✏️ 编辑故事</h3>
-      <div id="quick-story-editor" class="stories-editor"></div>
-      <input type="file" id="f-quick-story-img" accept="image/*" multiple style="display:none;">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3>✏️ 编辑故事</h3>
+          <p class="modal-sub">左边写故事，右边拖照片到对应猫咪分组；没拖动的默认所有关联猫共享</p>
+        </div>
+        <button class="modal-close" id="story-edit-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="quick-story-editor" class="stories-editor"></div>
+        <input type="file" id="f-quick-story-img" accept="image/*" multiple style="display:none;">
+      </div>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="quick-story-save">保存</button>
-        <button class="btn" id="quick-story-cancel">取消</button>
+        <div class="modal-actions-btns">
+          <button class="btn" id="quick-story-cancel">取消</button>
+          <button class="btn btn-primary" id="quick-story-save">保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -601,14 +972,23 @@
   <!-- 猫咪小知识编辑弹窗 -->
   <div class="modal-bg" id="knowledge-edit-modal">
     <div class="modal-panel">
-      <button class="modal-close" id="knowledge-edit-close">×</button>
-      <h3>✏️ 编辑猫咪小知识</h3>
-      <div id="knowledge-editor" class="stories-editor"></div>
-      <input type="file" id="f-knowledge-img" accept="image/*" multiple style="display:none;">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3>✏️ 编辑猫咪小知识</h3>
+          <p class="modal-sub">标题、正文和配图会展示在「猫咪小知识」栏目</p>
+        </div>
+        <button class="modal-close" id="knowledge-edit-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="knowledge-editor" class="stories-editor"></div>
+        <input type="file" id="f-knowledge-img" accept="image/*" multiple style="display:none;">
+      </div>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="knowledge-save">保存</button>
-        <button class="btn btn-danger" id="knowledge-del">删除</button>
-        <button class="btn" id="knowledge-cancel">取消</button>
+        <div class="modal-actions-btns">
+          <button class="btn btn-danger" id="knowledge-del">删除</button>
+          <button class="btn" id="knowledge-cancel">取消</button>
+          <button class="btn btn-primary" id="knowledge-save">保存</button>
+        </div>
       </div>
     </div>
   </div>
@@ -616,16 +996,57 @@
   <!-- 表情包编辑弹窗 -->
   <div class="modal-bg" id="sticker-edit-modal">
     <div class="modal-panel">
-      <button class="modal-close" id="sticker-edit-close">×</button>
-      <h3>✏️ 编辑表情包</h3>
-      <div id="sticker-editor" class="stories-editor"></div>
-      <input type="file" id="f-sticker-img" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none;">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3>✏️ 编辑表情包</h3>
+          <p class="modal-sub">表情包功能默认关闭；开启后展示在故事集的二级栏目</p>
+        </div>
+        <button class="modal-close" id="sticker-edit-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="sticker-editor" class="stories-editor"></div>
+        <input type="file" id="f-sticker-img" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none;">
+      </div>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="sticker-save">保存</button>
-        <button class="btn btn-danger" id="sticker-del">删除</button>
-        <button class="btn" id="sticker-cancel">取消</button>
+        <div class="modal-actions-btns">
+          <button class="btn btn-danger" id="sticker-del">删除</button>
+          <button class="btn" id="sticker-cancel">取消</button>
+          <button class="btn btn-primary" id="sticker-save">保存</button>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- 猫咪故事照片归属：从猫卡/猫咪档案进入，点照片快速选择进哪些猫的相册 -->
+  <div class="modal-bg" id="cat-photos-modal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3>📷 <span id="cat-photos-name">猫咪</span> · 故事照片归属</h3>
+          <p class="modal-sub">点照片选择它应该进哪些猫咪的相册；全选 = 共享，全不选 = 不进任何猫咪相册。</p>
+        </div>
+        <button class="modal-close" id="cat-photos-close" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="cat-photos-summary" id="cat-photos-summary"></div>
+        <div id="cat-photos-list"></div>
+      </div>
+      <div class="modal-actions">
+        <div class="modal-actions-btns">
+          <button class="btn btn-primary" id="cat-photos-done">完成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片放大查看层：必须放在 body 下（.modal-panel 有 overflow:hidden，会裁掉 fixed 层） -->
+  <div id="admin-lightbox" role="dialog" aria-modal="true" aria-label="图片预览" aria-hidden="true">
+    <button type="button" id="admin-lightbox-close" aria-label="关闭">×</button>
+    <button type="button" id="admin-lightbox-prev" aria-label="上一张">‹</button>
+    <img id="admin-lightbox-img" draggable="false" alt="">
+    <button type="button" id="admin-lightbox-next" aria-label="下一张">›</button>
+    <div id="admin-lightbox-index" aria-live="polite"></div>
+    <div id="admin-lightbox-caption"></div>
   </div>
 
   <script src="./vendor/leaflet.min.js"></script>

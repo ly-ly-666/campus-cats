@@ -1,5 +1,5 @@
 // ui.js — UI 模块（列表渲染、详情弹窗、标签页、HTML 转义）
-import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages } from './config.js?v=20260904o';
+import { DEFAULT_PHOTO, deriveSiblingRelations, openLightbox, initLightbox, collectStoryAlbumImages, catStatusKey } from './config.js?v=20261116c';
 import { mountLikeButton, mountStoryLikeButton, mountStoryComment } from './likes.js?v=20260925b';
 import { mountRatingBox, fetchRank, fetchAllReviews, submitRating } from './ratings.js?v=20260926a';
 export { openLightbox, initLightbox };
@@ -318,11 +318,16 @@ export function showModal(cat, cats, relations) {
         </div>
       </div>
       ${statusBanner}
+      <a class="modal-profile-link" href="./profile.html#${cat.id}">
+        <span class="mpl-icon">📖</span>
+        <span class="mpl-text"><b>查看完整档案</b><small>故事、相册、族谱和最近事件都在这里</small></span>
+        <span class="mpl-arrow">→</span>
+      </a>
       ${cat.description ? `<p class="modal-desc">${escapeHtml(cat.description)}</p>` : ''}
       <div class="modal-info">${infoHtml}</div>
       <div class="modal-like" data-like-for="${cat.id}"></div>
       <div class="rate-host" data-cat-id="${cat.id}"></div>
-      <div style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;"><a class="btn btn-sm" href="./profile.html#${cat.id}">📖 查看完整档案</a><button class="btn btn-sm" id="corr-from-modal" data-cat-id="${cat.id}">🐾 信息有误？更正</button></div>
+      <div class="modal-secondary-actions"><button class="btn btn-sm" id="corr-from-modal" data-cat-id="${cat.id}">🐾 信息有误？更正</button></div>
       <h3 class="modal-section-title">关系</h3>
       <div class="modal-relations">${relationHtml}</div>
       ${eventsHtml ? `<h3 class="modal-section-title">📅 最近事件</h3>${eventsHtml}` : ''}
@@ -330,12 +335,23 @@ export function showModal(cat, cats, relations) {
       ${albumHtml}
     </div>`;
 
+  const prevFocus = document.activeElement;
   modal.classList.add('open');
   modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  // 读屏/键盘：焦点移到首屏的「查看完整档案」CTA，不再留在背后的地图/列表上
+  const cta = modal.querySelector('.modal-profile-link');
+  if (cta) {
+    try { cta.focus({ preventScroll: true }); } catch (e) { cta.focus(); }
+  }
 
   const close = () => {
     modal.classList.remove('open');
     modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    if (prevFocus && typeof prevFocus.focus === 'function') {
+      try { prevFocus.focus({ preventScroll: true }); } catch (e) {}
+    }
   };
   modal.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
   window.__closeModal = close;
@@ -470,9 +486,11 @@ export function updateStats(cats) {
   const list = Array.isArray(cats) ? cats : [];
   const totalEl = document.getElementById('stat-total');
   const neuEl = document.getElementById('stat-neutered');
+  const presentEl = document.getElementById('stat-present');
   const fabEl = document.getElementById('fab-count');
   if (totalEl) totalEl.textContent = String(list.length);
   if (neuEl) neuEl.textContent = String(list.filter((c) => c.status === '已绝育').length);
+  if (presentEl) presentEl.textContent = String(list.filter((c) => catStatusKey(c) === 'present').length);
   if (fabEl) fabEl.textContent = String(list.length);
 }
 

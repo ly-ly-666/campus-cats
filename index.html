@@ -45,7 +45,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="./style.css?v=42">
+  <link rel="stylesheet" href="./style.css?v=47">
 </head>
 <body>
   <!-- 加载页 -->
@@ -58,15 +58,20 @@
 
   <header class="app-header">
     <h1 class="app-title">🐱 广油猫咪地图与族谱</h1>
-    <nav class="tab-bar" aria-label="视图切换">
-      <button class="tab-btn active" data-tab="map" type="button">🗺️ 地图分布</button>
-      <button class="tab-btn" data-tab="graph" type="button">🌳 亲戚关系</button>
-      <button class="tab-btn" data-tab="events" type="button">📅 最近事件</button>
-      <button class="tab-btn" data-tab="stories" type="button">📖 故事集</button>
-      <button class="tab-btn" data-tab="knowledge" type="button">📚 猫咪小知识</button>
-      <button class="tab-btn" data-tab="rank" type="button">🏆 评分·留言墙</button>
-      <a class="tab-btn" href="./admin.html" title="在线编辑数据并自动部署" style="display:none">⚙️ 编辑</a>
-    </nav>
+    <div class="tab-bar-wrap" id="tab-bar-wrap">
+      <button type="button" class="tab-scroll-hint tab-scroll-hint-left" id="tab-scroll-hint-left" aria-label="向左滚动查看更多标签" title="查看更多标签"><span>‹</span></button>
+      <nav class="tab-bar" aria-label="视图切换">
+        <button class="tab-btn active" data-tab="map" type="button">🗺️ 地图分布</button>
+        <button class="tab-btn" data-tab="graph" type="button">🌳 亲戚关系</button>
+        <button class="tab-btn" data-tab="events" type="button">📅 最近事件</button>
+        <button class="tab-btn" data-tab="stories" type="button">📖 故事集</button>
+        <a class="tab-btn" href="./gallery.html" title="沉浸式浏览所有猫咪照片" style="text-decoration:none">📷 照片墙</a>
+        <button class="tab-btn" data-tab="knowledge" type="button">📚 猫咪小知识</button>
+        <button class="tab-btn" data-tab="rank" type="button">🏆 评分·留言墙</button>
+        <a class="tab-btn" href="./admin.html" title="在线编辑数据并自动部署" style="display:none">⚙️ 编辑</a>
+      </nav>
+      <button type="button" class="tab-scroll-hint tab-scroll-hint-right" id="tab-scroll-hint" aria-label="向右滑动查看更多标签" title="查看更多标签"><span>›</span></button>
+    </div>
   </header>
 
   <!-- 猫协宣传条（最显眼位置） -->
@@ -95,8 +100,9 @@
 
   <!-- 统计条 -->
   <div class="site-stats" id="site-stats">
-    <span class="stat-item">🐱 已知流浪猫 <b id="stat-total">0</b> 只</span>
-    <span class="stat-item">💉 已绝育 <b id="stat-neutered">0</b> 只</span>
+    <span class="stat-item" title="包括在校、失踪、失踪已久、已领养和去喵星等全部猫咪记录">🐱 记录过的流浪猫 <b id="stat-total">0</b> 只</span>
+    <span class="stat-item" title="当前记录为「在校」的猫">🏫 在校 <b id="stat-present">0</b> 只</span>
+    <span class="stat-item" title="仅统计记录中明确标注「已绝育」的猫">💉 已知已绝育 <b id="stat-neutered">0</b> 只</span>
   </div>
 
   <main class="app-main">
@@ -117,15 +123,20 @@
         </div>
       </div>
 
-      <!-- 圈圈状态图例（可展开/收起，默认收起，不遮挡地图主干） -->
+      <!-- 圈圈状态图例 + 地图筛选（可展开/收起，默认收起，不遮挡地图主干） -->
       <div class="map-legend" id="map-legend">
-        <button type="button" class="map-legend-toggle" id="map-legend-toggle" aria-expanded="false" aria-controls="map-legend-body">🔍 圈圈含义</button>
+        <button type="button" class="map-legend-toggle" id="map-legend-toggle" aria-expanded="false" aria-controls="map-legend-body">🎛️ 筛选 / 图例</button>
         <div class="map-legend-body" id="map-legend-body" hidden>
-          <div class="legend-item"><span class="legend-swatch legend-swatch-present"></span>在校（橙圈）</div>
-          <div class="legend-item"><span class="legend-swatch legend-swatch-missing"></span>失踪（红圈闪烁）</div>
-          <div class="legend-item"><span class="legend-swatch legend-swatch-missing-old"></span>失踪已久（深红）</div>
-          <div class="legend-item"><span class="legend-swatch legend-swatch-adopted"></span>已领养（绿）</div>
-          <div class="legend-item"><span class="legend-swatch legend-swatch-past"></span>灰色 = 去喵星 / 过往</div>
+          <div class="map-legend-hint">点状态显示 / 隐藏地图上的猫咪，可多选</div>
+          <div class="legend-filter-row">
+            <button type="button" class="legend-filter-all" data-status-filter="all" aria-pressed="true">全部</button>
+            <span class="legend-filter-count" id="legend-filter-count" aria-live="polite">显示 0 只</span>
+          </div>
+          <button type="button" class="legend-filter active" data-status-filter="present" aria-pressed="true"><span class="legend-swatch legend-swatch-present"></span>在校 <b class="legend-count" data-count="present">0</b></button>
+          <button type="button" class="legend-filter active" data-status-filter="missing" aria-pressed="true"><span class="legend-swatch legend-swatch-missing"></span>失踪 <b class="legend-count" data-count="missing">0</b></button>
+          <button type="button" class="legend-filter active" data-status-filter="missing-old" aria-pressed="true"><span class="legend-swatch legend-swatch-missing-old"></span>失踪已久 <b class="legend-count" data-count="missing-old">0</b></button>
+          <button type="button" class="legend-filter active" data-status-filter="adopted" aria-pressed="true"><span class="legend-swatch legend-swatch-adopted"></span>已领养 <b class="legend-count" data-count="adopted">0</b></button>
+          <button type="button" class="legend-filter active" data-status-filter="past" aria-pressed="true"><span class="legend-swatch legend-swatch-past"></span>去喵星 / 过往 <b class="legend-count" data-count="past">0</b></button>
         </div>
       </div>
 
@@ -354,6 +365,6 @@
   </script>
 
   <!-- 入口模块（?v= 版本号：改版时递增，防止浏览器/CDN 缓存旧 JS 导致加载失败） -->
-  <script type="module" src="./js/main.js?v=20261016f"></script>
+  <script type="module" src="./js/main.js?v=20261116j"></script>
 </body>
 </html>
